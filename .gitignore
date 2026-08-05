@@ -7,23 +7,15 @@ out/
 *.sln.iml
 packages/
 .vs/
-.vscode/
 *.DotSettings
 *.DotSettings.user
-launchSettings.json
 
 # NuGet
 *.nupkg
 *.snupkg
 .nuget/
 
-# Entity Framework
-*.db
-*.db-shm
-*.db-wal
-Migrations/
-
-# Flutter
+# Flutter / Dart
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -33,46 +25,16 @@ Migrations/
 build/
 coverage/
 flutter_export_environment.sh
-.gradle/
-gradlew
-gradlew.bat
-android/
-ios/
-windows/
-macos/
-linux/
-web/
 .fvm/
 fvm_config.json
-
-# Dart
 doc/api/
-.dart_tool/
 *.iml
 
-# IDEs
+# IDE
 .idea/
-.vscode/
 *.swp
 *.swo
 *~
-.DS_Store
-Thumbs.db
-
-# Environment
-.env
-.env.local
-*.pem
-*.key
-
-# SQLite
-*.db
-*.sqlite
-*.sqlite3
-
-# Logs
-*.log
-logs/
 
 # OS
 .DS_Store
@@ -83,6 +45,21 @@ logs/
 ehthumbs.db
 Thumbs.db
 
-# Local development
+# Environment / secrets
+.env
+.env.local
+*.pem
+*.key
+appsettings.*.local.json
 local.settings.json
-appsettings.Development.json
+
+# SQLite database files (keep migrations in source control)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/

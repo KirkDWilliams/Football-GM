@@ -1,3 +1,3 @@
 <Solution>
-  <Project Path="API/API.csproj" />
+  <Project Path="api/FootballGm.Api.csproj" />
 </Solution>

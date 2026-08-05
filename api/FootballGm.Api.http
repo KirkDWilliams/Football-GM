@@ -1,0 +1,11 @@
+@FootballGm.Api_HostAddress = http://localhost:5000
+
+### Health check
+GET {{FootballGm.Api_HostAddress}}/api/health
+Accept: application/json
+
+### OpenAPI document
+GET {{FootballGm.Api_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###
