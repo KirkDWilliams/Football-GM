@@ -1,6 +1,7 @@
 @FootballGm.Api_HostAddress = http://localhost:5000
+@accessToken = replace-with-token-from-mint-response
 
-### Health check
+### Health check (anonymous)
 GET {{FootballGm.Api_HostAddress}}/api/health
 Accept: application/json
 
@@ -8,4 +9,17 @@ Accept: application/json
 GET {{FootballGm.Api_HostAddress}}/openapi/v1.json
 Accept: application/json
 
-###
+### Mint a JWT (Development only — no user account lookup)
+POST {{FootballGm.Api_HostAddress}}/api/tokens
+Content-Type: application/json
+Accept: application/json
+
+{
+  "subject": "dev-user-1",
+  "displayName": "Dev GM"
+}
+
+### Verify bearer token (requires Authorization header)
+GET {{FootballGm.Api_HostAddress}}/api/tokens/me
+Authorization: Bearer {{accessToken}}
+Accept: application/json
