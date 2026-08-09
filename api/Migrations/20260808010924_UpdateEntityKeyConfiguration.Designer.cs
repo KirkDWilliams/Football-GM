@@ -3,6 +3,7 @@ using System;
 using FootballGm.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FootballGm.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260808010924_UpdateEntityKeyConfiguration")]
+    partial class UpdateEntityKeyConfiguration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
@@ -22,10 +25,6 @@ namespace FootballGm.Api.Migrations
                     b.Property<string>("GameId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("AwayScore")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("AwayTeam")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -33,25 +32,25 @@ namespace FootballGm.Api.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("HomeScore")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("HomeTeam")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<short>("Season")
+                    b.Property<short>("LosingScore")
                         .HasColumnType("INTEGER");
 
-                    b.Property<short?>("Temperature")
+                    b.Property<short>("Season")
                         .HasColumnType("INTEGER");
 
                     b.Property<short>("Week")
                         .HasColumnType("INTEGER");
 
-                    b.Property<short?>("WindSpeed")
+                    b.Property<short>("WinningScore")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("WinningTeam")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.HasKey("GameId");
 
@@ -63,17 +62,19 @@ namespace FootballGm.Api.Migrations
                     b.Property<string>("PlayerId")
                         .HasColumnType("TEXT");
 
+                    b.Property<short>("Age")
+                        .HasColumnType("INTEGER");
+
                     b.Property<short>("DraftYear")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsInjured")
                         .HasColumnType("INTEGER");
 
                     b.Property<short>("JerseyNumber")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PictureUrl")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -104,11 +105,11 @@ namespace FootballGm.Api.Migrations
                     b.Property<short>("ExtraPointsMade")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("FieldGoalsMade")
+                    b.Property<string>("FieldGoalsAttempted")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("FieldGoalsMissed")
+                    b.Property<string>("FieldGoalsMade")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -127,16 +128,10 @@ namespace FootballGm.Api.Migrations
                     b.Property<short>("PassingTouchdowns")
                         .HasColumnType("INTEGER");
 
-                    b.Property<short>("PassingTwoPointConversions")
-                        .HasColumnType("INTEGER");
-
                     b.Property<short>("PassingYards")
                         .HasColumnType("INTEGER");
 
                     b.Property<short>("ReceivingTouchdowns")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<short>("ReceivingTwoPointConversions")
                         .HasColumnType("INTEGER");
 
                     b.Property<short>("ReceivingYards")
@@ -155,9 +150,6 @@ namespace FootballGm.Api.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<short>("RushingTouchdowns")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<short>("RushingTwoPointConversions")
                         .HasColumnType("INTEGER");
 
                     b.Property<short>("RushingYards")
@@ -185,13 +177,11 @@ namespace FootballGm.Api.Migrations
                     b.Property<short>("ExtraPointsMade")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("FieldGoalsMade")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<short>("FieldGoalsAttempted")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("FieldGoalsMissed")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<short>("FieldGoalsMade")
+                        .HasColumnType("INTEGER");
 
                     b.Property<short>("Fumbles")
                         .HasColumnType("INTEGER");
@@ -206,9 +196,6 @@ namespace FootballGm.Api.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<short>("PassingTouchdowns")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<short>("PassingTwoPointConversions")
                         .HasColumnType("INTEGER");
 
                     b.Property<short>("PassingYards")
@@ -229,9 +216,6 @@ namespace FootballGm.Api.Migrations
                     b.Property<short>("RushAttempts")
                         .HasColumnType("INTEGER");
 
-                    b.Property<short>("RushingBrokenTackles")
-                        .HasColumnType("INTEGER");
-
                     b.Property<short>("RushingFirstDowns")
                         .HasColumnType("INTEGER");
 
@@ -242,9 +226,6 @@ namespace FootballGm.Api.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<short>("Sacks")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<short>("TwoPointConversionsMade")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("PlayerId", "Season");

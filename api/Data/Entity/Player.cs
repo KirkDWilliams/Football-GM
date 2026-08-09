@@ -1,14 +1,13 @@
 namespace FootballGm.Api.Data.Entity
 {
-    public class Player
+    public class Player // load_players()
     {
-        public int PlayerId { get; set; }
-        public int TeamId { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public int Position { get; set; }
-        public short JerseyNumber { get; set; }
-        public short Age { get; set; }
-        public short DraftYear { get; set; }
-        public bool IsInjured { get; set; } = false;
+        public string PlayerId { get; set; } = string.Empty;    // gsis_id
+        public string Name { get; set; } = string.Empty;        // display_name
+        public string PictureUrl {  get; set; } = string.Empty; // headshot
+        public string Team { get; set; } = string.Empty;        // latest_team
+        public string Position { get; set; } = string.Empty;    // position
+        public short JerseyNumber { get; set; }                 // jersey_number
+        public short DraftYear { get; set; }                    // rookie_season
     }
 }
