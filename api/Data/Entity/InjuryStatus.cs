@@ -17,13 +17,17 @@ namespace FootballGm.Api.Data.Entity
  
     all_injuries <- load_injuries(2026)
 
+    off_injuries <- all_injuries[
+        all_injuries$position %in% c("QB", "RB", "WR", "TE", "K", "P"),
+    ]
+
     injuries <- data.frame(
-	    GameId = all_injuries$season,
-	    Week = all_injuries$week,
-	    PlayerId = all_injuries$gsis_id,
-	    OfficialReportStatus = all_injuries$report_primary_injury,
-	    PracticePrimaryStatus = all_injuries$practice_primary_injury,
-	    PracticeStatus = all_injuries$practice_status
+	    GameId = off_injuries$season,
+	    Week = off_injuries$week,
+	    PlayerId = off_injuries$gsis_id,
+	    OfficialReportStatus = off_injuries$report_primary_injury,
+	    PracticePrimaryStatus = off_injuries$practice_primary_injury,
+	    PracticeStatus = off_injuries$practice_status
     )
  
  */
