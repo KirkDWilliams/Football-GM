@@ -3,6 +3,7 @@ using System;
 using FootballGm.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FootballGm.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260811010658_AddUsers")]
+    partial class AddUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
@@ -56,38 +59,6 @@ namespace FootballGm.Api.Migrations
                     b.HasKey("GameId");
 
                     b.ToTable("Games");
-                });
-
-            modelBuilder.Entity("FootballGm.Api.Data.Entity.InjuryStatus", b =>
-                {
-                    b.Property<short>("Season")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<short>("Week")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("PlayerId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LastUpdated")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OfficialReportStatus")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PracticePrimaryStatus")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PracticeStatus")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Season", "Week", "PlayerId");
-
-                    b.ToTable("InjuryStatus");
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Player", b =>
@@ -200,7 +171,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("PlayerId", "GameId");
 
-                    b.ToTable("PlayerGame");
+                    b.ToTable("PlayerGameStats");
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.PlayerSeason", b =>
@@ -281,7 +252,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("PlayerId", "Season");
 
-                    b.ToTable("PlayerSeason");
+                    b.ToTable("PlayerSeasonStats");
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.User", b =>

@@ -1,5 +1,5 @@
 @FootballGm.Api_HostAddress = http://localhost:5000
-@accessToken = replace-with-token-from-mint-response
+@accessToken = replace-with-token-from-register-or-login
 
 ### Health check (anonymous)
 GET {{FootballGm.Api_HostAddress}}/api/health
@@ -7,6 +7,32 @@ Accept: application/json
 
 ### OpenAPI document
 GET {{FootballGm.Api_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+### Register a user (returns JWT)
+POST {{FootballGm.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "gm@example.com",
+  "password": "correct-horse-battery",
+  "displayName": "Nick"
+}
+
+### Login (returns JWT)
+POST {{FootballGm.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "gm@example.com",
+  "password": "correct-horse-battery"
+}
+
+### Current user from database (requires Authorization header)
+GET {{FootballGm.Api_HostAddress}}/api/auth/me
+Authorization: Bearer {{accessToken}}
 Accept: application/json
 
 ### Mint a JWT (Development only — no user account lookup)
@@ -19,7 +45,7 @@ Accept: application/json
   "displayName": "Dev GM"
 }
 
-### Verify bearer token (requires Authorization header)
+### Verify bearer token claims (requires Authorization header)
 GET {{FootballGm.Api_HostAddress}}/api/tokens/me
 Authorization: Bearer {{accessToken}}
 Accept: application/json

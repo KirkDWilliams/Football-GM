@@ -78,8 +78,11 @@ dotnet run --project api/FootballGm.Api.csproj --launch-profile https
 | Health | `http://localhost:5000/api/health` |
 | Scalar UI (dev) | `http://localhost:5000/scalar/v1` |
 | OpenAPI JSON | `http://localhost:5000/openapi/v1.json` |
+| Register | `POST http://localhost:5000/api/auth/register` |
+| Login | `POST http://localhost:5000/api/auth/login` |
+| Current user | `GET http://localhost:5000/api/auth/me` |
 | Mint JWT (dev only) | `POST http://localhost:5000/api/tokens` |
-| Token probe | `GET http://localhost:5000/api/tokens/me` |
+| Token claims probe | `GET http://localhost:5000/api/tokens/me` |
 
 ### Quick API checks (PowerShell)
 
@@ -87,13 +90,21 @@ dotnet run --project api/FootballGm.Api.csproj --launch-profile https
 # Health + database
 Invoke-RestMethod http://localhost:5000/api/health
 
-# Mint a dev JWT (no user accounts yet — Development only)
+# Register (creates user + returns JWT)
+$reg = @{ email = "gm@example.com"; password = "correct-horse-battery"; displayName = "Nick" } | ConvertTo-Json
+$auth = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/auth/register -ContentType application/json -Body $reg
+$auth.accessToken
+
+# Login
+$login = @{ email = "gm@example.com"; password = "correct-horse-battery" } | ConvertTo-Json
+$auth = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/auth/login -ContentType application/json -Body $login
+
+# Current user (requires Authorization header)
+Invoke-RestMethod http://localhost:5000/api/auth/me -Headers @{ Authorization = "Bearer $($auth.accessToken)" }
+
+# Optional: Development-only free mint (no password / no user row)
 $body = @{ subject = "dev-user-1"; displayName = "Dev GM" } | ConvertTo-Json
 $tok = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/tokens -ContentType application/json -Body $body
-$tok.accessToken
-
-# Call a protected endpoint
-Invoke-RestMethod http://localhost:5000/api/tokens/me -Headers @{ Authorization = "Bearer $($tok.accessToken)" }
 ```
 
 More request samples: `api/FootballGm.Api.http`.
@@ -219,18 +230,23 @@ From Visual Studio you can also run the API with the **http** or **https** launc
 
 ---
 
-## JWT (API — token mechanisms only)
+## Auth (API endpoints)
 
-There are **no user accounts, login screens, or password tables** yet.
+Real accounts live in SQLite (`Users` table). Passwords are stored as one-way hashes (never returned by the API).
 
 | Piece | Behavior |
 |-------|----------|
+| Register | `POST /api/auth/register` — email, password (min 8), displayName → JWT + user |
+| Login | `POST /api/auth/login` — email + password → JWT + user |
+| Me | `GET /api/auth/me` — Bearer token → user from DB |
 | Config | `Jwt` in `appsettings*.json` |
-| Mint | `POST /api/tokens` — **Development only** (404 outside Development) |
 | Use | `Authorization: Bearer <accessToken>` |
-| Probe | `GET /api/tokens/me` |
-| Protected | Teams, Players, Leagues, Games controllers |
-| Anonymous | Health, token mint |
+| Dev mint | `POST /api/tokens` — **Development only** free JWT (no user lookup) |
+| Claims probe | `GET /api/tokens/me` — subject/name from the token only |
+| Protected | Teams, Players, Leagues, Games, `/api/auth/me` |
+| Anonymous | Health, register, login, dev token mint |
+
+JWT `sub` / NameIdentifier is the **user id** (not email). Flutter UI for login is not wired yet — use Scalar, `.http`, or PowerShell.
 
 Replace `Jwt:SigningKey` before any real deployment. Prefer user secrets or environment variables for non-local secrets.
 
