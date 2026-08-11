@@ -29,5 +29,4 @@ namespace FootballGm.Api.Data.Entity
 	    PracticePrimaryStatus = off_injuries$practice_primary_injury,
 	    PracticeStatus = off_injuries$practice_status
     )
- 
  */

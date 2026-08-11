@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FootballGm.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260809023634_UpdatePlayerSeasonEntity")]
-    partial class UpdatePlayerSeasonEntity
+    [Migration("20260811012229_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
