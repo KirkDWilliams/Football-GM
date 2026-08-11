@@ -15,8 +15,10 @@ public class AppDbContext : DbContext
 
     public DbSet<Game> Games { get; set; }
     public DbSet<Player> Players { get; set; }
-    public DbSet<PlayerGame> PlayerGameStats { get; set; }
-    public DbSet<PlayerSeason> PlayerSeasonStats { get; set; }
+    public DbSet<PlayerGame> PlayerGame { get; set; }
+    public DbSet<PlayerSeason> PlayerSeason { get; set; }
+
+    public DbSet<InjuryStatus> InjuryStatus { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,5 +37,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<PlayerSeason>()
             .HasKey(ps => new { ps.PlayerId, ps.Season });
+
+        modelBuilder.Entity<InjuryStatus>()
+            .HasKey(i => new { i.Season, i.Week, i.PlayerId });
     }
 }

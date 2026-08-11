@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FootballGm.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260811012229_InitialCreate")]
+    [Migration("20260811013724_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -171,7 +171,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("PlayerId", "GameId");
 
-                    b.ToTable("PlayerGameStats");
+                    b.ToTable("PlayerGame");
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.PlayerSeason", b =>
@@ -252,7 +252,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("PlayerId", "Season");
 
-                    b.ToTable("PlayerSeasonStats");
+                    b.ToTable("PlayerSeason");
                 });
 #pragma warning restore 612, 618
         }
