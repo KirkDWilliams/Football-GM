@@ -80,6 +80,8 @@ dotnet run --project api/FootballGm.Api.csproj --launch-profile https
 | OpenAPI JSON | `http://localhost:5000/openapi/v1.json` |
 | Register | `POST http://localhost:5000/api/auth/register` |
 | Login | `POST http://localhost:5000/api/auth/login` |
+| Refresh tokens | `POST http://localhost:5000/api/auth/refresh` |
+| Logout | `POST http://localhost:5000/api/auth/logout` |
 | Current user | `GET http://localhost:5000/api/auth/me` |
 | Mint JWT (dev only) | `POST http://localhost:5000/api/tokens` |
 | Token claims probe | `GET http://localhost:5000/api/tokens/me` |
@@ -90,19 +92,28 @@ dotnet run --project api/FootballGm.Api.csproj --launch-profile https
 # Health + database
 Invoke-RestMethod http://localhost:5000/api/health
 
-# Register (creates user + returns JWT)
+# Register (creates user + returns accessToken + refreshToken)
 $reg = @{ email = "gm@example.com"; password = "correct-horse-battery"; displayName = "Nick" } | ConvertTo-Json
 $auth = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/auth/register -ContentType application/json -Body $reg
 $auth.accessToken
+$auth.refreshToken
 
 # Login
 $login = @{ email = "gm@example.com"; password = "correct-horse-battery" } | ConvertTo-Json
 $auth = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/auth/login -ContentType application/json -Body $login
 
-# Current user (requires Authorization header)
+# Current user (requires Authorization header with access token)
 Invoke-RestMethod http://localhost:5000/api/auth/me -Headers @{ Authorization = "Bearer $($auth.accessToken)" }
 
-# Optional: Development-only free mint (no password / no user row)
+# Refresh (rotates refresh token; old refresh becomes invalid)
+$refreshBody = @{ refreshToken = $auth.refreshToken } | ConvertTo-Json
+$auth = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/auth/refresh -ContentType application/json -Body $refreshBody
+
+# Logout (revokes the refresh token)
+$logoutBody = @{ refreshToken = $auth.refreshToken } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/auth/logout -ContentType application/json -Body $logoutBody
+
+# Optional: Development-only free mint (access JWT only — no user row, no refresh)
 $body = @{ subject = "dev-user-1"; displayName = "Dev GM" } | ConvertTo-Json
 $tok = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/tokens -ContentType application/json -Body $body
 ```
@@ -234,19 +245,33 @@ From Visual Studio you can also run the API with the **http** or **https** launc
 
 Real accounts live in SQLite (`Users` table). Passwords are stored as one-way hashes (never returned by the API).
 
+Sessions use a **short-lived access JWT** plus a **long-lived opaque refresh token**. The refresh token is stored only as a SHA-256 hash in the `RefreshTokens` table; the raw value is returned once to the client.
+
 | Piece | Behavior |
 |-------|----------|
-| Register | `POST /api/auth/register` — email, password (min 8), displayName → JWT + user |
-| Login | `POST /api/auth/login` — email + password → JWT + user |
-| Me | `GET /api/auth/me` — Bearer token → user from DB |
-| Config | `Jwt` in `appsettings*.json` |
-| Use | `Authorization: Bearer <accessToken>` |
-| Dev mint | `POST /api/tokens` — **Development only** free JWT (no user lookup) |
-| Claims probe | `GET /api/tokens/me` — subject/name from the token only |
+| Register | `POST /api/auth/register` — email, password (min 8), displayName → access + refresh + user |
+| Login | `POST /api/auth/login` — email + password → access + refresh + user |
+| Refresh | `POST /api/auth/refresh` — `{ refreshToken }` → new access + **rotated** refresh + user |
+| Logout | `POST /api/auth/logout` — `{ refreshToken }` → revokes that session (204) |
+| Me | `GET /api/auth/me` — Bearer **access** token → user from DB |
+| Config | `Jwt` in `appsettings*.json` (see session settings below) |
+| Use | `Authorization: Bearer <accessToken>` on protected routes |
+| Dev mint | `POST /api/tokens` — **Development only** free **access** JWT (no user/refresh) |
+| Claims probe | `GET /api/tokens/me` — subject/name from the access token only |
 | Protected | Teams, Players, Leagues, Games, `/api/auth/me` |
-| Anonymous | Health, register, login, dev token mint |
+| Anonymous | Health, register, login, refresh, logout, dev token mint |
 
-JWT `sub` / NameIdentifier is the **user id** (not email). Flutter UI for login is not wired yet — use Scalar, `.http`, or PowerShell.
+JWT `sub` / NameIdentifier is the **user id** (not email). Access tokens default to **30 minutes**; refresh tokens default to **30 days**. Reusing an old refresh token after rotation fails. Flutter UI for login is not wired yet — use Scalar, `.http`, or PowerShell.
+
+**Session limits & cleanup (out of the box):**
+
+| Setting | Default | Meaning |
+|---------|---------|---------|
+| `MaxActiveRefreshTokensPerUser` | `10` | Max concurrent devices/sessions; oldest active sessions are revoked when exceeded |
+| `RefreshTokenCleanupRetentionDays` | `7` | How long to keep **revoked** rows before delete |
+| `RefreshTokenCleanupIntervalHours` | `6` | Background job interval; also runs ~15s after startup |
+
+Cleanup **deletes** expired rows and revoked rows past retention so `RefreshTokens` does not grow forever. Rotation still inserts a new row and revokes the old one; dead history is removed on a schedule.
 
 Replace `Jwt:SigningKey` before any real deployment. Prefer user secrets or environment variables for non-local secrets.
 

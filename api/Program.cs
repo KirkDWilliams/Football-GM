@@ -56,7 +56,9 @@ if (string.IsNullOrWhiteSpace(jwtOptions.Issuer) || string.IsNullOrWhiteSpace(jw
 
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<IRefreshTokenMaintenance, RefreshTokenMaintenance>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddHostedService<RefreshTokenCleanupHostedService>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

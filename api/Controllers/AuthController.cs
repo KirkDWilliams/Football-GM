@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using FootballGm.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,14 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FootballGm.Api.Controllers;
 
 /// <summary>
-/// User registration, sign-in, and current-user lookup.
+/// User registration, sign-in, token refresh, logout, and current-user lookup.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController(IAuthService authService) : ControllerBase
 {
     /// <summary>
-    /// Create a new account and return a JWT.
+    /// Create a new account and return access + refresh tokens.
     /// </summary>
     [HttpPost("register")]
     [AllowAnonymous]
@@ -25,7 +25,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await authService.RegisterAsync(
-            new RegisterRequest(body.Email, body.Password, body.DisplayName),
+            new RegisterRequest(body.Email, body.Password, body.DisplayName, body.DeviceName),
             cancellationToken);
 
         if (result.Error is not null)
@@ -37,7 +37,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     /// <summary>
-    /// Sign in with email and password; returns a JWT on success.
+    /// Sign in with email and password; returns access + refresh tokens on success.
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
@@ -49,7 +49,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await authService.LoginAsync(
-            new LoginRequest(body.Email, body.Password),
+            new LoginRequest(body.Email, body.Password, body.DeviceName),
             cancellationToken);
 
         if (result.Error is not null)
@@ -58,6 +58,54 @@ public class AuthController(IAuthService authService) : ControllerBase
         }
 
         return Ok(ToResponse(result.Success!));
+    }
+
+    /// <summary>
+    /// Exchange a valid refresh token for a new access token and rotated refresh token.
+    /// </summary>
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<AuthResponse>> Refresh(
+        [FromBody] RefreshBody body,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.RefreshAsync(
+            new RefreshRequest(body.RefreshToken),
+            cancellationToken);
+
+        if (result.Error is not null)
+        {
+            return MapError(result.Error);
+        }
+
+        return Ok(ToResponse(result.Success!));
+    }
+
+    /// <summary>
+    /// Revoke a refresh token so it can no longer mint access tokens.
+    /// Idempotent when the token is missing or already revoked.
+    /// </summary>
+    [HttpPost("logout")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Logout(
+        [FromBody] LogoutBody body,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.LogoutAsync(
+            new LogoutRequest(body.RefreshToken),
+            cancellationToken);
+
+        if (result.Error is not null)
+        {
+            return MapError(result.Error);
+        }
+
+        return NoContent();
     }
 
     /// <summary>
@@ -93,25 +141,34 @@ public class AuthController(IAuthService authService) : ControllerBase
             AuthErrorCode.Validation => BadRequest(new { error = error.Message }),
             AuthErrorCode.Conflict => Conflict(new { error = error.Message }),
             AuthErrorCode.InvalidCredentials => Unauthorized(new { error = error.Message }),
+            AuthErrorCode.InvalidRefreshToken => Unauthorized(new { error = error.Message }),
             _ => BadRequest(new { error = error.Message }),
         };
 
     private static AuthResponse ToResponse(AuthSuccess success) =>
         new(
-            success.Token.AccessToken,
-            success.Token.TokenType,
-            success.Token.ExpiresAt,
+            success.AccessToken.AccessToken,
+            success.AccessToken.TokenType,
+            success.AccessToken.ExpiresAt,
+            success.RefreshToken,
+            success.RefreshExpiresAt,
             success.User);
 }
 
-public record RegisterBody(string Email, string Password, string DisplayName);
+public record RegisterBody(string Email, string Password, string DisplayName, string? DeviceName = null);
 
-public record LoginBody(string Email, string Password);
+public record LoginBody(string Email, string Password, string? DeviceName = null);
+
+public record RefreshBody(string RefreshToken);
+
+public record LogoutBody(string RefreshToken);
 
 public record AuthResponse(
     string AccessToken,
     string TokenType,
     DateTimeOffset ExpiresAt,
+    string RefreshToken,
+    DateTimeOffset RefreshExpiresAt,
     UserDto User);
 
 /// <summary>

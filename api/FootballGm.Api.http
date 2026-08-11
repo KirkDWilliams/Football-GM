@@ -1,5 +1,6 @@
 @FootballGm.Api_HostAddress = http://localhost:5000
-@accessToken = replace-with-token-from-register-or-login
+@accessToken = replace-with-access-token
+@refreshToken = replace-with-refresh-token
 
 ### Health check (anonymous)
 GET {{FootballGm.Api_HostAddress}}/api/health
@@ -9,7 +10,7 @@ Accept: application/json
 GET {{FootballGm.Api_HostAddress}}/openapi/v1.json
 Accept: application/json
 
-### Register a user (returns JWT)
+### Register a user (returns access + refresh tokens)
 POST {{FootballGm.Api_HostAddress}}/api/auth/register
 Content-Type: application/json
 Accept: application/json
@@ -17,17 +18,37 @@ Accept: application/json
 {
   "email": "gm@example.com",
   "password": "correct-horse-battery",
-  "displayName": "Nick"
+  "displayName": "Nick",
+  "deviceName": "http-file"
 }
 
-### Login (returns JWT)
+### Login (returns access + refresh tokens)
 POST {{FootballGm.Api_HostAddress}}/api/auth/login
 Content-Type: application/json
 Accept: application/json
 
 {
   "email": "gm@example.com",
-  "password": "correct-horse-battery"
+  "password": "correct-horse-battery",
+  "deviceName": "http-file"
+}
+
+### Refresh (rotates refresh token; returns new access + refresh)
+POST {{FootballGm.Api_HostAddress}}/api/auth/refresh
+Content-Type: application/json
+Accept: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Logout (revokes the refresh token)
+POST {{FootballGm.Api_HostAddress}}/api/auth/logout
+Content-Type: application/json
+Accept: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
 }
 
 ### Current user from database (requires Authorization header)
@@ -35,7 +56,7 @@ GET {{FootballGm.Api_HostAddress}}/api/auth/me
 Authorization: Bearer {{accessToken}}
 Accept: application/json
 
-### Mint a JWT (Development only — no user account lookup)
+### Mint a JWT (Development only — access token only, no user account lookup)
 POST {{FootballGm.Api_HostAddress}}/api/tokens
 Content-Type: application/json
 Accept: application/json

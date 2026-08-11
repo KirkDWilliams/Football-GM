@@ -1,16 +1,24 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Mail;
 using FootballGm.Api.Auth;
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace FootballGm.Api.Services;
 
-public class AuthService(AppDbContext db, IPasswordHasher<User> hasher, ITokenService tokenService) : IAuthService
+public class AuthService(
+    AppDbContext db,
+    IPasswordHasher<User> hasher,
+    ITokenService tokenService,
+    IRefreshTokenMaintenance refreshTokenMaintenance,
+    IOptions<JwtOptions> jwtOptions) : IAuthService
 {
     private const int MinPasswordLength = 8;
+
+    private readonly JwtOptions _jwtOptions = jwtOptions.Value;
 
     public async Task<AuthResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
@@ -42,7 +50,7 @@ public class AuthService(AppDbContext db, IPasswordHasher<User> hasher, ITokenSe
         db.Users.Add(user);
         await db.SaveChangesAsync(cancellationToken);
 
-        return AuthResult.Ok(BuildSuccess(user));
+        return AuthResult.Ok(await IssueSessionAsync(user, request.DeviceName, cancellationToken));
     }
 
     public async Task<AuthResult> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -75,7 +83,69 @@ public class AuthService(AppDbContext db, IPasswordHasher<User> hasher, ITokenSe
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        return AuthResult.Ok(BuildSuccess(user));
+        return AuthResult.Ok(await IssueSessionAsync(user, request.DeviceName, cancellationToken));
+    }
+
+    public async Task<AuthResult> RefreshAsync(RefreshRequest request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            return AuthResult.Fail(new AuthError(
+                AuthErrorCode.Validation,
+                "Refresh token is required."));
+        }
+
+        var tokenHash = RefreshTokenHasher.Hash(request.RefreshToken.Trim());
+        var existing = await db.RefreshTokens
+            .Include(t => t.User)
+            .SingleOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken);
+
+        if (existing is null || !existing.IsActive)
+        {
+            return AuthResult.Fail(InvalidRefreshToken());
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var (opaqueRefresh, refreshEntity) = CreateRefreshTokenEntity(existing.UserId, existing.DeviceName, now);
+
+        existing.RevokedAtUtc = now;
+        existing.ReplacedByTokenId = refreshEntity.Id;
+
+        db.RefreshTokens.Add(refreshEntity);
+        // Rotation is 1-for-1; still enforce cap in case of prior over-limit sessions.
+        await refreshTokenMaintenance.EnforceActiveSessionLimitAsync(existing.UserId, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        var access = tokenService.CreateToken(existing.User.Id, existing.User.DisplayName);
+        return AuthResult.Ok(new AuthSuccess(
+            access,
+            opaqueRefresh,
+            refreshEntity.ExpiresAtUtc,
+            ToDto(existing.User)));
+    }
+
+    public async Task<LogoutResult> LogoutAsync(LogoutRequest request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            return LogoutResult.Fail(new AuthError(
+                AuthErrorCode.Validation,
+                "Refresh token is required."));
+        }
+
+        var tokenHash = RefreshTokenHasher.Hash(request.RefreshToken.Trim());
+        var existing = await db.RefreshTokens
+            .SingleOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken);
+
+        // Idempotent: missing or already revoked still counts as logged out.
+        if (existing is null || existing.RevokedAtUtc is not null)
+        {
+            return LogoutResult.Ok();
+        }
+
+        existing.RevokedAtUtc = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+        return LogoutResult.Ok();
     }
 
     public async Task<UserDto?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
@@ -92,10 +162,40 @@ public class AuthService(AppDbContext db, IPasswordHasher<User> hasher, ITokenSe
         return user is null ? null : ToDto(user);
     }
 
-    private AuthSuccess BuildSuccess(User user)
+    private async Task<AuthSuccess> IssueSessionAsync(
+        User user,
+        string? deviceName,
+        CancellationToken cancellationToken)
     {
-        var token = tokenService.CreateToken(user.Id, user.DisplayName);
-        return new AuthSuccess(token, ToDto(user));
+        var now = DateTimeOffset.UtcNow;
+        var (opaqueRefresh, refreshEntity) = CreateRefreshTokenEntity(user.Id, deviceName, now);
+
+        db.RefreshTokens.Add(refreshEntity);
+        // Keep at most MaxActiveRefreshTokensPerUser concurrent devices/sessions.
+        await refreshTokenMaintenance.EnforceActiveSessionLimitAsync(user.Id, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        var access = tokenService.CreateToken(user.Id, user.DisplayName);
+        return new AuthSuccess(access, opaqueRefresh, refreshEntity.ExpiresAtUtc, ToDto(user));
+    }
+
+    private (string OpaqueToken, RefreshToken Entity) CreateRefreshTokenEntity(
+        string userId,
+        string? deviceName,
+        DateTimeOffset now)
+    {
+        var opaque = RefreshTokenHasher.GenerateOpaqueToken();
+        var entity = new RefreshToken
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            UserId = userId,
+            TokenHash = RefreshTokenHasher.Hash(opaque),
+            CreatedAtUtc = now,
+            ExpiresAtUtc = now.AddDays(_jwtOptions.RefreshTokenExpirationDays),
+            DeviceName = string.IsNullOrWhiteSpace(deviceName) ? null : deviceName.Trim(),
+        };
+
+        return (opaque, entity);
     }
 
     private static UserDto ToDto(User user) =>
@@ -106,6 +206,9 @@ public class AuthService(AppDbContext db, IPasswordHasher<User> hasher, ITokenSe
 
     private static AuthError InvalidCredentials() =>
         new(AuthErrorCode.InvalidCredentials, "Invalid email or password.");
+
+    private static AuthError InvalidRefreshToken() =>
+        new(AuthErrorCode.InvalidRefreshToken, "Invalid or expired refresh token.");
 
     private static AuthError? ValidateRegister(RegisterRequest request)
     {
