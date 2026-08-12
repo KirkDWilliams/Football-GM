@@ -1,11 +1,10 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:football_gm_app/auth/models/auth_session.dart';
+import 'package:football_gm_app/auth/token_store.dart';
 
-import '../models/auth_session.dart';
-import 'token_store.dart';
-
-/// Shared [Dio] with Bearer attachment and single-flight refresh on 401.
+/// Shared HTTP client: attaches Bearer tokens and refreshes on 401.
 class ApiClient {
   ApiClient({
     required String baseUrl,
@@ -22,13 +21,16 @@ class ApiClient {
             },
           ),
         ) {
-    // Separate client without interceptors so refresh cannot recurse.
+    // Separate client so refresh calls do not re-enter interceptors.
     _refreshDio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 15),
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
       ),
     );
 
@@ -43,16 +45,11 @@ class ApiClient {
   final TokenStore _tokenStore;
   final Dio _dio;
   late final Dio _refreshDio;
-
-  /// In-flight refresh so concurrent 401s share one refresh call.
   Future<AuthSession?>? _refreshInFlight;
 
   Dio get dio => _dio;
 
-  void _onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) {
+  void _onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (_shouldSkipAuth(options.path)) {
       handler.next(options);
       return;
@@ -62,7 +59,6 @@ class ApiClient {
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
-
     handler.next(options);
   }
 
@@ -81,7 +77,7 @@ class ApiClient {
     }
 
     try {
-      final session = await _refreshSession();
+      final session = await refreshSession();
       if (session == null) {
         handler.next(error);
         return;
@@ -92,18 +88,13 @@ class ApiClient {
         headers: Map<String, dynamic>.from(request.headers)
           ..['Authorization'] = 'Bearer ${session.accessToken}',
       );
-
-      final clone = await _dio.fetch(opts);
-      handler.resolve(clone);
+      handler.resolve(await _dio.fetch(opts));
     } on Object {
       handler.next(error);
     }
   }
 
-  /// Uses the stored refresh token; updates [TokenStore] on success.
-  Future<AuthSession?> refreshSession() => _refreshSession();
-
-  Future<AuthSession?> _refreshSession() async {
+  Future<AuthSession?> refreshSession() async {
     if (_refreshInFlight != null) {
       return _refreshInFlight;
     }

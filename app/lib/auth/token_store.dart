@@ -1,12 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:football_gm_app/auth/models/auth_session.dart';
 
-import '../models/auth_session.dart';
-
-/// Persists the current auth session (access + refresh + user) on device.
-///
-/// Uses platform secure storage where available. Do not log token values.
+/// Saves the signed-in session on the device (do not log tokens).
 class TokenStore {
   TokenStore({FlutterSecureStorage? storage})
       : _storage = storage ??
@@ -17,14 +14,10 @@ class TokenStore {
   static const _sessionKey = 'football_gm.auth_session';
 
   final FlutterSecureStorage _storage;
-
-  /// In-memory cache so interceptors do not hit disk on every request.
   AuthSession? _cached;
 
   AuthSession? get session => _cached;
-
   String? get accessToken => _cached?.accessToken;
-
   String? get refreshToken => _cached?.refreshToken;
 
   Future<AuthSession?> load() async {

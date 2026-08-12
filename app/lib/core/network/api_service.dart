@@ -1,14 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:football_gm_app/core/network/api_client.dart';
+import 'package:football_gm_app/models/team.dart';
 
-import '../models/team.dart';
-import 'api_client.dart';
-
-/// Domain API calls (teams, etc.) using the shared authenticated [Dio] client.
+/// Non-auth API calls (uses the shared authenticated Dio).
 class ApiService {
   ApiService({required Dio dio}) : _dio = dio;
 
-  /// Convenience constructor for apps that already built an [ApiClient].
-  factory ApiService.fromClient(ApiClient client) => ApiService(dio: client.dio);
+  factory ApiService.fromClient(ApiClient client) =>
+      ApiService(dio: client.dio);
 
   final Dio _dio;
 

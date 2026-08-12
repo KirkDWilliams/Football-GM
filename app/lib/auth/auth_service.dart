@@ -1,12 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:football_gm_app/auth/auth_exception.dart';
+import 'package:football_gm_app/auth/models/auth_session.dart';
+import 'package:football_gm_app/auth/models/auth_user.dart';
+import 'package:football_gm_app/auth/token_store.dart';
+import 'package:football_gm_app/core/network/api_client.dart';
 
-import '../models/auth_session.dart';
-import '../models/auth_user.dart';
-import 'api_client.dart';
-import 'auth_exception.dart';
-import 'token_store.dart';
-
-/// High-level auth API: register, login, refresh, logout, me, change password.
+/// Calls the auth API and keeps [TokenStore] in sync.
 class AuthService {
   AuthService({
     required ApiClient apiClient,
@@ -20,7 +19,6 @@ class AuthService {
   final Dio _dio;
 
   TokenStore get tokenStore => _tokenStore;
-
   AuthSession? get currentSession => _tokenStore.session;
 
   Future<AuthSession> register({
@@ -82,7 +80,6 @@ class AuthService {
     }
   }
 
-  /// Exchange refresh token for a new session (also used by the interceptor).
   Future<AuthSession?> refresh() => _apiClient.refreshSession();
 
   Future<void> logout() async {
@@ -95,7 +92,7 @@ class AuthService {
         );
       }
     } on DioException {
-      // Always clear local session even if the server call fails.
+      // Always clear local session.
     } finally {
       await _tokenStore.clear();
     }
@@ -105,7 +102,10 @@ class AuthService {
     try {
       final response = await _dio.get<Map<String, dynamic>>('/api/auth/me');
       if (response.statusCode != 200 || response.data == null) {
-        throw AuthException('Failed to load profile', statusCode: response.statusCode);
+        throw AuthException(
+          'Failed to load profile',
+          statusCode: response.statusCode,
+        );
       }
       return AuthUser.fromJson(response.data!);
     } on DioException catch (e) {
@@ -113,7 +113,6 @@ class AuthService {
     }
   }
 
-  /// Changes password and clears local session (all server refresh tokens are revoked).
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
