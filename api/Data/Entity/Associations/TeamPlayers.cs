@@ -11,7 +11,7 @@ namespace FootballGm.Api.Data.Entity.Associations
         public Team Team { get; set; } = null!;
 
         [ForeignKey(nameof(Player))]
-        public int PlayerId { get; set; }
+        public string PlayerId { get; set; } = null!;
         public Player Player { get; set; } = null!;
     }
 }
