@@ -343,7 +343,7 @@ Native Flutter (Windows/Android) does not need CORS; it matters for **Flutter we
 - **CORS** (dev) allows origins on `localhost`, `127.0.0.1`, and `10.0.2.2` only; production uses `Cors:AllowedOrigins`
 - **EF Core** migration history is not empty-DB safe yet; local dev DB that already exists works (see `docs/` prompts to fix later)
 - Flutter **does not** need its local `sqflite` DB for the API to work
-- Flutter does not send JWTs yet; use Scalar, `.http`, or PowerShell to exercise auth
+- Flutter **auth client** stores tokens and attaches Bearer headers (PR5); login/register **UI** is not wired yet (PR6) — use Scalar, `.http`, or PowerShell, or call `AuthService` from code
 
 ---
 

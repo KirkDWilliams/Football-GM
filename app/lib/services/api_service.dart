@@ -1,28 +1,29 @@
 import 'package:dio/dio.dart';
-import '../models/team.dart';
 
+import '../models/team.dart';
+import 'api_client.dart';
+
+/// Domain API calls (teams, etc.) using the shared authenticated [Dio] client.
 class ApiService {
-  final String baseUrl;
+  ApiService({required Dio dio}) : _dio = dio;
+
+  /// Convenience constructor for apps that already built an [ApiClient].
+  factory ApiService.fromClient(ApiClient client) => ApiService(dio: client.dio);
+
   final Dio _dio;
 
-  ApiService({required this.baseUrl})
-      : _dio = Dio(BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 15),
-        ));
-
   Future<List<Team>> getTeams() async {
-    final resp = await _dio.get('/api/teams');
-    if (resp.statusCode == 200) {
-      final data = resp.data as List<dynamic>;
-      return data.map((e) => Team.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+    final resp = await _dio.get<List<dynamic>>('/api/teams');
+    if (resp.statusCode == 200 && resp.data != null) {
+      return resp.data!
+          .map((e) => Team.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
     }
     throw Exception('Failed to load teams: ${resp.statusCode}');
   }
 
   Future<bool> healthCheck() async {
-    final resp = await _dio.get('/api/health');
+    final resp = await _dio.get<dynamic>('/api/health');
     return resp.statusCode == 200;
   }
 }

@@ -1,28 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:football_gm_app/config/api_config.dart';
+import 'package:football_gm_app/services/api_client.dart';
 import 'package:football_gm_app/services/api_service.dart';
+import 'package:football_gm_app/services/auth_service.dart';
+import 'package:football_gm_app/services/token_store.dart';
 import 'package:football_gm_app/data/db_provider.dart';
 import 'package:football_gm_app/repositories/repository.dart';
 import 'package:football_gm_app/models/team.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final tokenStore = TokenStore();
+  // Restore tokens so Dio can attach Bearer on protected calls (UI gate is PR6).
+  await tokenStore.load();
+
+  final apiClient = ApiClient(
+    baseUrl: ApiConfig.baseUrl,
+    tokenStore: tokenStore,
+  );
+  final authService = AuthService(
+    apiClient: apiClient,
+    tokenStore: tokenStore,
+  );
+  final apiService = ApiService.fromClient(apiClient);
+  final dbProvider = DbProvider();
+  final repository = Repository(apiService: apiService, dbProvider: dbProvider);
+
+  runApp(
+    MyApp(
+      authService: authService,
+      repository: repository,
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({
+    super.key,
+    required this.authService,
+    required this.repository,
+  });
+
+  final AuthService authService;
+  final Repository repository;
 
   @override
   Widget build(BuildContext context) {
-    final apiService = ApiService(baseUrl: ApiConfig.baseUrl);
-    final dbProvider = DbProvider();
-    final repository = Repository(apiService: apiService, dbProvider: dbProvider);
-
     return MultiProvider(
       providers: [
+        Provider<AuthService>.value(value: authService),
+        Provider<TokenStore>.value(value: authService.tokenStore),
         Provider<Repository>.value(value: repository),
-        ChangeNotifierProvider<TeamsProvider>(create: (_) => TeamsProvider(repository)),
+        ChangeNotifierProvider<TeamsProvider>(
+          create: (_) => TeamsProvider(repository),
+        ),
       ],
       child: MaterialApp(
         title: 'Football GM',
@@ -84,7 +117,10 @@ class HomePage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Teams', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Teams',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
                 ElevatedButton.icon(
                   onPressed: provider.loading ? null : () => provider.sync(),
                   icon: provider.loading
