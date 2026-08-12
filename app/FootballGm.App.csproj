@@ -1,0 +1,25 @@
+<!--
+  IDE-only project so Solution Explorer lists Flutter sources.
+  Does not build the app — use: flutter run
+-->
+<Project Sdk="Microsoft.Build.NoTargets/3.7.0">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="lib\**\*" />
+    <None Include="test\**\*" />
+    <None Include="pubspec.yaml" />
+    <None Include="pubspec.lock" />
+    <None Include="analysis_options.yaml" />
+    <None Include="README.md" />
+    <None Include="android\**\*"
+          Exclude="android\.gradle\**\*;android\**\build\**\*;android\local.properties" />
+    <None Include="web\**\*" />
+    <None Include="windows\**\*"
+          Exclude="windows\flutter\ephemeral\**\*;windows\**\out\**\*" />
+  </ItemGroup>
+</Project>

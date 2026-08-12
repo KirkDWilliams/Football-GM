@@ -14,7 +14,7 @@ api/
 ```powershell
 # from repo root
 dotnet run --project api/FootballGm.Api.csproj --launch-profile http
-dotnet test tests/FootballGm.Api.Tests/FootballGm.Api.Tests.csproj
+dotnet test api.Tests/FootballGm.Api.Tests.csproj
 ```
 
 - Dev: http://localhost:5000  

@@ -4,9 +4,9 @@ Fantasy football GM sim — **ASP.NET Core API** + **Flutter** app.
 
 ```
 Football-GM/
-├── api/       Backend (JWT auth, SQLite)
-├── app/       Flutter client
-├── tests/     API integration tests
+├── api/         Backend (JWT auth, SQLite)
+├── api.Tests/   API integration tests
+├── app/         Flutter client
 └── README.md
 ```
 
@@ -42,7 +42,7 @@ Other devices: `flutter run -d chrome` or `flutter run -d android`
 ## Tests
 
 ```powershell
-dotnet test tests/FootballGm.Api.Tests/FootballGm.Api.Tests.csproj
+dotnet test api.Tests/FootballGm.Api.Tests.csproj
 ```
 
 ```powershell
