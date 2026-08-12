@@ -1,3 +1,5 @@
+using FootballGm.Api.Data.Entity.Contrived;
+
 namespace FootballGm.Api.Data.Entity;
 
 /// <summary>

@@ -12,4 +12,7 @@ namespace FootballGm.Api.Controllers;
 public class GamesController : ControllerBase
 {
     // Endpoints will be added when game features are implemented.
+    // GetGamesByWeek
+
+    // GetGamesByPlayer
 }

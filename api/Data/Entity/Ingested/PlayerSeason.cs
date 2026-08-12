@@ -1,4 +1,4 @@
-namespace FootballGm.Api.Data.Entity
+namespace FootballGm.Api.Data.Entity.Ingested
 {
     public class PlayerSeason 
     {

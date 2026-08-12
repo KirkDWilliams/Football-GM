@@ -1,7 +1,7 @@
-using System.Text;
 using FootballGm.Api.Auth;
 using FootballGm.Api.Data;
-using FootballGm.Api.Data.Entity;
+using FootballGm.Api.Data.Entity.Contrived;
+using FootballGm.Api.Infrastructure;
 using FootballGm.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,7 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IRefreshTokenMaintenance, RefreshTokenMaintenance>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddHostedService<RefreshTokenCleanupHostedService>();
+builder.Services.AddScoped<PlayerRepository>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -1,4 +1,7 @@
 using FootballGm.Api.Data.Entity;
+using FootballGm.Api.Data.Entity.Associations;
+using FootballGm.Api.Data.Entity.Contrived;
+using FootballGm.Api.Data.Entity.Ingested;
 using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Data;
@@ -19,8 +22,10 @@ public class AppDbContext : DbContext
     public DbSet<Player> Players { get; set; }
     public DbSet<PlayerGame> PlayerGame { get; set; }
     public DbSet<PlayerSeason> PlayerSeason { get; set; }
-
     public DbSet<InjuryStatus> InjuryStatus { get; set; }
+    public DbSet<League> Leagues { get; set; }
+    public DbSet<Team> Teams { get; set; }
+    public DbSet<TeamPlayers> TeamPlayers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +53,31 @@ public class AppDbContext : DbContext
                 .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<Team>()
+            .HasOne(t => t.League)
+            .WithMany(l => l.Teams)
+            .HasForeignKey(t => t.LeagueId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TeamPlayers>()
+            .HasKey(tp => new
+            {
+                tp.TeamId,
+                tp.PlayerId
+            });
+
+        modelBuilder.Entity<TeamPlayers>()
+            .HasOne(tp => tp.Team)
+            .WithMany(t => t.TeamPlayers)
+            .HasForeignKey(tp => tp.TeamId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TeamPlayers>()
+            .HasOne(tp => tp.Player)
+            .WithMany(p => p.TeamPlayers)
+            .HasForeignKey(tp => tp.PlayerId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Single primary keys
         modelBuilder.Entity<Game>()

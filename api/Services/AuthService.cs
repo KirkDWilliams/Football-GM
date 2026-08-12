@@ -3,6 +3,7 @@ using System.Net.Mail;
 using FootballGm.Api.Auth;
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity;
+using FootballGm.Api.Data.Entity.Contrived;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
