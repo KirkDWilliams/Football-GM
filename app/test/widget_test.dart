@@ -1,14 +1,42 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:football_gm_app/main.dart';
+import 'package:football_gm_app/app.dart';
+import 'package:football_gm_app/auth/auth_controller.dart';
+import 'package:football_gm_app/auth/auth_service.dart';
+import 'package:football_gm_app/auth/token_store.dart';
+import 'package:football_gm_app/config/api_config.dart';
+import 'package:football_gm_app/core/network/api_client.dart';
+import 'package:football_gm_app/core/network/api_service.dart';
+import 'package:football_gm_app/data/db_provider.dart';
+import 'package:football_gm_app/data/team_repository.dart';
 
 void main() {
-  testWidgets('Home page shows Football GM title and empty teams state', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Signed-out users see the login screen', (tester) async {
+    final tokenStore = TokenStore();
+    final apiClient = ApiClient(
+      baseUrl: ApiConfig.baseUrl,
+      tokenStore: tokenStore,
+    );
+    final authService = AuthService(
+      apiClient: apiClient,
+      tokenStore: tokenStore,
+    );
+    final authController = AuthController(authService: authService)
+      ..status = AuthStatus.unauthenticated;
+
+    await tester.pumpWidget(
+      FootballGmApp(
+        authController: authController,
+        authService: authService,
+        teamRepository: TeamRepository(
+          apiService: ApiService.fromClient(apiClient),
+          dbProvider: DbProvider(),
+        ),
+      ),
+    );
     await tester.pump();
 
-    expect(find.text('Football GM'), findsOneWidget);
-    expect(find.text('Teams'), findsOneWidget);
-    expect(find.text('No teams found'), findsOneWidget);
-    expect(find.text('Sync'), findsOneWidget);
+    expect(find.text('Sign in'), findsWidgets);
+    expect(find.text('Create an account'), findsOneWidget);
+    expect(find.text('Sync'), findsNothing);
   });
 }

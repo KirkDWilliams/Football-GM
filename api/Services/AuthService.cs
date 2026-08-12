@@ -43,7 +43,7 @@ public class AuthService(
             Id = Guid.NewGuid().ToString("N"),
             Email = email,
             DisplayName = displayName,
-            CreatedAtUtc = DateTimeOffset.UtcNow,
+            CreatedAtUtc = DateTimeOffset.UtcNow
         };
 
         user.PasswordHash = hasher.HashPassword(user, request.Password);
@@ -149,6 +149,52 @@ public class AuthService(
         return LogoutResult.Ok();
     }
 
+    public async Task<ChangePasswordResult> ChangePasswordAsync(
+        string userId,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return ChangePasswordResult.Fail(InvalidCredentials());
+        }
+
+        var validationError = ValidateChangePassword(request);
+        if (validationError is not null)
+        {
+            return ChangePasswordResult.Fail(validationError);
+        }
+
+        var user = await db.Users.SingleOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        if (user is null)
+        {
+            return ChangePasswordResult.Fail(InvalidCredentials());
+        }
+
+        var verifyResult = hasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
+        if (verifyResult == PasswordVerificationResult.Failed)
+        {
+            return ChangePasswordResult.Fail(new AuthError(
+                AuthErrorCode.InvalidCredentials,
+                "Current password is incorrect."));
+        }
+
+        if (request.CurrentPassword == request.NewPassword)
+        {
+            return ChangePasswordResult.Fail(new AuthError(
+                AuthErrorCode.Validation,
+                "New password must be different from the current password."));
+        }
+
+        user.PasswordHash = hasher.HashPassword(user, request.NewPassword);
+
+        // Force every device to sign in again with the new password.
+        await refreshTokenMaintenance.RevokeAllForUserAsync(user.Id, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        return ChangePasswordResult.Ok();
+    }
+
     public async Task<UserDto?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
@@ -248,6 +294,23 @@ public class AuthService(
         if (string.IsNullOrWhiteSpace(request.Password))
         {
             return new AuthError(AuthErrorCode.Validation, "Password is required.");
+        }
+
+        return null;
+    }
+
+    private static AuthError? ValidateChangePassword(ChangePasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+        {
+            return new AuthError(AuthErrorCode.Validation, "Current password is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < MinPasswordLength)
+        {
+            return new AuthError(
+                AuthErrorCode.Validation,
+                $"New password must be at least {MinPasswordLength} characters.");
         }
 
         return null;

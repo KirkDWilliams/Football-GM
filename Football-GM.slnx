@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="api/FootballGm.Api.csproj" />
+  <Project Path="app/FootballGm.App.csproj" />
+  <Project Path="api.Tests/FootballGm.Api.Tests.csproj" />
 </Solution>

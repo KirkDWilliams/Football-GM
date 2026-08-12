@@ -47,23 +47,48 @@ public class RefreshTokenMaintenance(
         }
     }
 
+    public async Task RevokeAllForUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+
+        var now = DateTimeOffset.UtcNow;
+
+        var active = await db.RefreshTokens
+            .Where(t => t.UserId == userId && t.RevokedAtUtc == null)
+            .ToListAsync(cancellationToken);
+
+        foreach (var token in active)
+        {
+            token.RevokedAtUtc = now;
+        }
+    }
+
     public async Task<int> CleanupAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
         var retentionDays = Math.Max(0, _options.RefreshTokenCleanupRetentionDays);
         var revokeCutoff = now.AddDays(-retentionDays);
 
-        // Expired: no longer usable. Revoked past retention: history only, safe to drop.
-        var dead = await db.RefreshTokens
+        // SQLite + nullable DateTimeOffset OR predicates often fail translation; evaluate in memory.
+        // Table stays small thanks to caps + periodic cleanup.
+        var all = await db.RefreshTokens.AsNoTracking().ToListAsync(cancellationToken);
+        var deadIds = all
             .Where(t =>
                 t.ExpiresAtUtc <= now
-                || (t.RevokedAtUtc != null && t.RevokedAtUtc <= revokeCutoff))
-            .ToListAsync(cancellationToken);
+                || (t.RevokedAtUtc is not null && t.RevokedAtUtc <= revokeCutoff))
+            .Select(t => t.Id)
+            .ToList();
 
-        if (dead.Count == 0)
+        if (deadIds.Count == 0)
         {
             return 0;
         }
+
+        var dead = await db.RefreshTokens
+            .Where(t => deadIds.Contains(t.Id))
+            .ToListAsync(cancellationToken);
 
         db.RefreshTokens.RemoveRange(dead);
         await db.SaveChangesAsync(cancellationToken);
