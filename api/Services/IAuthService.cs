@@ -12,6 +12,11 @@ public interface IAuthService
 
     Task<LogoutResult> LogoutAsync(LogoutRequest request, CancellationToken cancellationToken = default);
 
+    Task<ChangePasswordResult> ChangePasswordAsync(
+        string userId,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default);
+
     Task<UserDto?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default);
 }
 
@@ -22,6 +27,8 @@ public record LoginRequest(string Email, string Password, string? DeviceName = n
 public record RefreshRequest(string RefreshToken);
 
 public record LogoutRequest(string? RefreshToken);
+
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
 public record UserDto(string Id, string Email, string DisplayName);
 
@@ -46,6 +53,13 @@ public record LogoutResult(bool Succeeded, AuthError? Error)
     public static LogoutResult Ok() => new(true, null);
 
     public static LogoutResult Fail(AuthError error) => new(false, error);
+}
+
+public record ChangePasswordResult(bool Succeeded, AuthError? Error)
+{
+    public static ChangePasswordResult Ok() => new(true, null);
+
+    public static ChangePasswordResult Fail(AuthError error) => new(false, error);
 }
 
 public record AuthError(AuthErrorCode Code, string Message);

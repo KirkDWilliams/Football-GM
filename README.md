@@ -42,6 +42,14 @@ dotnet --version
 flutter doctor
 ```
 
+### API tests
+
+```powershell
+dotnet test api.Tests/FootballGm.Api.Tests.csproj
+```
+
+Integration tests cover register, login, refresh rotation, logout, change-password, and health. They use a temp SQLite file and the `Testing` environment.
+
 All commands below assume your shell is at the **repo root** (`Football-GM/`) unless noted.
 
 ---
@@ -82,6 +90,7 @@ dotnet run --project api/FootballGm.Api.csproj --launch-profile https
 | Login | `POST http://localhost:5000/api/auth/login` |
 | Refresh tokens | `POST http://localhost:5000/api/auth/refresh` |
 | Logout | `POST http://localhost:5000/api/auth/logout` |
+| Change password | `POST http://localhost:5000/api/auth/change-password` |
 | Current user | `GET http://localhost:5000/api/auth/me` |
 | Mint JWT (dev only) | `POST http://localhost:5000/api/tokens` |
 | Token claims probe | `GET http://localhost:5000/api/tokens/me` |
@@ -109,7 +118,15 @@ Invoke-RestMethod http://localhost:5000/api/auth/me -Headers @{ Authorization = 
 $refreshBody = @{ refreshToken = $auth.refreshToken } | ConvertTo-Json
 $auth = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/auth/refresh -ContentType application/json -Body $refreshBody
 
-# Logout (revokes the refresh token)
+# Change password (revokes ALL refresh sessions — must login again after)
+$changePw = @{ currentPassword = "correct-horse-battery"; newPassword = "new-correct-horse" } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/auth/change-password -ContentType application/json -Body $changePw -Headers @{ Authorization = "Bearer $($auth.accessToken)" }
+
+# Login again with the new password
+$login = @{ email = "gm@example.com"; password = "new-correct-horse" } | ConvertTo-Json
+$auth = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/auth/login -ContentType application/json -Body $login
+
+# Logout (revokes this session's refresh token only)
 $logoutBody = @{ refreshToken = $auth.refreshToken } | ConvertTo-Json
 Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/auth/logout -ContentType application/json -Body $logoutBody
 
@@ -253,15 +270,16 @@ Sessions use a **short-lived access JWT** plus a **long-lived opaque refresh tok
 | Login | `POST /api/auth/login` — email + password → access + refresh + user |
 | Refresh | `POST /api/auth/refresh` — `{ refreshToken }` → new access + **rotated** refresh + user |
 | Logout | `POST /api/auth/logout` — `{ refreshToken }` → revokes that session (204) |
+| Change password | `POST /api/auth/change-password` — Bearer + `{ currentPassword, newPassword }` → rehash + **revoke all** refresh sessions (204) |
 | Me | `GET /api/auth/me` — Bearer **access** token → user from DB |
 | Config | `Jwt` in `appsettings*.json` (see session settings below) |
 | Use | `Authorization: Bearer <accessToken>` on protected routes |
 | Dev mint | `POST /api/tokens` — **Development only** free **access** JWT (no user/refresh) |
 | Claims probe | `GET /api/tokens/me` — subject/name from the access token only |
-| Protected | Teams, Players, Leagues, Games, `/api/auth/me` |
+| Protected | Teams, Players, Leagues, Games, `/api/auth/me`, change-password |
 | Anonymous | Health, register, login, refresh, logout, dev token mint |
 
-JWT `sub` / NameIdentifier is the **user id** (not email). Access tokens default to **30 minutes**; refresh tokens default to **30 days**. Reusing an old refresh token after rotation fails. Flutter UI for login is not wired yet — use Scalar, `.http`, or PowerShell.
+JWT `sub` / NameIdentifier is the **user id** (not email). Access tokens default to **30 minutes**; refresh tokens default to **30 days**. Reusing an old refresh token after rotation fails. After **change password**, every device must log in again (all refresh tokens revoked). Flutter UI for login is not wired yet — use Scalar, `.http`, or PowerShell.
 
 **Session limits & cleanup (out of the box):**
 

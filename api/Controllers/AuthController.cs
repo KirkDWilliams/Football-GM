@@ -109,6 +109,41 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     /// <summary>
+    /// Change the authenticated user's password and revoke all refresh sessions.
+    /// Client must log in again afterward.
+    /// </summary>
+    [HttpPost("change-password")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordBody body,
+        CancellationToken cancellationToken)
+    {
+        var userId =
+            User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtClaimNames.Sub);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await authService.ChangePasswordAsync(
+            userId,
+            new ChangePasswordRequest(body.CurrentPassword, body.NewPassword),
+            cancellationToken);
+
+        if (result.Error is not null)
+        {
+            return MapError(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
     /// Returns the authenticated user from the database (requires Bearer JWT).
     /// </summary>
     [HttpGet("me")]
@@ -162,6 +197,8 @@ public record LoginBody(string Email, string Password, string? DeviceName = null
 public record RefreshBody(string RefreshToken);
 
 public record LogoutBody(string RefreshToken);
+
+public record ChangePasswordBody(string CurrentPassword, string NewPassword);
 
 public record AuthResponse(
     string AccessToken,

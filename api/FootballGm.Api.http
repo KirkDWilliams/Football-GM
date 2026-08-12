@@ -56,6 +56,17 @@ GET {{FootballGm.Api_HostAddress}}/api/auth/me
 Authorization: Bearer {{accessToken}}
 Accept: application/json
 
+### Change password (requires access token; revokes all refresh sessions — re-login after)
+POST {{FootballGm.Api_HostAddress}}/api/auth/change-password
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "currentPassword": "correct-horse-battery",
+  "newPassword": "new-correct-horse"
+}
+
 ### Mint a JWT (Development only — access token only, no user account lookup)
 POST {{FootballGm.Api_HostAddress}}/api/tokens
 Content-Type: application/json

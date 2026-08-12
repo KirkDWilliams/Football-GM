@@ -12,6 +12,12 @@ public interface IRefreshTokenMaintenance
     Task EnforceActiveSessionLimitAsync(string userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Revokes every non-revoked refresh session for the user (e.g. after password change).
+    /// Does not call SaveChanges; caller owns the unit of work.
+    /// </summary>
+    Task RevokeAllForUserAsync(string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Deletes expired tokens and revoked tokens past the retention window.
     /// Returns the number of rows removed.
     /// </summary>

@@ -108,11 +108,20 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Apply pending EF Core migrations (creates the SQLite file when missing).
+// Apply schema: migrations for real environments; EnsureCreated for integration tests
+// (migration history was evolved against an existing DB and is not empty-DB safe yet).
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+
+    if (app.Environment.IsEnvironment("Testing"))
+    {
+        db.Database.EnsureCreated();
+    }
+    else
+    {
+        db.Database.Migrate();
+    }
 
     if (app.Environment.IsDevelopment())
     {
@@ -147,3 +156,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Expose entry point for WebApplicationFactory integration tests.
+public partial class Program;
