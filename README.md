@@ -291,14 +291,57 @@ JWT `sub` / NameIdentifier is the **user id** (not email). Access tokens default
 
 Cleanup **deletes** expired rows and revoked rows past retention so `RefreshTokens` does not grow forever. Rotation still inserts a new row and revokes the old one; dead history is removed on a schedule.
 
-Replace `Jwt:SigningKey` before any real deployment. Prefer user secrets or environment variables for non-local secrets.
+---
+
+## Secrets and deployment (API)
+
+**Do not commit real signing keys.** `appsettings.json` keeps a placeholder; **Development** uses `appsettings.Development.json` for local only.
+
+### Environment variables (recommended for servers)
+
+ASP.NET Core maps `__` to nested config:
+
+| Variable | Purpose |
+|----------|---------|
+| `Jwt__SigningKey` | Long random secret (**≥ 32 chars**). **Required** outside Development/Testing |
+| `Jwt__Issuer` | Optional override (default `FootballGm.Api`) |
+| `Jwt__Audience` | Optional override (default `FootballGm.Client`) |
+| `ConnectionStrings__DefaultConnection` | SQLite path or other provider string |
+| `Cors__AllowedOrigins__0` | First allowed browser origin (prod Flutter web, etc.) |
+| `Cors__AllowedOrigins__1` | Second origin, … |
+
+Example (PowerShell, current session):
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Production"
+$env:Jwt__SigningKey = "paste-a-long-random-secret-at-least-32-chars"
+$env:Cors__AllowedOrigins__0 = "https://your-app.example"
+dotnet run --project api/FootballGm.Api.csproj --no-launch-profile
+```
+
+Without a real `Jwt__SigningKey` in Production/Staging, the API **fails at startup** (placeholder is rejected).
+
+### User secrets (local override without editing files)
+
+```powershell
+dotnet user-secrets set "Jwt:SigningKey" "your-local-override-secret-at-least-32-chars" --project api/FootballGm.Api.csproj
+```
+
+### CORS
+
+| Environment | Behavior |
+|-------------|----------|
+| **Development** / **Testing** | Allows browser origins on `localhost`, `127.0.0.1`, `10.0.2.2` |
+| **Production** / other | Only origins listed in `Cors:AllowedOrigins` (empty = no browser CORS) |
+
+Native Flutter (Windows/Android) does not need CORS; it matters for **Flutter web** (and browsers).
 
 ---
 
 ## Development notes
 
-- **CORS** (dev) allows origins on `localhost`, `127.0.0.1`, and `10.0.2.2`
-- **EF Core** `AppDbContext` has a baseline migration with no domain tables yet
+- **CORS** (dev) allows origins on `localhost`, `127.0.0.1`, and `10.0.2.2` only; production uses `Cors:AllowedOrigins`
+- **EF Core** migration history is not empty-DB safe yet; local dev DB that already exists works (see `docs/` prompts to fix later)
 - Flutter **does not** need its local `sqflite` DB for the API to work
 - Flutter does not send JWTs yet; use Scalar, `.http`, or PowerShell to exercise auth
 

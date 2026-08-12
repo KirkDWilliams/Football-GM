@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>FootballGm.Api</RootNamespace>
     <AssemblyName>FootballGm.Api</AssemblyName>
+    <!-- Local overrides via: dotnet user-secrets set Jwt:SigningKey (see README) -->
+    <UserSecretsId>football-gm-api-7c3e9a2b-4f18-4d6e-9b0c-1a2d3e4f5a6b</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

@@ -9,25 +9,19 @@
 | PR1 | Refresh tokens + logout + session cap/cleanup | **Done** |
 | PR2 | Change password + revoke-all sessions | **Done** |
 | PR3 | Auth integration tests | **Done** |
-| **PR4** | Production-safe config/CORS | **Next** (or PR5 Flutter) |
-| PR4 | Production-safe config/CORS | Pending |
-| PR5–7 | Flutter auth | Pending |
+| PR4 | Production-safe config/CORS | **Done** |
+| **PR5** | Flutter auth client + secure storage | **Next** |
+| PR6 | Login/register UI + auth gate | Pending |
+| PR7 | Change password UI + polish | Pending |
 | PR8 | Docs smoke checklist | Pending |
 
-## PR2 summary
+## PR4 summary
 
-- `POST /api/auth/change-password` (Bearer)
-- Body: `currentPassword`, `newPassword` (min 8, must differ)
-- Success: rehash + revoke **all** refresh sessions → 204
-- Client must login again
+- Non-Development rejects placeholder `Jwt:SigningKey` at startup
+- CORS: local hosts only in Development/Testing; prod uses `Cors:AllowedOrigins`
+- User secrets id on API project; README secrets section
+- Env vars: `Jwt__SigningKey`, `Cors__AllowedOrigins__0`, etc.
 
-## PR3 shipped
+## Next: PR5
 
-- Project: `api.Tests/FootballGm.Api.Tests`
-- `dotnet test api.Tests/FootballGm.Api.Tests.csproj` — 9 auth/health tests
-- Testing env uses `EnsureCreated` (migration chain not empty-DB safe)
-
-## Next: PR4 or PR5
-
-- PR4: production secrets / CORS
-- PR5: Flutter auth client + secure storage
+Flutter: token storage, Dio Bearer interceptor, refresh-on-401, auth API methods.

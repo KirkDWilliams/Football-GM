@@ -42,17 +42,11 @@ builder.Services.Configure<JwtOptions>(jwtSection);
 var jwtOptions = jwtSection.Get<JwtOptions>()
     ?? throw new InvalidOperationException($"Configuration section '{JwtOptions.SectionName}' is missing.");
 
-if (string.IsNullOrWhiteSpace(jwtOptions.SigningKey) || jwtOptions.SigningKey.Length < 32)
-{
-    throw new InvalidOperationException(
-        $"{JwtOptions.SectionName}:SigningKey must be configured and at least 32 characters.");
-}
+ValidateJwtOptions(jwtOptions, builder.Environment);
 
-if (string.IsNullOrWhiteSpace(jwtOptions.Issuer) || string.IsNullOrWhiteSpace(jwtOptions.Audience))
-{
-    throw new InvalidOperationException(
-        $"{JwtOptions.SectionName}:Issuer and Audience must be configured.");
-}
+var corsSection = builder.Configuration.GetSection(CorsOptions.SectionName);
+builder.Services.Configure<CorsOptions>(corsSection);
+var corsOptions = corsSection.Get<CorsOptions>() ?? new CorsOptions();
 
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
@@ -81,26 +75,38 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+const string corsPolicyName = "AppCors";
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("FlutterDev", policy =>
+    options.AddPolicy(corsPolicyName, policy =>
     {
+        // Local Flutter web / emulator tooling.
+        if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"))
+        {
+            policy
+                .SetIsOriginAllowed(IsLocalFlutterOrigin)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+            return;
+        }
+
+        // Production / Staging: explicit allow-list only (env: Cors__AllowedOrigins__0=...).
+        var origins = corsOptions.AllowedOrigins
+            .Where(o => !string.IsNullOrWhiteSpace(o))
+            .Select(o => o.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (origins.Length == 0)
+        {
+            // No browser clients configured — reject all browser origins.
+            policy.SetIsOriginAllowed(_ => false);
+            return;
+        }
+
         policy
-            .SetIsOriginAllowed(origin =>
-            {
-                if (string.IsNullOrWhiteSpace(origin))
-                {
-                    return false;
-                }
-
-                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
-                {
-                    return false;
-                }
-
-                // Allow local Flutter web / desktop / tooling origins during development.
-                return uri.Host is "localhost" or "127.0.0.1" or "10.0.2.2";
-            })
+            .WithOrigins(origins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -150,12 +156,74 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-app.UseCors("FlutterDev");
+app.UseCors(corsPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
 
-// Expose entry point for WebApplicationFactory integration tests.
+static void ValidateJwtOptions(JwtOptions jwtOptions, IHostEnvironment environment)
+{
+    if (string.IsNullOrWhiteSpace(jwtOptions.SigningKey) || jwtOptions.SigningKey.Length < 32)
+    {
+        throw new InvalidOperationException(
+            $"{JwtOptions.SectionName}:SigningKey must be configured and at least 32 characters. " +
+            "Set Jwt__SigningKey via environment variables or user secrets for non-local deploys.");
+    }
+
+    if (string.IsNullOrWhiteSpace(jwtOptions.Issuer) || string.IsNullOrWhiteSpace(jwtOptions.Audience))
+    {
+        throw new InvalidOperationException(
+            $"{JwtOptions.SectionName}:Issuer and Audience must be configured.");
+    }
+
+    // Development and Testing may use appsettings keys; never ship the placeholder.
+    if (environment.IsDevelopment() || environment.IsEnvironment("Testing"))
+    {
+        return;
+    }
+
+    if (IsInsecureJwtSigningKey(jwtOptions.SigningKey))
+    {
+        throw new InvalidOperationException(
+            $"{JwtOptions.SectionName}:SigningKey is missing or still set to the placeholder. " +
+            "For Production/Staging set a long random secret via environment variable Jwt__SigningKey " +
+            "(or user secrets / a secret store). Do not commit real signing keys.");
+    }
+}
+
+static bool IsInsecureJwtSigningKey(string signingKey)
+{
+    if (string.IsNullOrWhiteSpace(signingKey))
+    {
+        return true;
+    }
+
+    // Matches appsettings.json placeholder and similar "replace me" values.
+    if (signingKey.Contains("REPLACE_WITH", StringComparison.OrdinalIgnoreCase)
+        || signingKey.Contains("CHANGE_ME", StringComparison.OrdinalIgnoreCase)
+        || signingKey.Contains("TODO", StringComparison.OrdinalIgnoreCase))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+static bool IsLocalFlutterOrigin(string? origin)
+{
+    if (string.IsNullOrWhiteSpace(origin))
+    {
+        return false;
+    }
+
+    if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+    {
+        return false;
+    }
+
+    return uri.Host is "localhost" or "127.0.0.1" or "10.0.2.2";
+}
+
 public partial class Program;
