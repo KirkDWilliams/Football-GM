@@ -14,7 +14,7 @@ namespace FootballGm.Api.Data.Entity.Ingested
         public short JerseyNumber { get; set; }                
         public short DraftYear { get; set; }
 
-        public ICollection<TeamPlayers> TeamPlayers { get; set; } = new List<TeamPlayers>();
+        public ICollection<TeamPlayers> TeamPlayers { get; set; } = [];
     }
 }
 

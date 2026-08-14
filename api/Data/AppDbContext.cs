@@ -26,7 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<League> Leagues { get; set; }
     public DbSet<Team> Teams { get; set; }
     public DbSet<TeamPlayers> TeamPlayers { get; set; }
-
+    public DbSet<Contract> Contracts { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -64,7 +64,8 @@ public class AppDbContext : DbContext
             .HasKey(tp => new
             {
                 tp.TeamId,
-                tp.PlayerId
+                tp.PlayerId,
+                tp.ContractId
             });
 
         modelBuilder.Entity<TeamPlayers>()
@@ -79,12 +80,21 @@ public class AppDbContext : DbContext
             .HasForeignKey(tp => tp.PlayerId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<TeamPlayers>()
+            .HasOne(tp => tp.Contract)
+            .WithMany(c => c.TeamPlayers)
+            .HasForeignKey(tp => tp.ContractId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Single primary keys
         modelBuilder.Entity<Game>()
             .HasKey(g => g.GameId);
 
         modelBuilder.Entity<Player>()
             .HasKey(p => p.PlayerId);
+
+        modelBuilder.Entity<Contract>()
+            .HasKey(c => c.ContractId);
 
         // Composite keys
         modelBuilder.Entity<PlayerGame>()
