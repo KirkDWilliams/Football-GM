@@ -35,16 +35,10 @@ public class RefreshTokenMaintenance(
             .ThenByDescending(t => t.Id)
             .ToList();
 
-        if (active.Count <= maxActive)
-        {
-            return;
-        }
+        if (active.Count <= maxActive) return;
 
         // Keep the newest MaxActive sessions; revoke the rest (oldest devices fall off).
-        foreach (var excess in active.Skip(maxActive))
-        {
-            excess.RevokedAtUtc = now;
-        }
+        foreach (var excess in active.Skip(maxActive)) excess.RevokedAtUtc = now;
     }
 
     public async Task RevokeAllForUserAsync(
@@ -59,10 +53,7 @@ public class RefreshTokenMaintenance(
             .Where(t => t.UserId == userId && t.RevokedAtUtc == null)
             .ToListAsync(cancellationToken);
 
-        foreach (var token in active)
-        {
-            token.RevokedAtUtc = now;
-        }
+        foreach (var token in active) token.RevokedAtUtc = now;
     }
 
     public async Task<int> CleanupAsync(CancellationToken cancellationToken = default)
@@ -81,10 +72,7 @@ public class RefreshTokenMaintenance(
             .Select(t => t.Id)
             .ToList();
 
-        if (deadIds.Count == 0)
-        {
-            return 0;
-        }
+        if (deadIds.Count == 0) return 0;
 
         var dead = await db.RefreshTokens
             .Where(t => deadIds.Contains(t.Id))

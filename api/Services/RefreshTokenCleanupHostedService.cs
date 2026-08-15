@@ -35,15 +35,11 @@ public class RefreshTokenCleanupHostedService(
                 var removed = await maintenance.CleanupAsync(stoppingToken);
 
                 if (removed > 0)
-                {
                     logger.LogInformation(
                         "Refresh token cleanup removed {RemovedCount} dead row(s).",
                         removed);
-                }
                 else
-                {
                     logger.LogDebug("Refresh token cleanup found nothing to remove.");
-                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

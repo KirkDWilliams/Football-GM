@@ -1,4 +1,3 @@
-using FootballGm.Api.Data.Entity.Associations;
 using System.ComponentModel.DataAnnotations;
 
 namespace FootballGm.Api.Data.Entity.Contrived;
@@ -8,8 +7,7 @@ namespace FootballGm.Api.Data.Entity.Contrived;
 /// </summary>
 public class User
 {
-    [Key]
-    public string Id { get; set; } = string.Empty;
+    [Key] public string Id { get; set; } = string.Empty;
 
     /// <summary>Normalized (trimmed + lowercased) email used for login.</summary>
     public string Email { get; set; } = string.Empty;
@@ -21,5 +19,5 @@ public class User
 
     public DateTimeOffset CreatedAtUtc { get; set; }
 
-    public List<LeagueTeams> LeagueTeams { get; set; } = [];
+    public List<Team> LeagueTeams { get; set; } = [];
 }

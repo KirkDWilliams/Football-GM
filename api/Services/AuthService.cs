@@ -24,19 +24,14 @@ public class AuthService(
     public async Task<AuthResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
         var validationError = ValidateRegister(request);
-        if (validationError is not null)
-        {
-            return AuthResult.Fail(validationError);
-        }
+        if (validationError is not null) return AuthResult.Fail(validationError);
 
         var email = NormalizeEmail(request.Email);
         var displayName = request.DisplayName.Trim();
 
         var emailTaken = await db.Users.AnyAsync(u => u.Email == email, cancellationToken);
         if (emailTaken)
-        {
             return AuthResult.Fail(new AuthError(AuthErrorCode.Conflict, "An account with this email already exists."));
-        }
 
         var user = new User
         {
@@ -57,25 +52,16 @@ public class AuthService(
     public async Task<AuthResult> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         var validationError = ValidateLogin(request);
-        if (validationError is not null)
-        {
-            return AuthResult.Fail(validationError);
-        }
+        if (validationError is not null) return AuthResult.Fail(validationError);
 
         var email = NormalizeEmail(request.Email);
         var user = await db.Users.SingleOrDefaultAsync(u => u.Email == email, cancellationToken);
 
         // Same generic failure whether the email is missing or the password is wrong.
-        if (user is null)
-        {
-            return AuthResult.Fail(InvalidCredentials());
-        }
+        if (user is null) return AuthResult.Fail(InvalidCredentials());
 
         var verifyResult = hasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
-        if (verifyResult == PasswordVerificationResult.Failed)
-        {
-            return AuthResult.Fail(InvalidCredentials());
-        }
+        if (verifyResult == PasswordVerificationResult.Failed) return AuthResult.Fail(InvalidCredentials());
 
         // Rehash if the hasher algorithm was upgraded since the password was stored.
         if (verifyResult == PasswordVerificationResult.SuccessRehashNeeded)
@@ -90,21 +76,16 @@ public class AuthService(
     public async Task<AuthResult> RefreshAsync(RefreshRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
-        {
             return AuthResult.Fail(new AuthError(
                 AuthErrorCode.Validation,
                 "Refresh token is required."));
-        }
 
         var tokenHash = RefreshTokenHasher.Hash(request.RefreshToken.Trim());
         var existing = await db.RefreshTokens
             .Include(t => t.User)
             .SingleOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken);
 
-        if (existing is null || !existing.IsActive)
-        {
-            return AuthResult.Fail(InvalidRefreshToken());
-        }
+        if (existing is null || !existing.IsActive) return AuthResult.Fail(InvalidRefreshToken());
 
         var now = DateTimeOffset.UtcNow;
         var (opaqueRefresh, refreshEntity) = CreateRefreshTokenEntity(existing.UserId, existing.DeviceName, now);
@@ -128,21 +109,16 @@ public class AuthService(
     public async Task<LogoutResult> LogoutAsync(LogoutRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
-        {
             return LogoutResult.Fail(new AuthError(
                 AuthErrorCode.Validation,
                 "Refresh token is required."));
-        }
 
         var tokenHash = RefreshTokenHasher.Hash(request.RefreshToken.Trim());
         var existing = await db.RefreshTokens
             .SingleOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken);
 
         // Idempotent: missing or already revoked still counts as logged out.
-        if (existing is null || existing.RevokedAtUtc is not null)
-        {
-            return LogoutResult.Ok();
-        }
+        if (existing is null || existing.RevokedAtUtc is not null) return LogoutResult.Ok();
 
         existing.RevokedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
@@ -154,37 +130,24 @@ public class AuthService(
         ChangePasswordRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return ChangePasswordResult.Fail(InvalidCredentials());
-        }
+        if (string.IsNullOrWhiteSpace(userId)) return ChangePasswordResult.Fail(InvalidCredentials());
 
         var validationError = ValidateChangePassword(request);
-        if (validationError is not null)
-        {
-            return ChangePasswordResult.Fail(validationError);
-        }
+        if (validationError is not null) return ChangePasswordResult.Fail(validationError);
 
         var user = await db.Users.SingleOrDefaultAsync(u => u.Id == userId, cancellationToken);
-        if (user is null)
-        {
-            return ChangePasswordResult.Fail(InvalidCredentials());
-        }
+        if (user is null) return ChangePasswordResult.Fail(InvalidCredentials());
 
         var verifyResult = hasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
         if (verifyResult == PasswordVerificationResult.Failed)
-        {
             return ChangePasswordResult.Fail(new AuthError(
                 AuthErrorCode.InvalidCredentials,
                 "Current password is incorrect."));
-        }
 
         if (request.CurrentPassword == request.NewPassword)
-        {
             return ChangePasswordResult.Fail(new AuthError(
                 AuthErrorCode.Validation,
                 "New password must be different from the current password."));
-        }
 
         user.PasswordHash = hasher.HashPassword(user, request.NewPassword);
 
@@ -197,10 +160,7 @@ public class AuthService(
 
     public async Task<UserDto?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return null;
-        }
+        if (string.IsNullOrWhiteSpace(userId)) return null;
 
         var user = await db.Users
             .AsNoTracking()
@@ -239,47 +199,47 @@ public class AuthService(
             TokenHash = RefreshTokenHasher.Hash(opaque),
             CreatedAtUtc = now,
             ExpiresAtUtc = now.AddDays(_jwtOptions.RefreshTokenExpirationDays),
-            DeviceName = string.IsNullOrWhiteSpace(deviceName) ? null : deviceName.Trim(),
+            DeviceName = string.IsNullOrWhiteSpace(deviceName) ? null : deviceName.Trim()
         };
 
         return (opaque, entity);
     }
 
-    private static UserDto ToDto(User user) =>
-        new(user.Id, user.Email, user.DisplayName);
+    private static UserDto ToDto(User user)
+    {
+        return new UserDto(user.Id, user.Email, user.DisplayName);
+    }
 
-    private static string NormalizeEmail(string email) =>
-        email.Trim().ToLowerInvariant();
+    private static string NormalizeEmail(string email)
+    {
+        return email.Trim().ToLowerInvariant();
+    }
 
-    private static AuthError InvalidCredentials() =>
-        new(AuthErrorCode.InvalidCredentials, "Invalid email or password.");
+    private static AuthError InvalidCredentials()
+    {
+        return new AuthError(AuthErrorCode.InvalidCredentials, "Invalid email or password.");
+    }
 
-    private static AuthError InvalidRefreshToken() =>
-        new(AuthErrorCode.InvalidRefreshToken, "Invalid or expired refresh token.");
+    private static AuthError InvalidRefreshToken()
+    {
+        return new AuthError(AuthErrorCode.InvalidRefreshToken, "Invalid or expired refresh token.");
+    }
 
     private static AuthError? ValidateRegister(RegisterRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || !IsValidEmail(request.Email))
-        {
             return new AuthError(AuthErrorCode.Validation, "A valid email is required.");
-        }
 
         if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < MinPasswordLength)
-        {
             return new AuthError(
                 AuthErrorCode.Validation,
                 $"Password must be at least {MinPasswordLength} characters.");
-        }
 
         if (string.IsNullOrWhiteSpace(request.DisplayName))
-        {
             return new AuthError(AuthErrorCode.Validation, "Display name is required.");
-        }
 
         if (request.DisplayName.Trim().Length > 100)
-        {
             return new AuthError(AuthErrorCode.Validation, "Display name must be 100 characters or fewer.");
-        }
 
         return null;
     }
@@ -287,14 +247,10 @@ public class AuthService(
     private static AuthError? ValidateLogin(LoginRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || !IsValidEmail(request.Email))
-        {
             return new AuthError(AuthErrorCode.Validation, "A valid email is required.");
-        }
 
         if (string.IsNullOrWhiteSpace(request.Password))
-        {
             return new AuthError(AuthErrorCode.Validation, "Password is required.");
-        }
 
         return null;
     }
@@ -302,16 +258,12 @@ public class AuthService(
     private static AuthError? ValidateChangePassword(ChangePasswordRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.CurrentPassword))
-        {
             return new AuthError(AuthErrorCode.Validation, "Current password is required.");
-        }
 
         if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < MinPasswordLength)
-        {
             return new AuthError(
                 AuthErrorCode.Validation,
                 $"New password must be at least {MinPasswordLength} characters.");
-        }
 
         return null;
     }

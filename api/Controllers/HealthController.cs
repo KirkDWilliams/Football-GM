@@ -31,10 +31,7 @@ public class HealthController : ControllerBase
             DateTimeOffset.UtcNow,
             databaseConnected);
 
-        if (!databaseConnected)
-        {
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
-        }
+        if (!databaseConnected) return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
 
         return Ok(response);
     }

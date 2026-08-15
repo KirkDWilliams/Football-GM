@@ -24,7 +24,7 @@ public class TokenService : ITokenService
         {
             new(JwtRegisteredClaimNames.Sub, subject),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(ClaimTypes.NameIdentifier, subject),
+            new(ClaimTypes.NameIdentifier, subject)
         };
 
         if (!string.IsNullOrWhiteSpace(displayName))
@@ -37,12 +37,12 @@ public class TokenService : ITokenService
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: _options.Issuer,
-            audience: _options.Audience,
-            claims: claims,
-            notBefore: DateTime.UtcNow,
-            expires: expiresAt.UtcDateTime,
-            signingCredentials: credentials);
+            _options.Issuer,
+            _options.Audience,
+            claims,
+            DateTime.UtcNow,
+            expiresAt.UtcDateTime,
+            credentials);
 
         var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
         return new TokenResponse(accessToken, "Bearer", expiresAt);

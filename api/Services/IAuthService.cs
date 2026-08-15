@@ -39,27 +39,46 @@ public record AuthSuccess(
     UserDto User);
 
 /// <summary>
-/// Result of register/login/refresh. Either <see cref="Success"/> is set, or <see cref="Error"/> describes the failure.
+/// Result of register/login/refresh. Either <see cref="Success" /> is set, or <see cref="Error" /> describes the
+/// failure.
 /// </summary>
 public record AuthResult(AuthSuccess? Success, AuthError? Error)
 {
-    public static AuthResult Ok(AuthSuccess success) => new(success, null);
+    public static AuthResult Ok(AuthSuccess success)
+    {
+        return new AuthResult(success, null);
+    }
 
-    public static AuthResult Fail(AuthError error) => new(null, error);
+    public static AuthResult Fail(AuthError error)
+    {
+        return new AuthResult(null, error);
+    }
 }
 
 public record LogoutResult(bool Succeeded, AuthError? Error)
 {
-    public static LogoutResult Ok() => new(true, null);
+    public static LogoutResult Ok()
+    {
+        return new LogoutResult(true, null);
+    }
 
-    public static LogoutResult Fail(AuthError error) => new(false, error);
+    public static LogoutResult Fail(AuthError error)
+    {
+        return new LogoutResult(false, error);
+    }
 }
 
 public record ChangePasswordResult(bool Succeeded, AuthError? Error)
 {
-    public static ChangePasswordResult Ok() => new(true, null);
+    public static ChangePasswordResult Ok()
+    {
+        return new ChangePasswordResult(true, null);
+    }
 
-    public static ChangePasswordResult Fail(AuthError error) => new(false, error);
+    public static ChangePasswordResult Fail(AuthError error)
+    {
+        return new ChangePasswordResult(false, error);
+    }
 }
 
 public record AuthError(AuthErrorCode Code, string Message);
@@ -69,5 +88,5 @@ public enum AuthErrorCode
     Validation,
     Conflict,
     InvalidCredentials,
-    InvalidRefreshToken,
+    InvalidRefreshToken
 }

@@ -13,8 +13,8 @@ namespace FootballGm.Api.Controllers;
 [Route("api/[controller]")]
 public class TokensController : ControllerBase
 {
-    private readonly ITokenService _tokenService;
     private readonly IHostEnvironment _environment;
+    private readonly ITokenService _tokenService;
 
     public TokensController(ITokenService tokenService, IHostEnvironment environment)
     {
@@ -33,15 +33,9 @@ public class TokensController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<TokenResponse> Create([FromBody] CreateTokenRequest request)
     {
-        if (!_environment.IsDevelopment())
-        {
-            return NotFound();
-        }
+        if (!_environment.IsDevelopment()) return NotFound();
 
-        if (string.IsNullOrWhiteSpace(request.Subject))
-        {
-            return BadRequest(new { error = "subject is required" });
-        }
+        if (string.IsNullOrWhiteSpace(request.Subject)) return BadRequest(new { error = "subject is required" });
 
         var token = _tokenService.CreateToken(request.Subject.Trim(), request.DisplayName);
         return Ok(token);

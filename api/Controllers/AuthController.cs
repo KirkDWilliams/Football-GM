@@ -28,10 +28,7 @@ public class AuthController(IAuthService authService) : ControllerBase
             new RegisterRequest(body.Email, body.Password, body.DisplayName, body.DeviceName),
             cancellationToken);
 
-        if (result.Error is not null)
-        {
-            return MapError(result.Error);
-        }
+        if (result.Error is not null) return MapError(result.Error);
 
         return CreatedAtAction(nameof(Me), ToResponse(result.Success!));
     }
@@ -52,10 +49,7 @@ public class AuthController(IAuthService authService) : ControllerBase
             new LoginRequest(body.Email, body.Password, body.DeviceName),
             cancellationToken);
 
-        if (result.Error is not null)
-        {
-            return MapError(result.Error);
-        }
+        if (result.Error is not null) return MapError(result.Error);
 
         return Ok(ToResponse(result.Success!));
     }
@@ -76,10 +70,7 @@ public class AuthController(IAuthService authService) : ControllerBase
             new RefreshRequest(body.RefreshToken),
             cancellationToken);
 
-        if (result.Error is not null)
-        {
-            return MapError(result.Error);
-        }
+        if (result.Error is not null) return MapError(result.Error);
 
         return Ok(ToResponse(result.Success!));
     }
@@ -100,10 +91,7 @@ public class AuthController(IAuthService authService) : ControllerBase
             new LogoutRequest(body.RefreshToken),
             cancellationToken);
 
-        if (result.Error is not null)
-        {
-            return MapError(result.Error);
-        }
+        if (result.Error is not null) return MapError(result.Error);
 
         return NoContent();
     }
@@ -125,20 +113,14 @@ public class AuthController(IAuthService authService) : ControllerBase
             User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.FindFirstValue(JwtClaimNames.Sub);
 
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return Unauthorized();
-        }
+        if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
         var result = await authService.ChangePasswordAsync(
             userId,
             new ChangePasswordRequest(body.CurrentPassword, body.NewPassword),
             cancellationToken);
 
-        if (result.Error is not null)
-        {
-            return MapError(result.Error);
-        }
+        if (result.Error is not null) return MapError(result.Error);
 
         return NoContent();
     }
@@ -156,38 +138,36 @@ public class AuthController(IAuthService authService) : ControllerBase
             User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.FindFirstValue(JwtClaimNames.Sub);
 
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return Unauthorized();
-        }
+        if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
         var user = await authService.GetUserByIdAsync(userId, cancellationToken);
-        if (user is null)
-        {
-            return Unauthorized();
-        }
+        if (user is null) return Unauthorized();
 
         return Ok(user);
     }
 
-    private ActionResult MapError(AuthError error) =>
-        error.Code switch
+    private ActionResult MapError(AuthError error)
+    {
+        return error.Code switch
         {
             AuthErrorCode.Validation => BadRequest(new { error = error.Message }),
             AuthErrorCode.Conflict => Conflict(new { error = error.Message }),
             AuthErrorCode.InvalidCredentials => Unauthorized(new { error = error.Message }),
             AuthErrorCode.InvalidRefreshToken => Unauthorized(new { error = error.Message }),
-            _ => BadRequest(new { error = error.Message }),
+            _ => BadRequest(new { error = error.Message })
         };
+    }
 
-    private static AuthResponse ToResponse(AuthSuccess success) =>
-        new(
+    private static AuthResponse ToResponse(AuthSuccess success)
+    {
+        return new AuthResponse(
             success.AccessToken.AccessToken,
             success.AccessToken.TokenType,
             success.AccessToken.ExpiresAt,
             success.RefreshToken,
             success.RefreshExpiresAt,
             success.User);
+    }
 }
 
 public record RegisterBody(string Email, string Password, string DisplayName, string? DeviceName = null);

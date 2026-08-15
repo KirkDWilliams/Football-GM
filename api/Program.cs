@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using System.Text;
 using FootballGm.Api.Auth;
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Contrived;
@@ -9,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,14 +26,14 @@ builder.Services.AddOpenApi(options =>
             Type = SecuritySchemeType.Http,
             Scheme = "bearer",
             BearerFormat = "JWT",
-            Description = "JWT from POST /api/auth/login (or register). Paste the accessToken value.",
+            Description = "JWT from POST /api/auth/login (or register). Paste the accessToken value."
         };
         return Task.CompletedTask;
     });
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Data Source=footballgm.db";
+                       ?? "Data Source=footballgm.db";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString));
@@ -41,7 +42,8 @@ var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
 builder.Services.Configure<JwtOptions>(jwtSection);
 
 var jwtOptions = jwtSection.Get<JwtOptions>()
-    ?? throw new InvalidOperationException($"Configuration section '{JwtOptions.SectionName}' is missing.");
+                 ?? throw new InvalidOperationException(
+                     $"Configuration section '{JwtOptions.SectionName}' is missing.");
 
 ValidateJwtOptions(jwtOptions, builder.Environment);
 
@@ -70,8 +72,8 @@ builder.Services
             ValidAudience = jwtOptions.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
             ClockSkew = TimeSpan.FromMinutes(1),
-            NameClaimType = System.Security.Claims.ClaimTypes.Name,
-            RoleClaimType = System.Security.Claims.ClaimTypes.Role,
+            NameClaimType = ClaimTypes.Name,
+            RoleClaimType = ClaimTypes.Role
         };
     });
 
@@ -123,13 +125,9 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
     if (app.Environment.IsEnvironment("Testing"))
-    {
         db.Database.EnsureCreated();
-    }
     else
-    {
         db.Database.Migrate();
-    }
 
     if (app.Environment.IsDevelopment())
     {
@@ -153,10 +151,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Prefer HTTP in local Flutter scenarios (Android emulator, web). HTTPS can be enabled via the https launch profile.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+if (!app.Environment.IsDevelopment()) app.UseHttpsRedirection();
 
 app.UseCors(corsPolicyName);
 app.UseAuthentication();
@@ -168,62 +163,42 @@ app.Run();
 static void ValidateJwtOptions(JwtOptions jwtOptions, IHostEnvironment environment)
 {
     if (string.IsNullOrWhiteSpace(jwtOptions.SigningKey) || jwtOptions.SigningKey.Length < 32)
-    {
         throw new InvalidOperationException(
             $"{JwtOptions.SectionName}:SigningKey must be configured and at least 32 characters. " +
             "Set Jwt__SigningKey via environment variables or user secrets for non-local deploys.");
-    }
 
     if (string.IsNullOrWhiteSpace(jwtOptions.Issuer) || string.IsNullOrWhiteSpace(jwtOptions.Audience))
-    {
         throw new InvalidOperationException(
             $"{JwtOptions.SectionName}:Issuer and Audience must be configured.");
-    }
 
     // Development and Testing may use appsettings keys; never ship the placeholder.
-    if (environment.IsDevelopment() || environment.IsEnvironment("Testing"))
-    {
-        return;
-    }
+    if (environment.IsDevelopment() || environment.IsEnvironment("Testing")) return;
 
     if (IsInsecureJwtSigningKey(jwtOptions.SigningKey))
-    {
         throw new InvalidOperationException(
             $"{JwtOptions.SectionName}:SigningKey is missing or still set to the placeholder. " +
             "For Production/Staging set a long random secret via environment variable Jwt__SigningKey " +
             "(or user secrets / a secret store). Do not commit real signing keys.");
-    }
 }
 
 static bool IsInsecureJwtSigningKey(string signingKey)
 {
-    if (string.IsNullOrWhiteSpace(signingKey))
-    {
-        return true;
-    }
+    if (string.IsNullOrWhiteSpace(signingKey)) return true;
 
     // Matches appsettings.json placeholder and similar "replace me" values.
     if (signingKey.Contains("REPLACE_WITH", StringComparison.OrdinalIgnoreCase)
         || signingKey.Contains("CHANGE_ME", StringComparison.OrdinalIgnoreCase)
         || signingKey.Contains("TODO", StringComparison.OrdinalIgnoreCase))
-    {
         return true;
-    }
 
     return false;
 }
 
 static bool IsLocalFlutterOrigin(string? origin)
 {
-    if (string.IsNullOrWhiteSpace(origin))
-    {
-        return false;
-    }
+    if (string.IsNullOrWhiteSpace(origin)) return false;
 
-    if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
-    {
-        return false;
-    }
+    if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri)) return false;
 
     return uri.Host is "localhost" or "127.0.0.1" or "10.0.2.2";
 }

@@ -1,0 +1,16 @@
+﻿R
+
+all_injuries <- load_injuries(2026)
+
+off_injuries <- all_injuries[
+    all_injuries$position %in% c("QB", "RB", "WR", "TE", "K", "P"),
+]
+
+injuries <- data.frame(
+	GameId = off_injuries$season,
+	Week = off_injuries$week,
+	PlayerId = off_injuries$gsis_id,
+	OfficialReportStatus = off_injuries$report_primary_injury,
+	PracticePrimaryStatus = off_injuries$practice_primary_injury,
+	PracticeStatus = off_injuries$practice_status
+)
