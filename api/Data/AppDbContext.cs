@@ -27,6 +27,7 @@ public class AppDbContext : DbContext
     public DbSet<Team> Teams { get; set; }
     public DbSet<TeamPlayers> TeamPlayers { get; set; }
     public DbSet<Contract> Contracts { get; set; }
+    public DbSet<Budget> Budgets { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

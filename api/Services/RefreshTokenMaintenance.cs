@@ -5,6 +5,27 @@ using Microsoft.Extensions.Options;
 
 namespace FootballGm.Api.Services;
 
+public interface IRefreshTokenMaintenance
+{
+    /// <summary>
+    /// If the user has more active refresh sessions than configured, revokes the oldest ones.
+    /// Call after inserting a new session for that user (same unit of work / before or after SaveChanges).
+    /// </summary>
+    Task EnforceActiveSessionLimitAsync(string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Revokes every non-revoked refresh session for the user (e.g. after password change).
+    /// Does not call SaveChanges; caller owns the unit of work.
+    /// </summary>
+    Task RevokeAllForUserAsync(string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes expired tokens and revoked tokens past the retention window.
+    /// Returns the number of rows removed.
+    /// </summary>
+    Task<int> CleanupAsync(CancellationToken cancellationToken = default);
+}
+
 public class RefreshTokenMaintenance(
     AppDbContext db,
     IOptions<JwtOptions> jwtOptions) : IRefreshTokenMaintenance
