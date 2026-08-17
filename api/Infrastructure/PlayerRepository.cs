@@ -23,7 +23,7 @@ public class PlayerRepository
     {
         return await _context.PlayerGame
             .FirstOrDefaultAsync(pg => pg.PlayerId == playerId &&
-                                       pg.GameId == gameId);
+                                       pg.GameId   == gameId);
     }
 
     public async Task<List<Player>> GetPlayersByTeamIdAsync(int teamId)
@@ -35,37 +35,37 @@ public class PlayerRepository
             .ToListAsync();
     }
 
-        public async Task<List<PlayerGame>> GetTeamPlayersGameStatsAsync(int teamId)
-        {
-            var playerIds = await _context.TeamPlayers
-                .Where(tp => tp.TeamId == teamId)
-                .Select(tp => tp.PlayerId)
-                .ToListAsync();
+    public async Task<List<PlayerGame>> GetTeamPlayersGameStatsAsync(int teamId)
+    {
+        var playerIds = await _context.TeamPlayers
+            .Where(tp => tp.TeamId == teamId)
+            .Select(tp => tp.PlayerId)
+            .ToListAsync();
 
         return await _context.PlayerGame
             .Where(pg => playerIds.Contains(pg.PlayerId))
             .ToListAsync();
     }
 
-        public async Task<List<Player>> GetFreeAgentsAsync(int leagueId)
-        {
-            return await _context.Players
-                .Include(p => p.TeamPlayers)
-                .Where(p => !p.TeamPlayers.Any(tp => tp.Team.LeagueId == leagueId))
-                .ToListAsync();
-        }
+    public async Task<List<Player>> GetFreeAgentsAsync(int leagueId)
+    {
+        return await _context.Players
+            .Include(p => p.TeamPlayers)
+            .Where(p => !p.TeamPlayers.Any(tp => tp.Team.LeagueId == leagueId))
+            .ToListAsync();
+    }
 
-        public async Task<List<PlayerGame>> GetFreeAgentsGameStats(int leagueId)
-        {
-            var playerIdsWithoutTeam = await _context.Players
-                .Include(p => p.TeamPlayers)
-                .Where(p => !p.TeamPlayers.Any(tp => tp.Team.LeagueId == leagueId))
-                .Select(p => p.PlayerId)
-                .ToListAsync();
+    public async Task<List<PlayerGame>> GetFreeAgentsGameStats(int leagueId)
+    {
+        var playerIdsWithoutTeam = await _context.Players
+            .Include(p => p.TeamPlayers)
+            .Where(p => !p.TeamPlayers.Any(tp => tp.Team.LeagueId == leagueId))
+            .Select(p => p.PlayerId)
+            .ToListAsync();
 
         return await _context.PlayerGame
-            .Where(pg => playerIdsWithoutTeam.Contains(pg.PlayerId))
-            .ToListAsync();
+        .Where(pg => playerIdsWithoutTeam.Contains(pg.PlayerId))
+        .ToListAsync();
     }
 
     public async Task<List<Player>> GetPlayersByLeagueIdAsync(int leagueId)

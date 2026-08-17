@@ -18,21 +18,22 @@ public class BudgetRepository
             ?? throw new Exception($"Budget does not exist for teamId {teamId}");
     }
 
-    public async Task<bool> UpdateTeamBudgetAsync(int teamId, Budget existingBudget, List<Contract> updatedContracts)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<List<Budget>> GetAllTeamBudgetsAsync(int leagueId)
     {
-        var teamIds = await _context.Teams
-            .Where(t => t.LeagueId == leagueId)
-            .Select(t => t.TeamId)
-            .ToListAsync();
+        var teamIds = await GetTeamIdsInLeagueAsync(leagueId);
 
         return await _context.Budgets
             .Where(b => teamIds.Contains(b.TeamId))
             .ToListAsync()
             ?? throw new Exception($"Budgets do not exist for leagueId {leagueId}");
+    }
+
+    private async Task<List<int>> GetTeamIdsInLeagueAsync(int leagueId)
+    {
+        return await _context.Teams
+            .Where(t => t.LeagueId == leagueId)
+            .Select(t => t.TeamId)
+            .ToListAsync()
+        ?? throw new Exception("No teams found for the given leagueId");
     }
 }

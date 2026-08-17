@@ -1,5 +1,6 @@
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Contrived;
+using FootballGm.Api.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Infrastructure;
@@ -13,19 +14,17 @@ public class ContractRepository
         _context = context;
     }
 
-    public async Task<Contract?> GetContractByPlayerIdAsync(string playerId)
+    public async Task<Contract> GetContractByPlayerIdAsync(string playerId)
     {
         var contractId = await _context.TeamPlayers
             .Where(tp => tp.PlayerId == playerId)
             .Select(tp => tp.ContractId)
             .FirstOrDefaultAsync();
 
-        if (contractId == 0)
-            return null;
-
         return await _context.Contracts
             .Where(c => c.ContractId == contractId)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync()
+            ?? throw new Exception("No contract exists for the given playerId.");
     }
 
     public async Task<List<Contract>> GetContractsByTeamIdAsync(int teamId)
@@ -64,40 +63,46 @@ public class ContractRepository
         return true;
     }
 
-    public async Task<Contract> TradePlayerAsync(int departingTeamId, int receivingTeamId, string playerId)
+    public async Task<bool> DeleteContractsAsync(List<Contract> contracts)
     {
-        var currentContract = await GetContractByPlayerIdAsync(playerId)
-            ?? throw new Exception("Player does not have a contract.");
-
-        var teamPlayer = await _context.TeamPlayers
-            .FirstOrDefaultAsync(tp => tp.TeamId == departingTeamId &&
-                                       tp.PlayerId == playerId &&
-                                       tp.ContractId == currentContract.ContractId)
-            ?? throw new InvalidOperationException("Player not found on departing team.");
-
-        teamPlayer.TeamId = receivingTeamId;
-        _context.TeamPlayers.Update(teamPlayer);
-
-        await _context.SaveChangesAsync();
-
-        return currentContract;
+        try
+        {
+            _context.Contracts.RemoveRange(contracts);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
-    public async Task<bool> RunCompletionOfContractsAsync(int currentWeek)
+    public async Task<bool> RunCompletionOfContractsAsync()
     {
-        var contracts = await _context.Contracts
-            .Where(c => c.EndWeek == currentWeek)
-            .ToListAsync();
-
-        foreach (var contract in contracts)
+        try
         {
-            var teamPlayer = await _context.TeamPlayers.FirstOrDefaultAsync(tp => tp.ContractId == contract.ContractId)
-                ?? throw new InvalidOperationException($"No TeamPlayers entry found for ContractId {contract.ContractId}");
+            var week = WeekHelper.GetCurrentWeek();
 
-            _context.TeamPlayers.Remove(teamPlayer);
+            var contracts = await _context.Contracts
+                .Where(c => c.EndWeek == week)
+                .ToListAsync();
+
+            foreach (var contract in contracts)
+            {
+                var teamPlayer = await _context.TeamPlayers.FirstOrDefaultAsync(tp => tp.ContractId == contract.ContractId)
+                    ?? throw new InvalidOperationException($"No TeamPlayers entry found for ContractId {contract.ContractId}");
+
+                _context.TeamPlayers.Remove(teamPlayer);
+            }
+
+            await DeleteContractsAsync(contracts);
+            await _context.SaveChangesAsync();
+
+            return true;
         }
-
-        await _context.SaveChangesAsync();
-        return true;
+        catch
+        {
+            return false;
+        }
     }
 }
