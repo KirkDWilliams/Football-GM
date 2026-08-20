@@ -17,8 +17,7 @@ public class TeamRepository
     public async Task<List<Team>> GetTeamsByLeagueId(int leagueId)
     {
         return await _context.Teams
-            .Where(t => t.LeagueId == leagueId)
-            .ToListAsync()
+            .Where(t => t.LeagueId == leagueId).ToListAsync()
         ?? throw new Exception("No teams found for the given leagueId.");
     }
 
@@ -31,8 +30,19 @@ public class TeamRepository
     public async Task<List<TeamPlayers>> GetTeamPlayersByTeamId(int teamId)
     {
         return await _context.TeamPlayers
-            .Where(tp => tp.TeamId == teamId)
-            .ToListAsync()
+            .Where(tp => tp.TeamId == teamId).ToListAsync()
         ?? throw new Exception("No Players found belonging to the given teamId.");
+    }
+
+    public async Task AddTeamToLeagueAsync(Team team)
+    {
+        try
+        {
+            await _context.Teams.AddAsync(team);
+        }
+        catch
+        {
+            throw new Exception("Failed to add new team to league.");
+        }
     }
 }

@@ -1,6 +1,5 @@
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Domain
 {

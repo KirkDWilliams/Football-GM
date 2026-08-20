@@ -2,7 +2,7 @@ namespace FootballGm.Api.Helpers;
 
 public static class WeekHelper
 {
-    private static readonly List<DateOnly> nflWeeks = 
+    private static readonly List<DateOnly> _nflWeeks = 
     [
         new DateOnly(2026, 09, 09), // Anything prior to this date should be considered a week 0.
         new DateOnly(2026, 09, 14), // Otherwise, the index is the week in question.
@@ -25,18 +25,26 @@ public static class WeekHelper
         new DateOnly(2027, 01, 10),
     ];
 
-    public static int GetCurrentWeek(DateOnly? fakeDate = null)
+    public static int NumberOfWeeksInSeason => _nflWeeks.Count;
+
+    public static int CurrentWeek
     {
-        var today = fakeDate == null
-            ? DateOnly.FromDateTime(DateTime.Now)
-            : fakeDate;
-
-        for (var week = 0; week < nflWeeks.Count; week++)
+        get
         {
-            if (today < nflWeeks[week])
-                return week;
-        }
+            var today = DateOnly.FromDateTime(NowProvider());
 
-        return -1; // Not sure how you got here!
+            for (var week = 0; week < NumberOfWeeksInSeason; week++)
+            {
+                if (today < _nflWeeks[week])
+                    return week;
+            }
+
+            return -1;
+        }   
     }
+
+    #region Testing Functions
+    public static Func<DateTime> NowProvider { get; set; } = () => DateTime.Now;
+
+    #endregion
 }

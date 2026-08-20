@@ -36,7 +36,7 @@ public class ContractRepository
             .ToListAsync();
     }
 
-    public async Task<bool> CreateContract(Contract contract)
+    public async Task<bool> SaveContract(Contract contract)
     {
         try
         { 
@@ -54,10 +54,10 @@ public class ContractRepository
     {
         var existingContract = await _context.Contracts
             .FirstOrDefaultAsync(c => c.ContractId == contract.ContractId);
+
         if (existingContract == null)
             return false;
 
-        // save over the existing contract with this new contract
         _context.Contracts.Update(contract);
         await _context.SaveChangesAsync();
         return true;
@@ -77,19 +77,18 @@ public class ContractRepository
         }
     }
 
+    //This method will live elsewhere ... I got a little carried away with ideas and bored making repo methods.
     public async Task<bool> RunCompletionOfContractsAsync()
     {
         try
         {
-            var week = WeekHelper.GetCurrentWeek();
-
             var contracts = await _context.Contracts
-                .Where(c => c.EndWeek == week)
-                .ToListAsync();
+                .Where(c => c.EndWeek == WeekHelper.CurrentWeek).ToListAsync();
 
             foreach (var contract in contracts)
             {
-                var teamPlayer = await _context.TeamPlayers.FirstOrDefaultAsync(tp => tp.ContractId == contract.ContractId)
+                var teamPlayer = await _context.TeamPlayers
+                    .FirstOrDefaultAsync(tp => tp.ContractId == contract.ContractId)
                     ?? throw new InvalidOperationException($"No TeamPlayers entry found for ContractId {contract.ContractId}");
 
                 _context.TeamPlayers.Remove(teamPlayer);

@@ -1,15 +1,12 @@
-using FootballGm.Api.Data.Entity.Contrived;
-using FootballGm.Api.Data.Models;
 using FootballGm.Api.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Domain;
 
 public class BudgetEvaluator
 {
-    private BudgetRepository _budgetRepo;
-    private ContractRepository _contractRep;
-    private TeamRepository _teamRepo;
+    private readonly BudgetRepository _budgetRepo;
+    private readonly ContractRepository _contractRep;
+    private readonly TeamRepository _teamRepo;
 
     public BudgetEvaluator(
         BudgetRepository budgetRepository,
@@ -21,7 +18,7 @@ public class BudgetEvaluator
         _teamRepo = teamRepository;
     }
 
-    public async Task<bool> ExactObligationsFromTeamBudgetsAsync(int leagueId)
+   /* public async Task<bool> ExactObligationsFromTeamBudgetsAsync(int leagueId)
     {
         var teams = await _teamRepo.GetTeamsByLeagueId(leagueId);
 
@@ -37,7 +34,7 @@ public class BudgetEvaluator
 
             var capObligations = decimal.Zero;
 
-            /*foreach (var contract in contracts)
+           foreach (var contract in contracts)
             {
                 var poop = contract.
             }
@@ -48,9 +45,9 @@ public class BudgetEvaluator
                 TeamId = shit.TeamId,
                 CurrentObligations = shit.FutureObligations,
                 FutureObligations = CalculateObligations()
-            }*/
+            }
         }
 
         return true;
-    }
+    }*/
 }
