@@ -22,10 +22,10 @@ public static class WeekHelper
         new DateOnly(2026, 12, 21),
         new DateOnly(2026, 12, 28),
         new DateOnly(2027, 01, 04),
-        new DateOnly(2027, 01, 10),
+        new DateOnly(2027, 01, 10)
     ];
 
-    public static int NumberOfWeeksInSeason => _nflWeeks.Count;
+    public static int NumberOfWeeksInSeason => _nflWeeks.Count - 1;
 
     public static int CurrentWeek
     {
