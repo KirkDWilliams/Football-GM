@@ -19,7 +19,7 @@ namespace FootballGm.Api.Helpers
 
                 for (var contract = 0; contract < contracts.Count; contract++)
                 {
-                    if (contract == 0 && contracts[contract].GiftedCapSpace > decimal.Zero)
+                    if (week == contracts[contract].StartWeek && contracts[contract].GiftedCapSpace > decimal.Zero)
                         obligation -= contracts[contract].GiftedCapSpace;
 
                     if (week > contracts[contract].EndWeek)
@@ -41,14 +41,25 @@ namespace FootballGm.Api.Helpers
             return weekObligations;
         }
 
-        public static (bool TeamA, bool TeamB) ValidateBudgets(List<Contract> a_ContractsTrading, List<Contract> b_ContractsTrading, TeamBudget budgetA, TeamBudget budgetB, decimal capCeiling)
+        public static (bool TeamA, bool TeamB) ValidateBudgets(
+            List<Contract> a_ContractsTrading,
+            List<Contract> b_ContractsTrading,
+            TeamBudget budgetA,
+            TeamBudget budgetB,
+            decimal capCeiling)
         {
             (bool teamAIsValid, bool teamBIsValid) = (true, true);
 
-            var a_ProposedContracts = budgetA.Contracts.Concat(b_ContractsTrading).ToList();
-            var a_ProposedPayments = CreatePaymentSchedule(a_ProposedContracts);
+            var a_TradeContractIds = a_ContractsTrading.Select(trade => trade.ContractId);
+            var b_TradeContractIds = b_ContractsTrading.Select(trade => trade.ContractId);
 
+            budgetA.Contracts.RemoveAll(c => a_TradeContractIds.Contains(c.ContractId));
+            budgetB.Contracts.RemoveAll(c => b_TradeContractIds.Contains(c.ContractId));
+
+            var a_ProposedContracts = budgetA.Contracts.Concat(b_ContractsTrading).ToList();
             var b_ProposedContracts = budgetB.Contracts.Concat(a_ContractsTrading).ToList();
+
+            var a_ProposedPayments = CreatePaymentSchedule(a_ProposedContracts);
             var b_ProposedPayments = CreatePaymentSchedule(b_ProposedContracts);
 
             for (var week = WeekHelper.CurrentWeek; week <= WeekHelper.NumberOfWeeksInSeason; week++)
