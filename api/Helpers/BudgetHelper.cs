@@ -1,4 +1,5 @@
 using FootballGm.Api.Data.Entity.Contrived;
+using FootballGm.Api.Data.Models;
 
 namespace FootballGm.Api.Helpers
 {
@@ -16,16 +17,19 @@ namespace FootballGm.Api.Helpers
             {
                 var obligation = decimal.Zero;
 
-                foreach (var contract in contracts)
+                for (var contract = 0; contract < contracts.Count; contract++)
                 {
-                    if (week > contract.EndWeek)
+                    if (contract == 0 && contracts[contract].GiftedCapSpace > decimal.Zero)
+                        obligation -= contracts[contract].GiftedCapSpace;
+
+                    if (week > contracts[contract].EndWeek)
                         continue;
 
-                    if (week == contract.StartWeek)
-                        obligation += contract.SigningBonus;
+                    if (week == contracts[contract].StartWeek)
+                        obligation += contracts[contract].SigningBonus;
 
-                    if (week >= contract.StartWeek)
-                        obligation += decimal.Divide(contract.Salary, (contract.EndWeek - contract.StartWeek + 1));
+                    if (week >= contracts[contract].StartWeek)
+                        obligation += decimal.Divide(contracts[contract].Salary, (contracts[contract].EndWeek - contracts[contract].StartWeek + 1));
                 };
 
                 if (decimal.Equals(obligation, decimal.Zero))
@@ -35,6 +39,28 @@ namespace FootballGm.Api.Helpers
             }
 
             return weekObligations;
+        }
+
+        public static (bool TeamA, bool TeamB) ValidateBudgets(List<Contract> a_ContractsTrading, List<Contract> b_ContractsTrading, TeamBudget budgetA, TeamBudget budgetB, decimal capCeiling)
+        {
+            (bool teamAIsValid, bool teamBIsValid) = (true, true);
+
+            var a_ProposedContracts = budgetA.Contracts.Concat(b_ContractsTrading).ToList();
+            var a_ProposedPayments = CreatePaymentSchedule(a_ProposedContracts);
+
+            var b_ProposedContracts = budgetB.Contracts.Concat(a_ContractsTrading).ToList();
+            var b_ProposedPayments = CreatePaymentSchedule(b_ProposedContracts);
+
+            for (var week = WeekHelper.CurrentWeek; week <= WeekHelper.NumberOfWeeksInSeason; week++)
+            {
+                if (a_ProposedPayments[week] > capCeiling)
+                    teamAIsValid = false;
+
+                if (b_ProposedPayments[week] > capCeiling)
+                    teamAIsValid = false;
+            }
+
+            return (teamAIsValid, teamBIsValid);
         }
 
         public static decimal GetContractRating(Contract contract)
@@ -50,7 +76,7 @@ namespace FootballGm.Api.Helpers
 
             do
             {
-                rating += 1 + Decimal.Multiply(paymentSchedule[week], (decimal)Math.Pow(1 - discount, week++ - (contract.StartWeek - 1)));
+                rating += Decimal.Add(1, Decimal.Multiply(paymentSchedule[week], (decimal)Math.Pow(1 - discount, week++ - (contract.StartWeek - 1))));
             }
             while (paymentSchedule[week] > 0);
 

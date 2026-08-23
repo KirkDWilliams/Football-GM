@@ -10,8 +10,13 @@ public class Team
 
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+
     public short Wins { get; set; }
     public short Loses { get; set; }
+
+    public List<TeamPlayers> ActivePlayers { get; set; } = [];
+    public List<TeamPlayers> InactivePlayers { get; set; } = [];
+
     public League League { get; set; } = null!;
     public ICollection<TeamPlayers> TeamPlayers { get; set; } = new List<TeamPlayers>();
 }

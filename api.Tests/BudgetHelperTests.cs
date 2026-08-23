@@ -270,7 +270,7 @@ public class BudgetHelperTests()
     }
 
     [Fact]
-    public void GivenContractOptionsBetween_CeterisPeribus_ShorterContractsArePreferred()
+    public void GivenContractOptions_CeterisPeribus_ShorterContractsArePreferred()
     {
         // Arrange
         var original = WeekHelper.NowProvider;
@@ -286,14 +286,6 @@ public class BudgetHelperTests()
                 SigningBonus = 4
             };
 
-            // Act
-            var sixWeekRating = BudgetHelper.GetContractRating(sixWeekContract);
-
-            // Assert
-            Assert.True(sixWeekRating < 50);
-            Assert.True(sixWeekRating > 49);
-
-            //Arrange 2
             Contract fiveWeekContract = new()
             {
                 StartWeek = 1,
@@ -302,13 +294,6 @@ public class BudgetHelperTests()
                 SigningBonus = 4
             };
 
-            // Act
-            var fiveWeekRating = BudgetHelper.GetContractRating(fiveWeekContract);
-
-            // Assert
-            Assert.True(fiveWeekRating > sixWeekRating);
-
-            //Arrange 3
             Contract fourWeekContract = new()
             {
                 StartWeek = 1,
@@ -318,10 +303,109 @@ public class BudgetHelperTests()
             };
 
             // Act
+            var sixWeekRating = BudgetHelper.GetContractRating(sixWeekContract);
+            var fiveWeekRating = BudgetHelper.GetContractRating(fiveWeekContract);
             var fourWeekRating = BudgetHelper.GetContractRating(fourWeekContract);
 
             // Assert
+            Assert.True(fiveWeekRating > sixWeekRating);
             Assert.True(fourWeekRating > fiveWeekRating);
+        }
+        finally
+        {
+            WeekHelper.NowProvider = original;
+        }
+    }
+
+    [Fact]
+    public void GivenContractOptions_CeterisPeribus_GreaterSalariesArePreferred()
+    {
+        // Arrange
+        var original = WeekHelper.NowProvider;
+        try
+        {
+            WeekHelper.NowProvider = () => new DateTime(2026, 09, 08);
+
+            Contract highestSalary = new()
+            {
+                StartWeek = 1,
+                EndWeek = 5,
+                Salary = 51,
+                SigningBonus = 4
+            };
+
+            Contract middleSalary = new()
+            {
+                StartWeek = 1,
+                EndWeek = 5,
+                Salary = 50,
+                SigningBonus = 4
+            };
+
+            Contract lowestSalary = new()
+            {
+                StartWeek = 1,
+                EndWeek = 5,
+                Salary = 49,
+                SigningBonus = 4
+            };
+
+            // Act
+            var highestRating = BudgetHelper.GetContractRating(highestSalary);
+            var middleRating = BudgetHelper.GetContractRating(middleSalary);
+            var lowestRating = BudgetHelper.GetContractRating(lowestSalary);
+
+            // Assert
+            Assert.True(middleRating < highestRating);
+            Assert.True(lowestRating < middleRating);
+        }
+        finally
+        {
+            WeekHelper.NowProvider = original;
+        }
+    }
+
+    [Fact]
+    public void GivenContractOptions_CeterisPeribus_GreaterSigningBonusesArePreferred()
+    {
+        // Arrange
+        var original = WeekHelper.NowProvider;
+        try
+        {
+            WeekHelper.NowProvider = () => new DateTime(2026, 09, 08);
+
+            Contract highestBonus = new()
+            {
+                StartWeek = 1,
+                EndWeek = 5,
+                Salary = 50,
+                SigningBonus = 5
+            };
+
+            Contract middleBonus = new()
+            {
+                StartWeek = 1,
+                EndWeek = 5,
+                Salary = 50,
+                SigningBonus = 4
+            };
+
+            Contract lowestBonus = new()
+            {
+                StartWeek = 1,
+                EndWeek = 5,
+                Salary = 50,
+                SigningBonus = 3
+            };
+
+            // Act
+            var highestRating = BudgetHelper.GetContractRating(highestBonus);
+            var middleRating = BudgetHelper.GetContractRating(middleBonus);
+            var lowestRating = BudgetHelper.GetContractRating(lowestBonus);
+
+            // Assert
+            Assert.True(middleRating < highestRating);
+            Assert.True(lowestRating < middleRating);
         }
         finally
         {
