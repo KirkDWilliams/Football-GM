@@ -30,6 +30,7 @@ public class PlayerSeason
     public short ExtraPointsAttempted { get; init; }
 
     public short PassingTwoPointConversions { get; init; }
-    public short TwoPointConversionsMade { get; init; }
+    public short RushingTwoPointConversions { get; init; }
+    public short ReceivingTwoPointConversions { get; init; }
     public short ReturnedTouchdowns { get; init; }
 }

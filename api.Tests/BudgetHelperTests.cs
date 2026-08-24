@@ -425,7 +425,7 @@ public class BudgetHelperTests()
     #region ValidateBudgets
 
     [Fact]
-    public void PoopMaster3000()
+    public void GivenTwoTeamsWithAValidTrade_WhenValidatingTheTradeProposalForBudgetExcess_ReturnsTrueForEach()
     {
         // Arrange
         var original = WeekHelper.NowProvider;
@@ -435,94 +435,99 @@ public class BudgetHelperTests()
 
             List<Contract> proposedTradesFromTeamA =
             [
-                new()
-                {
-                    ContractId = 100,
-                    StartWeek = 9,
-                    EndWeek = 15,
-                    Salary = 45,
-                    SigningBonus = 10
-                },
-                new()
-                {
-                    ContractId = 101,
-                    StartWeek = 8,
-                    EndWeek = 15,
-                    Salary = 45,
-                    SigningBonus = 10
-                }
+                new() { ContractId = 100, StartWeek = 9, EndWeek = 15, Salary = 45, SigningBonus = 10 },
+                new() { ContractId = 101, StartWeek = 8, EndWeek = 15, Salary = 45, SigningBonus = 10 }
             ];
 
             List<Contract> proposedTradesFromTeamB =
             [
-                new()
-                {
-                    ContractId = 200,
-                    StartWeek = 7,
-                    EndWeek = 14,
-                    Salary = 60,
-                    SigningBonus = 4
-                },
-                new()
-                {
-                    ContractId = 201,
-                    StartWeek = 10,
-                    GiftedCapSpace = 15
-                }
+                new() { ContractId = 200, StartWeek = 7,  EndWeek = 14, Salary = 60, SigningBonus = 4 },
+                new() { ContractId = 201, StartWeek = 10, GiftedCapSpace = 15 }
             ];
 
             var teamBudgetA = new TeamBudget
             {
+                TeamId = 1,
                 Contracts =
                 [
-                    new()
-                    {
-                        ContractId = 100,
-                        StartWeek = 9,
-                        EndWeek = 15,
-                        Salary = 45,
-                        SigningBonus = 10
-                    },
-                    new()
-                    {
-                        ContractId = 101,
-                        StartWeek = 8,
-                        EndWeek = 15,
-                        Salary = 45,
-                        SigningBonus = 10
-                    }
-                ],
-                TeamId = 1,
+                    new() { ContractId = 100, StartWeek = 9, EndWeek = 15, Salary = 45, SigningBonus = 10 },
+                    new() { ContractId = 101, StartWeek = 8, EndWeek = 15, Salary = 45, SigningBonus = 10 },
+                    new() { ContractId = 102, StartWeek = 5, EndWeek = 12, Salary = 65, SigningBonus = 12 },
+                ]
             };
 
             var teamBudgetB = new TeamBudget
             {
+                TeamId = 2,
                 Contracts =
                 [
-                    new()
-                    {
-                        ContractId = 200,
-                        StartWeek = 7,
-                        EndWeek = 14,
-                        Salary = 60,
-                        SigningBonus = 4
-                    },
-                    new()
-                    {
-                        ContractId = 201,
-                        StartWeek = 10,
-                        GiftedCapSpace = 15
-                    }
+                    new() { ContractId = 200, StartWeek = 7,  EndWeek = 14, Salary = 60, SigningBonus = 4 },
+                    new() { ContractId = 200, StartWeek = 8,  EndWeek = 15, Salary = 60, SigningBonus = 14 },
+                    new() { ContractId = 200, StartWeek = 9,  EndWeek = 16, Salary = 60, SigningBonus = 24 },
+                    new() { ContractId = 201, StartWeek = 10, GiftedCapSpace = 15 }
                 ],
-                TeamId = 2,
             };
 
             // Act
-            var shit = BudgetHelper.ValidateBudgets(proposedTradesFromTeamA, proposedTradesFromTeamB, teamBudgetA, teamBudgetB, 50);
+            var (teamABudgetValidity, teamBBudgetValidity) = BudgetHelper.ValidateProposedBudgets(proposedTradesFromTeamA, proposedTradesFromTeamB, teamBudgetA, teamBudgetB, 50);
 
             // Assert
-            Assert.True(shit.TeamA);
-            Assert.True(shit.TeamB);
+            Assert.True(teamABudgetValidity);
+            Assert.True(teamBBudgetValidity);
+        }
+        finally { WeekHelper.NowProvider = original; }
+    }
+
+    [Fact]
+    public void GivenTwoTeamsWithAnInvalidTrade_WhenValidatingTheTradeProposalForBudgetExcess_ReturnsFalseAndTrue()
+    {
+        // Arrange
+        var original = WeekHelper.NowProvider;
+        try
+        {
+            WeekHelper.NowProvider = () => new DateTime(2026, 11, 15); //10
+
+            List<Contract> proposedTradesFromTeamA =
+            [
+                new() { ContractId = 100, StartWeek = 9, EndWeek = 15, Salary = 45, SigningBonus = 10 },
+                new() { ContractId = 101, StartWeek = 8, EndWeek = 15, Salary = 45, SigningBonus = 10 }
+            ];
+
+            List<Contract> proposedTradesFromTeamB =
+            [
+                new() { ContractId = 200, StartWeek = 7,  EndWeek = 14, Salary = 60, SigningBonus = 4 },
+                new() { ContractId = 201, StartWeek = 10, GiftedCapSpace = 15 }
+            ];
+
+            var teamBudgetA = new TeamBudget
+            {
+                TeamId = 1,
+                Contracts =
+                [
+                    new() { ContractId = 100, StartWeek = 9, EndWeek = 15, Salary = 45, SigningBonus = 10 },
+                    new() { ContractId = 101, StartWeek = 8, EndWeek = 15, Salary = 45, SigningBonus = 10 },
+                    new() { ContractId = 102, StartWeek = 5, EndWeek = 12, Salary = 65, SigningBonus = 12 },
+                ]
+            };
+
+            var teamBudgetB = new TeamBudget
+            {
+                TeamId = 2,
+                Contracts =
+                [
+                    new() { ContractId = 200, StartWeek = 7,  EndWeek = 14, Salary = 60, SigningBonus = 4 },
+                    new() { ContractId = 200, StartWeek = 8,  EndWeek = 15, Salary = 60, SigningBonus = 14 },
+                    new() { ContractId = 200, StartWeek = 9,  EndWeek = 16, Salary = 60, SigningBonus = 24 },
+                    new() { ContractId = 201, StartWeek = 10, GiftedCapSpace = 15 }
+                ],
+            };
+
+            // Act
+            var (teamABudgetValidity, teamBBudgetValidity) = BudgetHelper.ValidateProposedBudgets(proposedTradesFromTeamA, proposedTradesFromTeamB, teamBudgetA, teamBudgetB, 15);
+
+            // Assert
+            Assert.False(teamABudgetValidity);
+            Assert.True(teamBBudgetValidity);
         }
         finally { WeekHelper.NowProvider = original; }
     }
