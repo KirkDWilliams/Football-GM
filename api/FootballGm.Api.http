@@ -83,3 +83,13 @@ Accept: application/json
 GET {{FootballGm.Api_HostAddress}}/api/tokens/me
 Authorization: Bearer {{accessToken}}
 Accept: application/json
+
+### Create a league (requires access token; omit rules to use standard weights)
+POST {{FootballGm.Api_HostAddress}}/api/league
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Poop League"
+}

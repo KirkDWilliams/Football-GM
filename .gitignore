@@ -63,3 +63,7 @@ local.settings.json
 # Logs
 *.log
 logs/
+
+# AI
+.agents/
+skills-lock.json

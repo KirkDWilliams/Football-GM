@@ -4,13 +4,17 @@ namespace FootballGm.Api.Data.Entity.Contrived;
 
 public class League
 {
-    [Key] public int LeagueId { get; set; }
-    public int AdminTeamId { get; set; }
+    [Key]
+    public int LeagueId { get; init; }
 
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public decimal WeeklyCapSpace { get; set; } = 100M;
+    [MaxLength(32)]
+    public required string AdminUserId { get; init; }
 
-    public List<Rules> LeagueRules { get; set; } = []; // default rules
-    public ICollection<Team> Teams { get; set; } = [];
+    public int AdminTeamId { get; init; }
+
+    [MaxLength(50)]
+    public required string Name { get; init; }
+
+    public required Settings Settings { get; init; }
+    public ICollection<Team> Teams { get; init; } = [];
 }

@@ -1,6 +1,6 @@
 namespace FootballGm.Api.Data.Enums;
 
-public enum Positions
+public enum Position : short
 {
     Quarterback,
     RunningBack,
