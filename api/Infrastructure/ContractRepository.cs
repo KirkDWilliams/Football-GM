@@ -1,11 +1,24 @@
 using FootballGm.Api.Data;
+using FootballGm.Api.Data.Entity.Associations;
 using FootballGm.Api.Data.Entity.Contrived;
+using FootballGm.Api.Data.Entity.Ingested;
+using FootballGm.Api.Data.Models;
 using FootballGm.Api.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Infrastructure;
 
-public class ContractRepository
+public interface IContractRepository
+{
+    Task<Contract> GetContractByPlayerIdAsync(int leagueId, int teamId, string playerId, CancellationToken cancellationToken = default);
+    Task<List<Contract>> GetContractsByTeamIdAsync(int leagueId, int teamId, CancellationToken cancellationToken = default);
+    Task<bool> CreateContract(int leagueId, int teamId, string playerId, Contract contract, CancellationToken cancellationToken = default);
+    Task<bool> UpdateContract(Contract contract, CancellationToken cancellationToken = default);
+    Task<bool> DeleteContractsAsync(List<Contract> contracts, CancellationToken cancellationToken = default);
+    //TODO: this needs to live elsewhere-> Task<bool> RunCompletionOfContractsAsync(CancellationToken cancellationToken = default);
+}
+
+public class ContractRepository : IContractRepository
 {
     private readonly AppDbContext _context;
 
@@ -14,34 +27,52 @@ public class ContractRepository
         _context = context;
     }
 
-    public async Task<Contract> GetContractByPlayerIdAsync(string playerId)
+    public async Task<Contract> GetContractByPlayerIdAsync(int leagueId, int teamId, string playerId, CancellationToken cancellationToken = default)
     {
         var contractId = await _context.TeamPlayers
-            .Where(tp => tp.PlayerId == playerId)
+            .Where(tp => tp.LeagueId == leagueId && tp.TeamId == teamId && tp.PlayerId == playerId)
             .Select(tp => tp.ContractId)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         return await _context.Contracts
             .Where(c => c.ContractId == contractId)
-            .FirstOrDefaultAsync()
+            .FirstOrDefaultAsync(cancellationToken)
             ?? throw new Exception("No contract exists for the given playerId.");
     }
 
-    public async Task<List<Contract>> GetContractsByTeamIdAsync(int teamId)
+    public async Task<List<Contract>> GetContractsByTeamIdAsync(int leagueId, int teamId, CancellationToken cancellationToken = default)
     {
         return await _context.TeamPlayers
-            .Where(tp => tp.TeamId == teamId)
+            .Where(tp => tp.LeagueId == leagueId && tp.TeamId == teamId)
             .Include(tp => tp.Contract)
             .Select(tp => tp.Contract)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<bool> SaveContract(Contract contract)
+    public async Task<bool> CreateContract(int leagueId, int teamId, string playerId, Contract contract, CancellationToken cancellationToken = default)
     {
         try
-        { 
+        {
+            var hasExistingContract = await _context.Contracts
+                .AnyAsync(c => c.ContractId == contract.ContractId, cancellationToken);
+
+            if (hasExistingContract)
+                return false;
+
             _context.Contracts.Add(contract);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
+
+            var teamPlayer = new TeamPlayers
+            {
+                LeagueId = leagueId,
+                TeamId = teamId,
+                PlayerId = playerId,
+                ContractId = contract.ContractId
+            };
+
+            _context.TeamPlayers.Add(teamPlayer);
+            await _context.SaveChangesAsync(cancellationToken);
+
             return true;
         }
         catch
@@ -50,25 +81,25 @@ public class ContractRepository
         }
     }
 
-    public async Task<bool> UpdateContract(Contract contract)
+    public async Task<bool> UpdateContract(Contract contract, CancellationToken cancellationToken = default)
     {
         var existingContract = await _context.Contracts
-            .FirstOrDefaultAsync(c => c.ContractId == contract.ContractId);
+            .FirstOrDefaultAsync(c => c.ContractId == contract.ContractId, cancellationToken);
 
         if (existingContract == null)
             return false;
 
         _context.Contracts.Update(contract);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
         return true;
     }
 
-    public async Task<bool> DeleteContractsAsync(List<Contract> contracts)
+    public async Task<bool> DeleteContractsAsync(List<Contract> contracts, CancellationToken cancellationToken = default)
     {
         try
         {
             _context.Contracts.RemoveRange(contracts);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
             return true;
         }
         catch
@@ -77,25 +108,25 @@ public class ContractRepository
         }
     }
 
-    //This method will live elsewhere ... I got a little carried away with ideas and bored making repo methods.
-    public async Task<bool> RunCompletionOfContractsAsync()
+    // this belongs elsewhere for the automation
+    public async Task<bool> RunCompletionOfContractsAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             var contracts = await _context.Contracts
-                .Where(c => c.EndWeek == WeekHelper.CurrentWeek).ToListAsync();
+                .Where(c => c.EndWeek == WeekHelper.CurrentWeek).ToListAsync(cancellationToken);
 
             foreach (var contract in contracts)
             {
                 var teamPlayer = await _context.TeamPlayers
-                    .FirstOrDefaultAsync(tp => tp.ContractId == contract.ContractId)
+                    .FirstOrDefaultAsync(tp => tp.ContractId == contract.ContractId, cancellationToken)
                     ?? throw new InvalidOperationException($"No TeamPlayers entry found for ContractId {contract.ContractId}");
 
                 _context.TeamPlayers.Remove(teamPlayer);
             }
 
-            await DeleteContractsAsync(contracts);
-            await _context.SaveChangesAsync();
+            await DeleteContractsAsync(contracts, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
 
             return true;
         }

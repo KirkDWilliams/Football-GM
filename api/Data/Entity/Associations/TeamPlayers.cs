@@ -6,6 +6,9 @@ namespace FootballGm.Api.Data.Entity.Associations;
 
 public class TeamPlayers
 {
+    [ForeignKey(nameof(League))] public int LeagueId { get; set; }
+    public League League { get; set; } = null!;
+
     [ForeignKey(nameof(Team))] public int TeamId { get; set; }
 
     public Team Team { get; set; } = null!;

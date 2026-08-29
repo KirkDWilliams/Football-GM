@@ -4,7 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Infrastructure;
 
-public class BudgetRepository
+public interface IBudgetRepository
+{
+    Task<Budget> GetTeamBudgetAsync(int teamId);
+
+    Task<List<Budget>> GetTeamBudgetsAsync(int leagueId, List<int> teamIds);
+}
+
+public class BudgetRepository : IBudgetRepository
 {
     private AppDbContext _context;
     public BudgetRepository(AppDbContext dbContext)
