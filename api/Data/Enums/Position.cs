@@ -6,5 +6,6 @@ public enum Position : short
     RunningBack,
     WideReceiver,
     TightEnd,
-    Kicker
+    Kicker,
+    Punter
 }

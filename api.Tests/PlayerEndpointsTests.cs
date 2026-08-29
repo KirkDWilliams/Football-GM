@@ -17,17 +17,31 @@ public class PlayerEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory
     [Fact]
     public async Task Get_player_without_token_returns_unauthorized()
     {
-        var response = await _client.GetAsync("/api/player/00-0033873?leagueId=1&gameId=2024_01_KC_BAL");
+        var response = await _client.GetAsync("/api/player/00-0033873");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
-    public async Task Get_player_without_game_id_returns_bad_request()
+    public async Task Get_player_without_stats_does_not_require_game_or_league()
     {
         var auth = await RegisterAsync();
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/player/00-0033873?leagueId=1");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/player/missing-player");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_player_previous_week_without_game_id_returns_bad_request()
+    {
+        var auth = await RegisterAsync();
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "/api/player/00-0033873?leagueId=1&stats=PreviousWeek");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         var response = await _client.SendAsync(request);
@@ -41,7 +55,35 @@ public class PlayerEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory
 
         using var request = new HttpRequestMessage(
             HttpMethod.Get,
-            "/api/player/missing-player?leagueId=1&gameId=2024_01_KC_BAL");
+            "/api/player/missing-player?leagueId=1&gameId=2024_01_KC_BAL&stats=PreviousWeek");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_player_stats_without_league_id_returns_bad_request()
+    {
+        var auth = await RegisterAsync();
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "/api/player/00-0033873?stats=Season&stats=RecentThreeGames");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_unknown_player_season_returns_not_found()
+    {
+        var auth = await RegisterAsync();
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "/api/player/missing-player?leagueId=1&stats=Season");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         var response = await _client.SendAsync(request);

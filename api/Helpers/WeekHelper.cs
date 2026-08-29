@@ -27,6 +27,8 @@ public static class WeekHelper
 
     public static int NumberOfWeeksInSeason => NflWeeks.Count - 1;
 
+    public static short CurrentSeason => (short)NflWeeks[0].Year;
+
     public static int CurrentWeek
     {
         get
