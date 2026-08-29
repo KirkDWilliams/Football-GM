@@ -9,6 +9,7 @@ namespace FootballGm.Api.Data.Models;
 public class Rule
 {
     public RuleType RuleType { get; set; }
+    public StatType Stat { get; set; }
 
     public static List<Rule> CreateDefaultScoringWeights() =>
     [
@@ -44,7 +45,6 @@ public class ScoringWeightRule : Rule
         RuleType = RuleType.ScoringWeight;
     }
 
-    public StatType Stat { get; set; }
     public decimal Weight { get; set; }
 }
 
@@ -55,7 +55,6 @@ public class BonusRule : Rule
         RuleType = RuleType.Bonus;
     }
 
-    public StatType Stat { get; set; }
     public decimal Threshold { get; set; }
     public decimal Points { get; set; }
 }

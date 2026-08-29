@@ -93,3 +93,8 @@ Accept: application/json
 {
   "name": "Poop League"
 }
+
+### Get a player scored for a league/game (requires access token)
+GET {{FootballGm.Api_HostAddress}}/api/player/00-0033873?leagueId=1&gameId=2024_01_KC_BAL
+Authorization: Bearer {{accessToken}}
+Accept: application/json
