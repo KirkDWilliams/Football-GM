@@ -1,0 +1,37 @@
+﻿namespace FootballGm.Api.Data.Enums;
+
+public enum NflTeam
+{
+    BuffaloBills,
+    MiamiDolphins,
+    NewEnglandPatriots,
+    NewYorkJets,
+    BaltimoreRavens,
+    CincinnatiBengals,
+    ClevelandBrowns,
+    PittsburghSteelers,
+    HoustonTexans,
+    IndianapolisColts,
+    JacksonvilleJaguars,
+    TennesseeTitans,
+    DenverBroncos,
+    KansasCityChiefs,
+    LasVegasRaiders,
+    LosAngelesChargers,
+    DallasCowboys,
+    NewYorkGiants,
+    PhiladelphiaEagles,
+    WashingtonCommanders,
+    ChicagoBears,
+    DetroitLions,
+    GreenBayPackers,
+    MinnesotaVikings,
+    AtlantaFalcons,
+    CarolinePanthers,
+    NewOrleansSaints,
+    TampaBayBuccaneers,
+    ArizonaCardinals,
+    LosAngelesRams,
+    SanFrancisco49ers,
+    SeattleSeahawks
+}

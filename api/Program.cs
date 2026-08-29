@@ -7,6 +7,7 @@ using FootballGm.Api.Domain;
 using FootballGm.Api.Infrastructure;
 using FootballGm.Api.Infrastructure.Interfaces;
 using FootballGm.Api.Services;
+using FootballGm.Api.Services.GameAnalysis;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -58,7 +59,9 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IRefreshTokenMaintenance, RefreshTokenMaintenance>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddHostedService<RefreshTokenCleanupHostedService>();
-builder.Services.AddScoped<PlayerRepository>();
+builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
+builder.Services.AddScoped<IScoreCalculator, ScoreCalculator>();
+builder.Services.AddScoped<IPlayerOrchestrator, PlayerOrchestrator>();
 builder.Services.AddScoped<ILeagueRepository, LeagueRepository>();
 builder.Services.AddScoped<ILeagueOrchestrator, LeagueOrchestrator>();
 

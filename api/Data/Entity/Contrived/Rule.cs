@@ -9,6 +9,7 @@ public abstract class Rule
     public long RuleId { get; init; }
     public int SettingsId { get; init; }
     public RuleType RuleType { get; init; }
+    public StatType Stat { get; init; }
 }
 
 public class ScoringWeightRule : Rule
@@ -18,7 +19,6 @@ public class ScoringWeightRule : Rule
         RuleType = RuleType.ScoringWeight;
     }
 
-    public StatType Stat { get; init; }
     public decimal Weight { get; init; }
 }
 
@@ -29,7 +29,6 @@ public class BonusRule : Rule
         RuleType = RuleType.Bonus;
     }
 
-    public StatType Stat { get; init; }
     public decimal Threshold { get; init; }
     public decimal Points { get; init; }
 }
