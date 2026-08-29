@@ -57,6 +57,19 @@ public class ScoreCalculator : IScoreCalculator
             ? games
             : games.Take(RecentGameWindow).ToList();
 
-        return Calculate(StatLine.From(window), rules);
+        var perGame = window
+            .Select(game => Calculate(StatLine.From(game), rules))
+            .ToList();
+        var gameCount = perGame.Count;
+
+        return perGame
+            .SelectMany(scores => scores)
+            .GroupBy(score => score.StatType)
+            .Select(group => new StatScore
+            {
+                StatType = group.Key,
+                Value = group.Sum(score => score.Value) / gameCount
+            })
+            .ToList();
     }
 }

@@ -56,13 +56,16 @@ public class PlayerOrchestrator(
         ArgumentNullException.ThrowIfNull(league);
 
         var rules = league.Settings.Rules;
-        var stats = requested.Select(kind => kind switch
-        {
-            StatSetKind.PreviousWeek => ScorePreviousWeek(game, rules),
-            StatSetKind.Season => ScoreSeason(season, rules),
-            StatSetKind.RecentThreeGames => ScoreRecentThreeGames(recentGames, rules),
-            _ => throw new ArgumentOutOfRangeException(nameof(statSets), kind, "Unknown stat set.")
-        }).ToList();
+        var stats = requested
+            .Select(kind => kind switch
+            {
+                StatSetKind.PreviousWeek => ScorePreviousWeek(game, rules),
+                StatSetKind.Season => ScoreSeason(season, rules),
+                StatSetKind.RecentThreeGames => ScoreRecentThreeGames(recentGames, rules),
+                _ => throw new ArgumentOutOfRangeException(nameof(statSets), kind, "Unknown stat set.")
+            })
+            .OfType<StatSet>()
+            .ToList();
 
         return Player.FromEntity(playerEntity) with { Stats = stats };
     }
@@ -86,6 +89,12 @@ public class PlayerOrchestrator(
             StatSetKind.Season,
             season is null ? [] : calculator.CalculateSeason(season, rules));
 
-    private StatSet ScoreRecentThreeGames(IReadOnlyList<PlayerGame> games, List<Rule> rules) =>
-        StatSet.From(StatSetKind.RecentThreeGames, calculator.CalculateRecentThreeGames(games, rules));
+    private StatSet? ScoreRecentThreeGames(IReadOnlyList<PlayerGame> games, List<Rule> rules)
+    {
+        var scores = calculator.CalculateRecentThreeGames(games, rules);
+        if (scores.Count == 0)
+            return null;
+
+        return StatSet.From(StatSetKind.RecentThreeGames, scores);
+    }
 }

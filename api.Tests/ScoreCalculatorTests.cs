@@ -2,6 +2,7 @@ using FootballGm.Api.Data.Entity.Ingested;
 using FootballGm.Api.Data.Enums;
 using FootballGm.Api.Data.Models;
 using FootballGm.Api.Services.GameAnalysis;
+using BonusRule = FootballGm.Api.Data.Entity.Contrived.BonusRule;
 using Rule = FootballGm.Api.Data.Entity.Contrived.Rule;
 using ScoringWeightRule = FootballGm.Api.Data.Entity.Contrived.ScoringWeightRule;
 
@@ -35,7 +36,7 @@ public class ScoreCalculatorTests
     }
 
     [Fact]
-    public void CalculateRecentThreeGames_sums_the_three_most_recent_games()
+    public void CalculateRecentThreeGames_averages_per_game_scores()
     {
         var games = new List<PlayerGame>
         {
@@ -46,7 +47,9 @@ public class ScoreCalculatorTests
 
         var scores = _calculator.CalculateRecentThreeGames(games, _passingYardRules);
 
-        Assert.Equal(20m, Total(scores));
+        Assert.Equal(4m, ScoreFor(scores, StatType.PassingYards));
+        Assert.Equal(8m / 3m, ScoreFor(scores, StatType.PassingTouchdowns));
+        Assert.Equal(20m / 3m, Total(scores));
     }
 
     [Fact]
@@ -62,11 +65,11 @@ public class ScoreCalculatorTests
 
         var scores = _calculator.CalculateRecentThreeGames(games, _passingYardRules);
 
-        Assert.Equal(12m, Total(scores));
+        Assert.Equal(4m, Total(scores));
     }
 
     [Fact]
-    public void CalculateRecentThreeGames_scores_two_games_when_that_is_all_that_exists()
+    public void CalculateRecentThreeGames_averages_two_games_when_that_is_all_that_exists()
     {
         var games = new List<PlayerGame>
         {
@@ -76,11 +79,11 @@ public class ScoreCalculatorTests
 
         var scores = _calculator.CalculateRecentThreeGames(games, _passingYardRules);
 
-        Assert.Equal(10m, Total(scores));
+        Assert.Equal(5m, Total(scores));
     }
 
     [Fact]
-    public void CalculateRecentThreeGames_scores_one_game_at_the_start_of_the_season()
+    public void CalculateRecentThreeGames_uses_the_one_game_at_the_start_of_the_season()
     {
         var games = new List<PlayerGame>
         {
@@ -98,7 +101,26 @@ public class ScoreCalculatorTests
         var scores = _calculator.CalculateRecentThreeGames([], _passingYardRules);
 
         Assert.Empty(scores);
-        Assert.Equal(0m, Total(scores));
+    }
+
+    [Fact]
+    public void CalculateRecentThreeGames_applies_bonuses_per_game_before_averaging()
+    {
+        List<Rule> rules =
+        [
+            new ScoringWeightRule { Stat = StatType.PassingYards, Weight = 0.04m },
+            new BonusRule { Stat = StatType.PassingYards, Threshold = 100, Points = 5m }
+        ];
+
+        var games = new List<PlayerGame>
+        {
+            Game(passingYards: 150),
+            Game(passingYards: 80)
+        };
+
+        var scores = _calculator.CalculateRecentThreeGames(games, rules);
+
+        Assert.Equal(7.1m, Total(scores));
     }
 
     [Fact]
