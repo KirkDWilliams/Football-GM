@@ -67,6 +67,44 @@ public sealed class StatLine
         [StatType.ReturnedTouchdowns] = season.ReturnedTouchdowns
     });
 
+    public static StatLine From(IEnumerable<PlayerGame> games)
+    {
+        ArgumentNullException.ThrowIfNull(games);
+
+        var list = games as IReadOnlyList<PlayerGame> ?? games.ToList();
+        if (list.Count == 0)
+            return From(new PlayerGame());
+
+        if (list.Count == 1)
+            return From(list[0]);
+
+        return new StatLine(new Dictionary<StatType, decimal>
+        {
+            [StatType.PassAttempts] = list.Sum(g => (decimal)g.PassAttempts),
+            [StatType.PassCompletions] = list.Sum(g => (decimal)g.PassCompletions),
+            [StatType.PassingYards] = list.Sum(g => (decimal)g.PassingYards),
+            [StatType.PassingTouchdowns] = list.Sum(g => (decimal)g.PassingTouchdowns),
+            [StatType.RushingAttempts] = list.Sum(g => (decimal)g.RushAttempts),
+            [StatType.RushingYards] = list.Sum(g => (decimal)g.RushingYards),
+            [StatType.RushingFirstDowns] = list.Sum(g => (decimal)g.RushingFirstDowns),
+            [StatType.RushingTouchdowns] = list.Sum(g => (decimal)g.RushingTouchdowns),
+            [StatType.Receptions] = list.Sum(g => (decimal)g.Receptions),
+            [StatType.ReceivingYards] = list.Sum(g => (decimal)g.ReceivingYards),
+            [StatType.ReceivingTouchdowns] = list.Sum(g => (decimal)g.ReceivingTouchdowns),
+            [StatType.Interceptions] = list.Sum(g => (decimal)g.Interceptions),
+            [StatType.Fumbles] = list.Sum(g => (decimal)g.Fumbles),
+            [StatType.Sacks] = list.Sum(g => (decimal)g.Sacks),
+            [StatType.FieldGoalsMade] = list.Sum(g => CountKickList(g.FieldGoalsMade)),
+            [StatType.FieldGoalsMissed] = list.Sum(g => CountKickList(g.FieldGoalsMissed)),
+            [StatType.ExtraPointsMade] = list.Sum(g => (decimal)g.ExtraPointsMade),
+            [StatType.ExtraPointsAttempted] = list.Sum(g => (decimal)g.ExtraPointsAttempted),
+            [StatType.PassingTwoPointConversions] = list.Sum(g => (decimal)g.PassingTwoPointConversions),
+            [StatType.RushingTwoPointConversions] = list.Sum(g => (decimal)g.RushingTwoPointConversions),
+            [StatType.ReceivingTwoPointConversions] = list.Sum(g => (decimal)g.ReceivingTwoPointConversions),
+            [StatType.ReturnedTouchdowns] = list.Sum(g => (decimal)g.ReturnedTouchdowns)
+        });
+    }
+
     private static decimal CountKickList(string list)
     {
         if (string.IsNullOrWhiteSpace(list))

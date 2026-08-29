@@ -94,7 +94,22 @@ Accept: application/json
   "name": "Poop League"
 }
 
+### Get a player identity only (requires access token)
+GET {{FootballGm.Api_HostAddress}}/api/player/00-0033873
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
 ### Get a player scored for a league/game (requires access token)
-GET {{FootballGm.Api_HostAddress}}/api/player/00-0033873?leagueId=1&gameId=2024_01_KC_BAL
+GET {{FootballGm.Api_HostAddress}}/api/player/00-0033873?leagueId=1&gameId=2024_01_KC_BAL&stats=PreviousWeek
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+### Get a player scored for the current season (requires access token)
+GET {{FootballGm.Api_HostAddress}}/api/player/00-0033873?leagueId=1&stats=Season
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+### Get a player scored for recent games and the current season (requires access token)
+GET {{FootballGm.Api_HostAddress}}/api/player/00-0033873?leagueId=1&stats=RecentThreeGames&stats=Season
 Authorization: Bearer {{accessToken}}
 Accept: application/json

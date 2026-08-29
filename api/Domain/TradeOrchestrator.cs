@@ -24,15 +24,17 @@ namespace FootballGm.Api.Domain
 
         /*public async Task<Contract> TradePlayer(int departingTeamId, int receivingTeamId, string playerId)
         {
-            var contractTask = _contractRepo.GetContractByPlayerIdAsync(playerId);
             var teamPlayerTask = _teamRepo.GetTeamPlayerByPlayerId(playerId);
             var departingBudgetTask = _budgetRepo.GetTeamBudgetAsync(departingTeamId);
             var receivingBudgetTask = _budgetRepo.GetTeamBudgetAsync(receivingTeamId);
 
-            await Task.WhenAll(contractTask, teamPlayerTask, departingBudgetTask, receivingBudgetTask);
+            await Task.WhenAll(teamPlayerTask, departingBudgetTask, receivingBudgetTask);
 
-            var currentContract = await contractTask;
             var teamPlayer = await teamPlayerTask;
+            var currentContract = await _contractRepo.GetContractByPlayerIdAsync(
+                teamPlayer.LeagueId,
+                departingTeamId,
+                playerId);
             var departingTeamBudget = await departingBudgetTask;
             var receivingTeamBudget = await receivingBudgetTask;
 

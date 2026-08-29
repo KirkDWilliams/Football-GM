@@ -1,5 +1,6 @@
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Ingested;
+using FootballGm.Api.Helpers;
 using FootballGm.Api.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,24 @@ public class PlayerRepository(AppDbContext context) : IPlayerRepository
         return await context.PlayerGame
             .FirstOrDefaultAsync(pg => pg.PlayerId == playerId &&
                                        pg.GameId   == gameId);
+    }
+
+    public async Task<List<PlayerGame>> GetRecentPlayerGamesAsync(string playerId, int count)
+    {
+        var seasonPrefix = $"{WeekHelper.CurrentSeason}_";
+
+        return await context.PlayerGame
+            .Where(pg => pg.PlayerId == playerId && pg.GameId.StartsWith(seasonPrefix))
+            .OrderByDescending(pg => pg.GameId)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task<PlayerSeason?> GetPlayerSeasonStatsAsync(string playerId, short season)
+    {
+        return await context.PlayerSeason
+            .Where(ps => ps.PlayerId == playerId && ps.Season == season)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<List<Player>> GetPlayersByTeamIdAsync(int teamId)

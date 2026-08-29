@@ -1,5 +1,6 @@
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Ingested;
+using FootballGm.Api.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Infrastructure;
@@ -15,7 +16,10 @@ public class PlayerSeasonRepository
 
     public async Task<PlayerSeason?> GetPlayerSeasonStatsAsync(string playerId)
     {
+        var season = WeekHelper.CurrentSeason;
+
         return await _context.PlayerSeason
-            .FirstOrDefaultAsync(pg => pg.PlayerId == playerId);
+            .Where(ps => ps.PlayerId == playerId && ps.Season == season)
+            .FirstOrDefaultAsync();
     }
 }
