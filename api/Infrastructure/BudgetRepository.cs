@@ -6,9 +6,11 @@ namespace FootballGm.Api.Infrastructure;
 
 public interface IBudgetRepository
 {
-    Task<Budget> GetTeamBudgetAsync(int teamId);
+    Task<Budget> GetTeamBudgetAsync(int teamId, CancellationToken cancellationToken);
 
-    Task<List<Budget>> GetTeamBudgetsAsync(int leagueId, List<int> teamIds);
+    Task<List<Budget>> GetLeagueBudgetsAsync(int leagueId, CancellationToken cancellationToken);
+
+    Task<bool> UpdateBudgetAsync(Data.Models.Budget budget, CancellationToken cancellationToken);
 }
 
 public class BudgetRepository : IBudgetRepository
@@ -19,17 +21,27 @@ public class BudgetRepository : IBudgetRepository
         _context = dbContext;
     }
 
-    public async Task<Budget> GetTeamBudgetAsync(int teamId)
+    public async Task<Budget> GetTeamBudgetAsync(int teamId, CancellationToken cancellationToken)
     {
-        return await _context.Budgets.FirstOrDefaultAsync(b => b.TeamId == teamId)
+        return await _context.Budgets.FirstOrDefaultAsync(b => b.TeamId == teamId, cancellationToken)
             ?? throw new Exception($"Budget does not exist for teamId {teamId}");
     }
 
-    public async Task<List<Budget>> GetTeamBudgetsAsync(int leagueId, List<int> teamIds)
+    public async Task<List<Budget>> GetLeagueBudgetsAsync(int leagueId, CancellationToken cancellationToken)
     {
         return await _context.Budgets
-            .Where(b => teamIds.Contains(b.TeamId))
-            .ToListAsync()
+            .Where(b => b.LeagueId == leagueId)
+            .ToListAsync(cancellationToken)
             ?? throw new Exception($"Budgets do not exist for leagueId {leagueId}");
+    }
+
+    public async Task<bool> UpdateBudgetAsync(Data.Models.Budget budget, CancellationToken cancellationToken)
+    {
+        var updatedBudget = new Data.Entity.Contrived.Budget { TeamId = budget.TeamId, PaymentSchedule = budget.PaymentSchedule };
+
+        _context.Budgets.Update(updatedBudget);
+        var changed = await _context.SaveChangesAsync(cancellationToken);
+
+        return changed > 0;
     }
 }

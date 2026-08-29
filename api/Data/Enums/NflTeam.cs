@@ -1,4 +1,4 @@
-﻿namespace FootballGm.Api.Data.Enums;
+namespace FootballGm.Api.Data.Enums;
 
 public enum NflTeam
 {

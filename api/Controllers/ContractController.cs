@@ -35,11 +35,11 @@ public class ContractController : ControllerBase
     }
 
     [HttpGet("{leagueId}/{teamId}")]
-    public async Task<ActionResult<List<Contract>>> GetTeamContracts(int leagueId, int teamId)
+    public async Task<ActionResult<List<Data.Models.Contract>>> GetTeamContracts(int leagueId, int teamId, CancellationToken cancellationToken)
     {
         try
         {
-            List<Contract> contracts = await _contractOrchestrator.GetTeamContractsAsync(leagueId, teamId);
+            List<Data.Models.Contract> contracts = await _contractOrchestrator.GetTeamContracts(leagueId, teamId, cancellationToken);
 
             return Ok(contracts);
         }
@@ -67,11 +67,11 @@ public class ContractController : ControllerBase
     }*/
 
     [HttpPost("{leagueId}/{teamId}/{playerId}/Enact")]
-    public async Task<ActionResult<bool>> Enact(int leagueId, int teamId, string playerId, [FromBody] Contract contract)
+    public async Task<ActionResult<bool>> Enact(int leagueId, int teamId, string playerId, [FromBody] Data.Models.Contract contract, CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _contractOrchestrator.CreateContractAsync(leagueId, teamId, playerId, contract);
+            var result = await _contractOrchestrator.CreateContract(leagueId, teamId, playerId, contract, cancellationToken);
             return Ok(result);
         }
         catch
@@ -81,11 +81,11 @@ public class ContractController : ControllerBase
     }
 
     [HttpPut("Extend")]
-    public async Task<ActionResult<bool>> Extend([FromBody] Contract contract)
+    public async Task<ActionResult<bool>> Extend([FromBody] Data.Models.Contract contract, CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _contractOrchestrator.ExtendContractAsync(contract);
+            var result = await _contractOrchestrator.ExtendContract(contract, cancellationToken);
             return Ok(result);
         }
         catch
@@ -95,11 +95,11 @@ public class ContractController : ControllerBase
     }
 
     [HttpDelete("Drop")]
-    public async Task<ActionResult<bool>> Drop([FromBody] Contract contract)
+    public async Task<ActionResult<bool>> Drop([FromBody] Data.Models.Contract contract, CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _contractOrchestrator.DeleteContractAsync(contract);
+            var result = await _contractOrchestrator.DeleteContract(contract, cancellationToken);
             return Ok(result);
         }
         catch

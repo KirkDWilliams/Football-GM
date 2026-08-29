@@ -1,4 +1,3 @@
-using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Infrastructure;
 
 namespace FootballGm.Api.Domain;
@@ -12,39 +11,45 @@ public class ContractOrchestrator
         _contractRepository = contractRepository;
     }
 
-    public async Task<List<Contract>> GetTeamContractsAsync(int leagueId, int teamId)
+    public async Task<List<Data.Models.Contract>> GetTeamContracts(int leagueId, int teamId, CancellationToken cancellationToken = default)
     {
-        var contracts = await _contractRepository.GetContractsByTeamIdAsync(leagueId, teamId);
-        return contracts;
+        List<Data.Models.Contract> teamContracts = [];
+        var contracts = await _contractRepository.GetContractsByTeamIdAsync(leagueId, teamId, cancellationToken);
+
+        foreach(var contract in contracts)
+        {
+            teamContracts.Add(Data.Models.Contract.FromEntity(contract));
+        }
+        return teamContracts;
     }
 
-    public async Task<Contract> GetContractAsync(int leagueId, int teamId, string playerId)
+    public async Task<Data.Models.Contract> GetContract(int leagueId, int teamId, string playerId, CancellationToken cancellationToken = default)
     {
-        var contract = await _contractRepository.GetContractByPlayerIdAsync(leagueId, teamId, playerId);
-        return contract;
+        var contract = await _contractRepository.GetContractByPlayerIdAsync(leagueId, teamId, playerId, cancellationToken);
+        return Data.Models.Contract.FromEntity(contract);
     }
 
-    public async Task<bool> CreateContractAsync(int leagueId, int teamId, string playerId, Contract contract)
+    public async Task<bool> CreateContract(int leagueId, int teamId, string playerId, Data.Models.Contract contract, CancellationToken cancellationToken = default)
     {
-        var result = await _contractRepository.CreateContract(leagueId, teamId, playerId, contract);
+        var result = await _contractRepository.CreateContractAsync(leagueId, teamId, playerId, contract, cancellationToken);
         return result;
     }
 
-    public async Task<bool> ExtendContractAsync(Contract contract)
+    public async Task<bool> ExtendContract(Data.Models.Contract contract, CancellationToken cancellationToken = default)
     {
-        var result = await _contractRepository.UpdateContract(contract);
+        var result = await _contractRepository.UpdateContractAsync(contract, cancellationToken);
         return result;
     }
 
-    public async Task<bool> DeleteContractAsync(Contract contract)
+    public async Task<bool> DeleteContract(Data.Models.Contract contract, CancellationToken cancellationToken = default)
     {
-        var result = await _contractRepository.DeleteContractsAsync([contract]);
+        var result = await _contractRepository.DeleteContractsAsync([contract], cancellationToken);
         return result;
     }
 
-    public async Task<bool> DeleteContractsAsync(List<Contract> contracts)
+    public async Task<bool> DeleteContracts(List<Data.Models.Contract> contracts, CancellationToken cancellationToken = default)
     {
-        var result = await _contractRepository.DeleteContractsAsync(contracts);
+        var result = await _contractRepository.DeleteContractsAsync(contracts, cancellationToken);
         return result;
     }
 }

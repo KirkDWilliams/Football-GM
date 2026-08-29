@@ -445,7 +445,7 @@ public class BudgetHelperTests()
                 new() { ContractId = 201, StartWeek = 10, GiftedCapSpace = 15 }
             ];
 
-            var teamBudgetA = new TeamBudget
+            var teamBudgetA = new Data.Models.Budget
             {
                 TeamId = 1,
                 Contracts =
@@ -456,7 +456,7 @@ public class BudgetHelperTests()
                 ]
             };
 
-            var teamBudgetB = new TeamBudget
+            var teamBudgetB = new Data.Models.Budget
             {
                 TeamId = 2,
                 Contracts =
@@ -499,7 +499,7 @@ public class BudgetHelperTests()
                 new() { ContractId = 201, StartWeek = 10, GiftedCapSpace = 15 }
             ];
 
-            var teamBudgetA = new TeamBudget
+            var teamBudgetA = new Data.Models.Budget
             {
                 TeamId = 1,
                 Contracts =
@@ -510,7 +510,7 @@ public class BudgetHelperTests()
                 ]
             };
 
-            var teamBudgetB = new TeamBudget
+            var teamBudgetB = new Data.Models.Budget
             {
                 TeamId = 2,
                 Contracts =

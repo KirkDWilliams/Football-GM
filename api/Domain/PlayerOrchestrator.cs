@@ -1,4 +1,4 @@
-﻿using FootballGm.Api.Data.Models;
+using FootballGm.Api.Data.Models;
 using FootballGm.Api.Infrastructure.Interfaces;
 using FootballGm.Api.Services.GameAnalysis;
 
@@ -32,9 +32,7 @@ public class PlayerOrchestrator(
         ArgumentNullException.ThrowIfNull(gameEntity);
         ArgumentNullException.ThrowIfNull(leagueEntity);
 
-        var scores = calculator.Calculate(
-            StatLine.From(gameEntity),
-            leagueEntity.Settings.Rules);
+        var scores = calculator.Calculate(StatLine.From(gameEntity), leagueEntity.Settings.Rules);
 
         return Player.FromEntity(playerEntity) with
         {

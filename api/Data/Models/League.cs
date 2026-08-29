@@ -1,4 +1,4 @@
-﻿using FootballGm.Api.Data.Enums;
+using FootballGm.Api.Data.Enums;
 
 namespace FootballGm.Api.Data.Models;
 
@@ -23,6 +23,7 @@ public class League
     {
         Name = name;
         Rules = rules is { Count: > 0 } ? rules : Rule.CreateDefaultScoringWeights();
+
         if (positions is { Count: > 0 })
             Positions = positions;
     }

@@ -22,7 +22,7 @@ namespace FootballGm.Api.Domain
             _budgetEvaluator = budgetEvaluator;
         }
 
-        public async Task<Contract> TradePlayer(int departingTeamId, int receivingTeamId, string playerId)
+        /*public async Task<Contract> TradePlayer(int departingTeamId, int receivingTeamId, string playerId)
         {
             var contractTask = _contractRepo.GetContractByPlayerIdAsync(playerId);
             var teamPlayerTask = _teamRepo.GetTeamPlayerByPlayerId(playerId);
@@ -36,15 +36,15 @@ namespace FootballGm.Api.Domain
             var departingTeamBudget = await departingBudgetTask;
             var receivingTeamBudget = await receivingBudgetTask;
 
-
+*/
 
             /*teamPlayer.TeamId = receivingTeamId;
             _context.TeamPlayers.Update(teamPlayer);
             currBudget.FutureObligations += (Decimal.Divide(priorContract.SigningBonus, priorContract.EndWeek - priorContract.StartWeek + 1) * (priorContract.EndWeek - WeekHelper.GetCurrentWeek()));
 
             await _context.SaveChangesAsync();*/
-
+/*
             return currentContract;
-        }
+        }*/
     }
 }
