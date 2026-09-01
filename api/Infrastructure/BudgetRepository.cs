@@ -37,7 +37,7 @@ public class BudgetRepository : IBudgetRepository
 
     public async Task<bool> UpdateBudgetAsync(Data.Models.Budget budget, CancellationToken cancellationToken)
     {
-        var updatedBudget = new Data.Entity.Contrived.Budget { TeamId = budget.TeamId, PaymentSchedule = budget.PaymentSchedule };
+        var updatedBudget = new Budget { TeamId = budget.TeamId, PaymentSchedule = budget.PaymentSchedule };
 
         _context.Budgets.Update(updatedBudget);
         var changed = await _context.SaveChangesAsync(cancellationToken);

@@ -1,6 +1,5 @@
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Associations;
-using FootballGm.Api.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Infrastructure;
@@ -50,12 +49,6 @@ public class ContractRepository : IContractRepository
     {
         try
         {
-/*            var hasExistingContract = await _context.Contracts
-                .AnyAsync(c => c.ContractId == contract.ContractId, cancellationToken);
-
-            if (hasExistingContract)
-                return false;*/
-
             _context.Contracts.Add(CreateEntity(contract));
 
             var teamPlayer = new TeamPlayers

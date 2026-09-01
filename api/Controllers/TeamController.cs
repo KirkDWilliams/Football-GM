@@ -2,8 +2,6 @@ using FootballGm.Api.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace FootballGm.Api.Controllers;
 
 [Route("api/[controller]")]
@@ -17,16 +15,58 @@ public class TeamController : ControllerBase
         _teamOrchestrator = teamOrchestator;
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Data.Models.Budget>> GetBudget(int teamId, CancellationToken cancellationToken)
+    [HttpGet("{teamId}")]
+    public async Task<ActionResult<Data.Models.Budget>> GetBudget(
+        [FromRoute] int teamId,
+        CancellationToken cancellationToken)
     {
-        var budget = await _teamOrchestrator.GetBudget(teamId, cancellationToken);
+        try
+        {
+            var budget = await _teamOrchestrator.GetBudget(teamId, cancellationToken);
 
-        return Ok(budget);
+            if (budget == null)
+                return NotFound($"Budget not found for team {teamId}");
+
+            return Ok(budget);
+        }
+        catch (OperationCanceledException)
+        {
+            return StatusCode(StatusCodes.Status408RequestTimeout, "Request was cancelled");
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the budget");
+        }
     }
 
-    [HttpPut("{id}")]
-    public void UpdateBudget(int id, [FromBody] string value)
+    [HttpPut("{teamId}")]
+    public async Task<ActionResult<bool>> UpdateBudget(
+        [FromRoute] int teamId,
+        [FromBody] Data.Models.Budget newBudget,
+        CancellationToken cancellationToken)
     {
+        if (newBudget == null)
+            return BadRequest("Budget cannot be null");
+
+        if (newBudget.TeamId != teamId)
+            return BadRequest("Budget Team ID must match the URL parameter");
+
+        try
+        {
+            var updated = await _teamOrchestrator.UpdateBudget(newBudget, cancellationToken);
+
+            if (!updated)
+                return NotFound($"Budget not found for team {teamId}");
+
+            return Ok(updated);
+        }
+        catch (OperationCanceledException)
+        {
+            return StatusCode(StatusCodes.Status408RequestTimeout, "Request was cancelled");
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the budget");
+        }
     }
 }

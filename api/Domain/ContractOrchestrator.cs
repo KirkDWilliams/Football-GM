@@ -20,6 +20,7 @@ public class ContractOrchestrator
         {
             teamContracts.Add(Data.Models.Contract.FromEntity(contract));
         }
+
         return teamContracts;
     }
 
@@ -41,15 +42,19 @@ public class ContractOrchestrator
         return result;
     }
 
-    public async Task<bool> DeleteContract(Data.Models.Contract contract, CancellationToken cancellationToken = default)
+    public async Task<bool> DropContract(Data.Models.Contract contract, CancellationToken cancellationToken = default)
     {
-        var result = await _contractRepository.DeleteContractsAsync([contract], cancellationToken);
-        return result;
-    }
+        var terminatedContract = new Data.Models.Contract
+        {
+            Salary = 0,
+            GiftedCapSpace = 0,
+            SigningBonus = contract.SigningBonus,
+            ContractId = contract.ContractId,
+            EndWeek = contract.EndWeek,
+            StartWeek = contract.StartWeek,
+        };
 
-    public async Task<bool> DeleteContracts(List<Data.Models.Contract> contracts, CancellationToken cancellationToken = default)
-    {
-        var result = await _contractRepository.DeleteContractsAsync(contracts, cancellationToken);
+        var result = await _contractRepository.UpdateContractAsync(terminatedContract, cancellationToken);
         return result;
     }
 }

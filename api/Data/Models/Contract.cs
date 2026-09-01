@@ -9,7 +9,7 @@ namespace FootballGm.Api.Data.Models
         public decimal Salary { get; set; } = decimal.Zero;
         public decimal GiftedCapSpace { get; set; } = decimal.Zero;
 
-        public static Contract FromEntity(Data.Entity.Contrived.Contract contract) => new()
+        public static Contract FromEntity(Entity.Contrived.Contract contract) => new()
         {
             ContractId = contract.ContractId,
             StartWeek = contract.StartWeek,
