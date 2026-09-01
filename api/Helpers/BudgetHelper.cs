@@ -1,12 +1,10 @@
-using FootballGm.Api.Data.Entity.Contrived;
-using FootballGm.Api.Data.Models;
-using static FootballGm.Api.Data.Comparers;
+using FootballGm.Api.Data.Enums;
 
 namespace FootballGm.Api.Helpers
 {
     public static class BudgetHelper
     {
-        public static decimal[] CreatePaymentSchedule(List<Data.Models.Contract> contracts, bool includeSigningBonus = true)
+        public static decimal[] CreatePaymentSchedule(List<Data.Models.Contract> contracts, ContractType type)
         {
             var weekObligations = new decimal[WeekHelper.NumberOfWeeksInSeason+1];
             var startingWeek = WeekHelper.CurrentWeek;
@@ -26,11 +24,27 @@ namespace FootballGm.Api.Helpers
                     if (week == contracts[contract].StartWeek)
                         obligation -= contracts[contract].GiftedCapSpace;
 
-                    var totalCompensation = includeSigningBonus
-                        ? decimal.Add(contracts[contract].Salary, contracts[contract].SigningBonus)
-                        : contracts[contract].Salary;
+                    var weeklyPayment = decimal.Zero;
 
-                    obligation += decimal.Divide(totalCompensation, (contracts[contract].EndWeek - contracts[contract].StartWeek + 1));     
+                    switch (type)
+                    {
+                        case ContractType.Standard:
+                            weeklyPayment += contracts[contract].Salary + contracts[contract].SigningBonus;
+                            break;
+
+                        case ContractType.Received:
+                            weeklyPayment += contracts[contract].Salary;
+                            break;
+
+                        case ContractType.Traded:
+                        case ContractType.Dropped:
+                            weeklyPayment += contracts[contract].SigningBonus;
+                            break;
+
+                        default: break;
+                    }
+
+                    obligation += weeklyPayment / (contracts[contract].EndWeek - contracts[contract].StartWeek + 1);     
                 };
 
                 if (decimal.Equals(obligation, decimal.Zero))
@@ -42,6 +56,49 @@ namespace FootballGm.Api.Helpers
             return weekObligations;
         }
 
+        public static (decimal[] Salary, decimal[] Bonus) CreatePaymentSchedule(List<Data.Models.Contract> contracts)
+        {
+            var salaryObligations = new decimal[WeekHelper.NumberOfWeeksInSeason + 1];
+            var bonusObligations = new decimal[WeekHelper.NumberOfWeeksInSeason + 1];
+
+            var startingWeek = WeekHelper.CurrentWeek;
+
+            if (startingWeek == 0)
+                startingWeek++;
+
+            for (var week = startingWeek; week <= WeekHelper.NumberOfWeeksInSeason; week++)
+            {
+                var salaryObligation = decimal.Zero;
+                var bonusObligation = decimal.Zero;
+
+                for (var contract = 0; contract < contracts.Count; contract++)
+                {
+                    if (week > contracts[contract].EndWeek || week < contracts[contract].StartWeek)
+                        continue;
+
+                    if (week == contracts[contract].StartWeek)
+                    {
+                        salaryObligation -= contracts[contract].GiftedCapSpace / 2;
+                        bonusObligation -= contracts[contract].GiftedCapSpace / 2; // TODO: NOT SURE WHICH TO GIVE CREDIT TO
+                    }
+
+                    var salaryPayment = contracts[contract].Salary;
+                    var bonusPayment  = contracts[contract].SigningBonus;
+
+                    salaryObligation += salaryPayment / (contracts[contract].EndWeek - contracts[contract].StartWeek + 1);
+                    bonusObligation += bonusPayment / (contracts[contract].EndWeek - contracts[contract].StartWeek + 1);
+                };
+
+                if (salaryObligation == 0 && bonusObligation == 0)
+                    break;
+
+                salaryObligations[week] = Math.Round(salaryObligation, 2);
+                bonusObligations[week] = Math.Round(bonusObligation, 2);
+            }
+
+            return (salaryObligations, bonusObligations);
+        }
+
         public static (bool TeamA, bool TeamB) ValidateProposedBudgets(
             List<Data.Models.Contract> tradesFromTeamA,
             List<Data.Models.Contract> tradesFromTeamB,
@@ -51,20 +108,19 @@ namespace FootballGm.Api.Helpers
         {
             (bool teamAValid, bool teamBValid) = (true, true);
 
-            var paymentsFromA = CreatePaymentSchedule(tradesFromTeamA, false);
-            var paymentsFromB = CreatePaymentSchedule(tradesFromTeamB, false);
+            (var salaryObligationToB, _) = CreatePaymentSchedule(tradesFromTeamA);
+            (var salaryObligationToA, _) = CreatePaymentSchedule(tradesFromTeamB);
 
-            var tradeDiff = PaymentScheduleOperation(paymentsFromA, paymentsFromB, (A,B) => A - B );
-
-            var postTradePaymentScheduleA = PaymentScheduleOperation(budgetA.PaymentSchedule, tradeDiff, (A, d) => A - d);
-            var postTradePaymentScheduleB = PaymentScheduleOperation(budgetB.PaymentSchedule, tradeDiff, (B, d) => B + d);
+            // X budget: X current - X salary going away + Y salary coming in
+            var newABudget = PaymentScheduleOperation(budgetA.PaymentSchedule, salaryObligationToB, salaryObligationToA, (a, b, c) => a - b + c);
+            var newBBudget = PaymentScheduleOperation(budgetB.PaymentSchedule, salaryObligationToB, salaryObligationToA, (a, b, c) => a - b + c);
 
             for (var week = WeekHelper.CurrentWeek; week <= WeekHelper.NumberOfWeeksInSeason; week++)
             {
-                if (postTradePaymentScheduleA[week] > capCeiling)
+                if (newABudget[week] > capCeiling)
                     teamAValid = false;
 
-                if (postTradePaymentScheduleB[week] > capCeiling)
+                if (newBBudget[week] > capCeiling)
                     teamAValid = false;
             }
 
@@ -76,7 +132,7 @@ namespace FootballGm.Api.Helpers
             if (contract.StartWeek - 1 != WeekHelper.CurrentWeek)
                 throw new InvalidOperationException("Contracts must be made one week prior to starting.");
 
-            var paymentSchedule = CreatePaymentSchedule([contract]);
+            var paymentSchedule = CreatePaymentSchedule([contract], ContractType.Standard);
 
             var rating = decimal.Zero;
             var week = contract.StartWeek;
@@ -91,13 +147,13 @@ namespace FootballGm.Api.Helpers
             return rating;
         }
 
-        private static decimal[] PaymentScheduleOperation(decimal[] a, decimal[] b, Func<decimal,decimal,decimal> operand)
+        private static decimal[] PaymentScheduleOperation(decimal[] a, decimal[] b, decimal[] c, Func<decimal,decimal,decimal,decimal> operand)
         {
             var diff = new decimal[WeekHelper.NumberOfWeeksInSeason + 1];
 
             for (var week = 0; week <= WeekHelper.NumberOfWeeksInSeason; week++)
             {
-                diff[week] = operand(a[week], b[week]);
+                diff[week] = operand(a[week], b[week], c[week]);
             }
 
             return diff;
