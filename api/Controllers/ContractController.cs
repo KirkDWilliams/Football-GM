@@ -1,4 +1,3 @@
-using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Domain;
 using FootballGm.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;

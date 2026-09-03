@@ -49,14 +49,18 @@ public class ContractRepository : IContractRepository
     {
         try
         {
-            _context.Contracts.Add(CreateEntity(contract));
+            if (_context.TeamPlayers.Any(tp => tp.TeamId == teamId && tp.PlayerId == playerId))
+                return false;
+
+            var contractEntity = CreateEntity(contract);
+            _context.Contracts.Add(contractEntity);
 
             var teamPlayer = new TeamPlayers
             {
                 LeagueId = leagueId,
                 TeamId = teamId,
                 PlayerId = playerId,
-                ContractId = contract.ContractId
+                Contract = contractEntity 
             };
 
             _context.TeamPlayers.Add(teamPlayer);
