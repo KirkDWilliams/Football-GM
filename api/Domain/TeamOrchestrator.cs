@@ -8,7 +8,7 @@ public interface ITeamOrchestrator
 {
     Task<Data.Models.Budget> GetBudget(int teamId, CancellationToken cancelToken);
     Task<bool> UpdateBudget(Data.Models.Budget budget, CancellationToken cancelToken);
-    Task<List<Team>> CreateTeamsInLeague(int leagueId, List<DraftOutcome> draftOutcome, CancellationToken cancellationToken);
+    Task<Team> CreateTeamInLeague(int leagueId, DraftOutcome draftOutcome, CancellationToken cancellationToken);
 }
 
 public class TeamOrchestrator : ITeamOrchestrator
@@ -33,25 +33,19 @@ public class TeamOrchestrator : ITeamOrchestrator
         return await _budgetRepository.UpdateBudgetAsync(budget, cancelToken);
     }
 
-    public async Task<List<Team>> CreateTeamsInLeague(int leagueId, List<DraftOutcome> draftOutcomes, CancellationToken cancellationToken)
+    public async Task<Team> CreateTeamInLeague(int leagueId, DraftOutcome draftOutcome, CancellationToken cancellationToken)
     {
-        List<Team> leagueTeams = [];
+        var team = new Team
+        {
+            LeagueId = leagueId,
+            Name = draftOutcome.TeamName,
+            Description = draftOutcome.Description,
+        };
 
-        foreach (var draftOutcome in draftOutcomes)
-        { 
-            var team = new Team
-            {
-                LeagueId = leagueId,
-                Name = draftOutcome.TeamName,
-                User = draftOutcome.User
-            };
-
-            leagueTeams.Add(team);
-        }
-
-        return await _teamRepository.AddTeamsToLeagueAsync(leagueTeams, cancellationToken);
+        return await _teamRepository.AddTeamsToLeagueAsync(team, cancellationToken);
 
         //TODO: figure out why I thought there was more work to be done here...
         // I think it had to do with seeding the inactive players on the roster...
+        // or the associations table...
     }
 }

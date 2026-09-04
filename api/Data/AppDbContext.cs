@@ -138,8 +138,5 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<InjuryStatus>()
             .HasKey(i => new { i.Season, i.Week, i.PlayerId });
-
-        modelBuilder.Entity<Budget>()
-            .HasKey(b => new { b.TeamId, b.Week });
     }
 }

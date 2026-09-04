@@ -1,5 +1,6 @@
 using FootballGm.Api.Data.Models;
 using FootballGm.Api.Domain;
+using FootballGm.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -70,17 +71,17 @@ public class TeamController(TeamOrchestrator teamOrchestator, ContractOrchestrat
 
 
     [HttpPost("{leagueId}")]
-    public async Task<ActionResult<bool>> CreateTeams(
+    public async Task<ActionResult<bool>> CreateTeam(
         [FromRoute] int leagueId,
-        [FromBody] List<DraftOutcome> draftOutcomes,
+        [FromBody] DraftOutcome draftOutcome,
         CancellationToken cancellationToken)
     {
         try
         {
-            var teams = await _teamOrchestrator.CreateTeamsInLeague(leagueId, draftOutcomes, cancellationToken);
-            // Create Contracts for each Player on a team
-            await _contractOrchestrator.CreateContracts(leagueId, teams, draftOutcomes, cancellationToken);
-            // Update the Team budget 
+            var team = await _teamOrchestrator.CreateTeamInLeague(leagueId, draftOutcome, cancellationToken);
+            var contracts = await _contractOrchestrator.CreateContractsForTeam(leagueId, team, draftOutcome, cancellationToken);
+            var paymentSchedule = BudgetHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractType.Standard);
+            var savedBudget = await _teamOrchestrator.UpdateBudget(new Budget { TeamId = team.TeamId,  PaymentSchedule = paymentSchedule }, cancellationToken);
             // Add the TeamPlayerAssociations
                // return NotFound($"Error occured while creating the teams for League: {leagueId}");
 

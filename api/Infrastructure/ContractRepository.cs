@@ -8,8 +8,8 @@ public interface IContractRepository
 {
     Task<Data.Entity.Contrived.Contract> GetContractByPlayerIdAsync(int leagueId, int teamId, string playerId, CancellationToken cancellationToken = default);
     Task<List<Data.Entity.Contrived.Contract>> GetContractsByTeamIdAsync(int leagueId, int teamId, CancellationToken cancellationToken = default);
-    Task<bool> CreateContractAsync(int leagueId, int teamId, string playerId, Data.Models.Contract contract, CancellationToken cancellationToken = default);
-    Task<bool> UpdateContractAsync(Data.Models.Contract contract, CancellationToken cancellationToken = default);
+    Task<Data.Models.Contract> CreateContractAsync(int leagueId, int teamId, string playerId, Data.Models.Contract contract, CancellationToken cancellationToken = default);
+    Task<Data.Models.Contract> UpdateContractAsync(Data.Models.Contract contract, CancellationToken cancellationToken = default);
     Task<bool> DeleteContractsAsync(List<Data.Models.Contract> contracts, CancellationToken cancellationToken = default);
     //TODO: this needs to live elsewhere-> Task<bool> RunCompletionOfContractsAsync(CancellationToken cancellationToken = default);
 }
@@ -45,12 +45,12 @@ public class ContractRepository : IContractRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<bool> CreateContractAsync(int leagueId, int teamId, string playerId, Data.Models.Contract contract, CancellationToken cancellationToken = default)
+    public async Task<Data.Models.Contract> CreateContractAsync(int leagueId, int teamId, string playerId, Data.Models.Contract contract, CancellationToken cancellationToken = default)
     {
         try
         {
             if (_context.TeamPlayers.Any(tp => tp.TeamId == teamId && tp.PlayerId == playerId))
-                return false;
+                throw new Exception("Contract already exists.");
 
             var contractEntity = CreateEntity(contract);
             _context.Contracts.Add(contractEntity);
@@ -66,25 +66,38 @@ public class ContractRepository : IContractRepository
             _context.TeamPlayers.Add(teamPlayer);
             var changed = await _context.SaveChangesAsync(cancellationToken);
 
-            return changed > 0;
+            return changed > 0
+                ? new Data.Models.Contract(contractEntity)
+                : throw new InvalidOperationException("No contract was created.");
         }
         catch
         {
-            return false;
+            return new Data.Models.Contract();
         }
     }
 
-    public async Task<bool> UpdateContractAsync(Data.Models.Contract contract, CancellationToken cancellationToken = default)
+    public async Task<Data.Models.Contract> UpdateContractAsync(Data.Models.Contract contract, CancellationToken cancellationToken = default)
     {
-        var existingContract = await _context.Contracts
-            .FirstOrDefaultAsync(c => c.ContractId == contract.ContractId, cancellationToken);
+        try
+        {
+            var existingContract = await _context.Contracts.AnyAsync(c => c.ContractId == contract.ContractId, cancellationToken);
 
-        if (existingContract == null)
-            return false;
+            if (existingContract is not true)
+                throw new Exception("No contract exists to delete.");
 
-        _context.Contracts.Update(CreateEntity(contract));
-        var changed = await _context.SaveChangesAsync(cancellationToken);
-        return changed > 0;
+            var updateContract = CreateEntity(contract);
+
+            _context.Contracts.Update(updateContract);
+            var changed = await _context.SaveChangesAsync(cancellationToken);
+
+            return changed > 0
+                ? new Data.Models.Contract(updateContract)
+                : throw new InvalidOperationException("No contract was updated.");
+        }
+        catch
+        {
+            return new Data.Models.Contract();
+        }
     }
 
     public async Task<bool> DeleteContractsAsync(List<Data.Models.Contract> contracts, CancellationToken cancellationToken = default)

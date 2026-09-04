@@ -24,8 +24,7 @@ public class ContractController : ControllerBase
     // 3.0.  | Sign new contract
     // 4.0.  | Extend contract
     // 5.0.  | Delete contract
-    // 6.0.  | 
-    // 7.0.  | 
+
     private readonly ContractOrchestrator _contractOrchestrator;
 
     public ContractController(ContractOrchestrator contractOrchestrator)
@@ -101,7 +100,7 @@ public class ContractController : ControllerBase
         {
             var result = await _contractOrchestrator.CreateContract(leagueId, teamId, playerId, contract, cancellationToken);
 
-            if (result is not true)
+            if (result is null)
                 return BadRequest($"Failed to enact a contract for Player {playerId} for Team {teamId}.");
 
             return Ok(result);

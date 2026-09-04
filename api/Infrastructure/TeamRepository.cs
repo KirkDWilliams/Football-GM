@@ -10,7 +10,7 @@ public interface ITeamRepository
     Task<List<Team>> GetTeamsByLeagueId(int leagueId, CancellationToken cancellationToken);
     Task<TeamPlayers> GetTeamPlayerByPlayerId(string playerId, CancellationToken cancellationToken);
     Task<List<TeamPlayers>> GetTeamPlayersByTeamId(int teamId, CancellationToken cancellationToken);
-    Task<List<Team>> AddTeamsToLeagueAsync(List<Team> teams, CancellationToken cancellationToken);
+    Task<Team> AddTeamsToLeagueAsync(Team team, CancellationToken cancellationToken);
     Task<Team> UpdateTeam(Team team, CancellationToken cancellationToken);
 }
 
@@ -43,17 +43,17 @@ public class TeamRepository : ITeamRepository
         ?? throw new Exception("No Players found belonging to the given teamId.");
     }
 
-    public async Task<List<Team>> AddTeamsToLeagueAsync(List<Team> teams, CancellationToken cancellationToken)
+    public async Task<Team> AddTeamsToLeagueAsync(Team team, CancellationToken cancellationToken)
     {
         try
         {
-            _context.Teams.AddRange(teams);
+            _context.Teams.Add(team);
             var changed = await _context.SaveChangesAsync(cancellationToken);
 
-            if (changed != teams.Count)
+            if (changed == 0)
                 throw new Exception("Not all Teams were saved to league.");
 
-            return teams;
+            return team;
         }
         catch
         {
