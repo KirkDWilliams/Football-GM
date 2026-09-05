@@ -1,61 +1,49 @@
+using FootballGm.Api.Data.Enums;
 using FootballGm.Api.Data.Models;
 using FootballGm.Api.Infrastructure.Interfaces;
+using FootballGm.Api.Services;
+using FootballGm.Api.Domain.Interfaces;
 using Entities = FootballGm.Api.Data.Entity.Contrived;
 
 namespace FootballGm.Api.Domain;
 
-public interface ILeagueOrchestrator
-{
-    Task<League> CreateLeague(string userId, League league, CancellationToken cancellationToken);
-}
-
-public class LeagueOrchestrator(ILeagueRepository repository) : ILeagueOrchestrator
+public class LeagueOrchestrator(ILeagueRepository repository, ILeagueCodeService codeService) : ILeagueOrchestrator
 {
     public async Task<League> CreateLeague(
         string userId,
         League league,
         CancellationToken cancellationToken)
     {
-        var entity = new Entities.League
-        {
-            AdminUserId = userId,
-            Name = league.Name.Trim(),
-            Settings = new Entities.Settings
-            {
-                WeeklyCapSpace = league.WeeklyCapSpace,
-                EligiblePositions = [.. league.Positions.Distinct()],
-                Rules = ToEntityRules(league.Rules)
-            }
-        };
-
-        var saved = await repository.AddAsync(entity, cancellationToken);
-
-        return new League(saved.Name, league.Positions, league.Rules)
-        {
-            LeagueId = saved.LeagueId,
-            WeeklyCapSpace = saved.Settings.WeeklyCapSpace
-        };
+        var joinCode = await codeService.GenerateUniqueJoinCodeAsync(cancellationToken);
+        var saved = await repository.AddAsync(league.ToEntity(joinCode, userId), cancellationToken);
+        return League.FromEntity(saved);
     }
 
-    private static List<Entities.Rule> ToEntityRules(IEnumerable<Rule> rules) =>
-    [
-        .. rules.Select<Rule, Entities.Rule>(rule => rule switch
-        {
-            ScoringWeightRule weight => new Entities.ScoringWeightRule
-            {
-                Stat = weight.Stat,
-                Weight = weight.Weight
-            },
-            BonusRule bonus => new Entities.BonusRule
-            {
-                Stat = bonus.Stat,
-                Threshold = bonus.Threshold,
-                Points = bonus.Points
-            },
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(rules),
-                rule.RuleType,
-                "Unknown rule type.")
-        })
-    ];
+    public async Task<JoinLeagueResult> JoinLeague(
+        string userId,
+        string leagueCode,
+        CancellationToken cancellationToken)
+    {
+        var league = await repository.GetByCodeAsync(leagueCode, cancellationToken);
+        if (league is null)
+            return new JoinLeagueResult(JoinLeagueStatus.NotFound);
+
+        if (await repository.IsMemberAsync(league.LeagueId, userId, cancellationToken))
+            return new JoinLeagueResult(JoinLeagueStatus.AlreadyMember);
+
+        await repository.AddMemberAsync(
+            Entities.LeagueMember.Create(userId, LeagueMemberRole.Member, league.LeagueId),
+            cancellationToken);
+
+        return new JoinLeagueResult(JoinLeagueStatus.Joined, League.FromEntity(league));
+    }
 }
+
+public enum JoinLeagueStatus
+{
+    Joined,
+    NotFound,
+    AlreadyMember
+}
+
+public sealed record JoinLeagueResult(JoinLeagueStatus Status, League? League = null);

@@ -38,8 +38,8 @@ public class TeamOrchestrator : ITeamOrchestrator
         var team = new Team
         {
             LeagueId = leagueId,
-            Name = draftOutcome.TeamName,
-            Description = draftOutcome.Description,
+            UserId = draftOutcome.User.Id,
+            Name = draftOutcome.TeamName
         };
 
         return await _teamRepository.AddTeamsToLeagueAsync(team, cancellationToken);

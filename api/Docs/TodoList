@@ -1,0 +1,3 @@
+﻿Opportunities:
+[ ] Clean up DbContext - Regen snapshot and migrations
+[ ] Add User Repository - Move stuff out of services

@@ -7,25 +7,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Data;
 
-/// <summary>
-/// Application database context. Domain entities and DbSets will be added as features are built.
-/// </summary>
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+    /// <summary>
+    /// Ingested data populated through background service
+    /// </summary>
     public DbSet<Game> Games { get; set; }
     public DbSet<Player> Players { get; set; }
     public DbSet<PlayerGame> PlayerGame { get; set; }
     public DbSet<PlayerSeason> PlayerSeason { get; set; }
     public DbSet<InjuryStatus> InjuryStatus { get; set; }
+
+    /// <summary>
+    /// Contrived data populated through user action
+    /// </summary>
     public DbSet<League> Leagues { get; set; }
+    public DbSet<LeagueMember> LeagueMembers { get; set; }
     public DbSet<Settings> Settings { get; set; }
     public DbSet<Rule> Rules { get; set; }
     public DbSet<Team> Teams { get; set; }
-    public DbSet<TeamPlayers> TeamPlayers { get; set; }
     public DbSet<Contract> Contracts { get; set; }
     public DbSet<Budget> Budgets { get; set; }
+
+    /// <summary>
+    /// Misc
+    /// </summary>
+    public DbSet<TeamPlayers> TeamPlayers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,7 +48,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(u => u.Email).HasMaxLength(256).IsRequired();
             entity.Property(u => u.DisplayName).HasMaxLength(100).IsRequired();
             entity.Property(u => u.PasswordHash).IsRequired();
-            entity.Ignore(u => u.LeagueTeams);
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>
@@ -90,8 +99,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(t => t.LeagueId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Team>().Ignore(t => t.ActivePlayers);
-        modelBuilder.Entity<Team>().Ignore(t => t.InactivePlayers);
+        modelBuilder.Entity<Budget>()
+            .HasKey(b => new { b.LeagueId, b.TeamId });
+
+        modelBuilder.Entity<LeagueMember>(entity =>
+        {
+            entity.HasKey(m => new { m.LeagueId, m.UserId });
+            entity.HasIndex(m => m.UserId);
+            entity.Property(m => m.UserId).HasMaxLength(32).IsRequired();
+            entity.Property(m => m.Role).HasConversion<short>().IsRequired();
+
+            entity.HasOne(m => m.League)
+                .WithMany(l => l.Members)
+                .HasForeignKey(m => m.LeagueId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.User)
+                .WithMany(u => u.LeagueMembers)
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<TeamPlayers>()
             .HasKey(tp => new

@@ -4,6 +4,7 @@ using FootballGm.Api.Auth;
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Domain;
+using FootballGm.Api.Domain.Interfaces;
 using FootballGm.Api.Infrastructure;
 using FootballGm.Api.Infrastructure.Interfaces;
 using FootballGm.Api.Services;
@@ -63,6 +64,7 @@ builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
 builder.Services.AddScoped<IScoreCalculator, ScoreCalculator>();
 builder.Services.AddScoped<IPlayerOrchestrator, PlayerOrchestrator>();
 builder.Services.AddScoped<ILeagueRepository, LeagueRepository>();
+builder.Services.AddScoped<ILeagueCodeService, LeagueCodeService>();
 builder.Services.AddScoped<ILeagueOrchestrator, LeagueOrchestrator>();
 
 builder.Services
