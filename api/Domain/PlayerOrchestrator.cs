@@ -24,7 +24,7 @@ public class PlayerOrchestrator(
     {
         var requested = statSets.Distinct().ToList();
         if (requested.Count == 0)
-            return await GetPlayerAlone(playerId);
+            return await GetPlayerAlone(playerId, cancellationToken);
 
         if (leagueId is null or <= 0)
             throw new ArgumentException("LeagueId is required when requesting stats.", nameof(leagueId));
@@ -32,28 +32,29 @@ public class PlayerOrchestrator(
         if (requested.Contains(StatSetKind.PreviousWeek) && string.IsNullOrWhiteSpace(gameId))
             throw new ArgumentException("GameId is required when requesting previous week stats.", nameof(gameId));
 
-        var playerTask = playerRepository.GetPlayerByIdAsync(playerId);
-        var leagueTask = leagueRepository.GetByIdAsync(leagueId.Value, cancellationToken);
-        var gameTask = requested.Contains(StatSetKind.PreviousWeek)
-            ? playerRepository.GetPlayerGameStatsAsync(playerId, gameId!)
-            : Task.FromResult<PlayerGame?>(null);
-        var seasonTask = requested.Contains(StatSetKind.Season)
-            ? playerRepository.GetPlayerSeasonStatsAsync(playerId, WeekHelper.CurrentSeason)
-            : Task.FromResult<PlayerSeason?>(null);
-        var recentGamesTask = requested.Contains(StatSetKind.RecentThreeGames)
-            ? playerRepository.GetRecentPlayerGamesAsync(playerId, ScoreCalculator.RecentGameWindow)
-            : Task.FromResult<List<PlayerGame>>([]);
-
-        await Task.WhenAll(playerTask, leagueTask, gameTask, seasonTask, recentGamesTask);
-
-        var playerEntity = await playerTask;
-        var league = await leagueTask;
-        var game = await gameTask;
-        var season = await seasonTask;
-        var recentGames = await recentGamesTask;
-
+        var playerEntity = await playerRepository.GetPlayerByIdAsync(playerId, cancellationToken);
         ArgumentNullException.ThrowIfNull(playerEntity);
+
+        var league = await leagueRepository.GetByIdAsync(leagueId.Value, cancellationToken);
         ArgumentNullException.ThrowIfNull(league);
+
+        PlayerGame? game = null;
+        PlayerSeason? season = null;
+        List<PlayerGame> recentGames = [];
+        if (requested.Contains(StatSetKind.PreviousWeek))
+            game = await playerRepository.GetPlayerGameStatsAsync(playerId, gameId!, cancellationToken);
+
+        if (requested.Contains(StatSetKind.Season))
+            season = await playerRepository.GetPlayerSeasonStatsAsync(
+                playerId,
+                WeekHelper.CurrentSeason,
+                cancellationToken);
+
+        if (requested.Contains(StatSetKind.RecentThreeGames))
+            recentGames = await playerRepository.GetRecentPlayerGamesAsync(
+                playerId,
+                ScoreCalculator.RecentGameWindow,
+                cancellationToken);
 
         var rules = league.Settings.Rules;
         var stats = requested
@@ -70,9 +71,9 @@ public class PlayerOrchestrator(
         return Player.FromEntity(playerEntity) with { Stats = stats };
     }
 
-    private async Task<Player> GetPlayerAlone(string playerId)
+    private async Task<Player> GetPlayerAlone(string playerId, CancellationToken cancellationToken)
     {
-        var player = await playerRepository.GetPlayerByIdAsync(playerId);
+        var player = await playerRepository.GetPlayerByIdAsync(playerId, cancellationToken);
         ArgumentNullException.ThrowIfNull(player);
         return Player.FromEntity(player);
     }

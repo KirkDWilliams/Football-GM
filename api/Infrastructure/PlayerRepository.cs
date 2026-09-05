@@ -8,95 +8,107 @@ namespace FootballGm.Api.Infrastructure;
 
 public class PlayerRepository(AppDbContext context) : IPlayerRepository
 {
-    public async Task<Player?> GetPlayerByIdAsync(string playerId)
+    public Task<Player?> GetPlayerByIdAsync(string playerId, CancellationToken cancellationToken = default)
     {
-        return await context.Players
-            .FirstOrDefaultAsync(p => p.PlayerId == playerId);
+        return context.Players
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.PlayerId == playerId, cancellationToken);
     }
 
-    public async Task<PlayerGame?> GetPlayerGameStatsAsync(string playerId, string gameId)
+    public Task<PlayerGame?> GetPlayerGameStatsAsync(
+        string playerId,
+        string gameId,
+        CancellationToken cancellationToken = default)
     {
-        return await context.PlayerGame
-            .FirstOrDefaultAsync(pg => pg.PlayerId == playerId &&
-                                       pg.GameId   == gameId);
+        return context.PlayerGame
+            .AsNoTracking()
+            .FirstOrDefaultAsync(pg => pg.PlayerId == playerId && pg.GameId == gameId, cancellationToken);
     }
 
-    public async Task<List<PlayerGame>> GetRecentPlayerGamesAsync(string playerId, int count)
+    public Task<List<PlayerGame>> GetRecentPlayerGamesAsync(
+        string playerId,
+        int count,
+        CancellationToken cancellationToken = default)
     {
         var seasonPrefix = $"{WeekHelper.CurrentSeason}_";
 
-        return await context.PlayerGame
+        return context.PlayerGame
+            .AsNoTracking()
             .Where(pg => pg.PlayerId == playerId && pg.GameId.StartsWith(seasonPrefix))
             .OrderByDescending(pg => pg.GameId)
             .Take(count)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<PlayerSeason?> GetPlayerSeasonStatsAsync(string playerId, short season)
+    public Task<PlayerSeason?> GetPlayerSeasonStatsAsync(
+        string playerId,
+        short season,
+        CancellationToken cancellationToken = default)
     {
-        return await context.PlayerSeason
-            .Where(ps => ps.PlayerId == playerId && ps.Season == season)
-            .FirstOrDefaultAsync();
+        return context.PlayerSeason
+            .AsNoTracking()
+            .FirstOrDefaultAsync(ps => ps.PlayerId == playerId && ps.Season == season, cancellationToken);
     }
 
-    public async Task<List<Player>> GetPlayersByTeamIdAsync(int teamId)
+    public Task<List<Player>> GetPlayersByTeamIdAsync(int teamId, CancellationToken cancellationToken = default)
     {
-        return await context.TeamPlayers
+        return context.TeamPlayers
+            .AsNoTracking()
             .Where(tp => tp.TeamId == teamId)
-            .Include(tp => tp.Player)
             .Select(tp => tp.Player)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<PlayerGame>> GetTeamPlayersGameStatsAsync(int teamId)
+    public Task<List<PlayerGame>> GetTeamPlayersGameStatsAsync(int teamId, CancellationToken cancellationToken = default)
     {
-        var playerIds = await context.TeamPlayers
+        return context.TeamPlayers
+            .AsNoTracking()
             .Where(tp => tp.TeamId == teamId)
-            .Select(tp => tp.PlayerId)
-            .ToListAsync();
-
-        return await context.PlayerGame
-            .Where(pg => playerIds.Contains(pg.PlayerId))
-            .ToListAsync();
+            .Join(
+                context.PlayerGame,
+                tp => tp.PlayerId,
+                pg => pg.PlayerId,
+                (_, pg) => pg)
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Player>> GetFreeAgentsAsync(int leagueId)
+    public Task<List<Player>> GetFreeAgentsAsync(int leagueId, CancellationToken cancellationToken = default)
     {
-        return await context.Players
-            .Include(p => p.TeamPlayers)
+        return context.Players
+            .AsNoTracking()
             .Where(p => !p.TeamPlayers.Any(tp => tp.Team.LeagueId == leagueId))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<PlayerGame>> GetFreeAgentsGameStats(int leagueId)
+    public Task<List<PlayerGame>> GetFreeAgentsGameStatsAsync(int leagueId, CancellationToken cancellationToken = default)
     {
-        var playerIdsWithoutTeam = await context.Players
-            .Include(p => p.TeamPlayers)
+        return context.Players
+            .AsNoTracking()
             .Where(p => !p.TeamPlayers.Any(tp => tp.Team.LeagueId == leagueId))
-            .Select(p => p.PlayerId)
-            .ToListAsync();
-
-        return await context.PlayerGame
-        .Where(pg => playerIdsWithoutTeam.Contains(pg.PlayerId))
-        .ToListAsync();
+            .Join(
+                context.PlayerGame,
+                p => p.PlayerId,
+                pg => pg.PlayerId,
+                (_, pg) => pg)
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Player>> GetPlayersByLeagueIdAsync(int leagueId)
+    public Task<List<Player>> GetPlayersByLeagueIdAsync(int leagueId, CancellationToken cancellationToken = default)
     {
-        return await context.TeamPlayers
+        return context.TeamPlayers
+            .AsNoTracking()
             .Where(tp => tp.Team.LeagueId == leagueId)
-            .Include(tp => tp.Player)
             .Select(tp => tp.Player)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Player>> GetAllPlayersAsync()
+    public Task<List<Player>> GetAllPlayersAsync(CancellationToken cancellationToken = default)
     {
-        return await context.Players.ToListAsync();
+        return context.Players.AsNoTracking().ToListAsync(cancellationToken);
     }
 
-    public async Task<List<PlayerGame>> GetAllPlayerGameStatsAsync()
+    public Task<List<PlayerGame>> GetAllPlayerGameStatsAsync(CancellationToken cancellationToken = default)
     {
-        return await context.PlayerGame.ToListAsync();
+        return context.PlayerGame.AsNoTracking().ToListAsync(cancellationToken);
     }
 }

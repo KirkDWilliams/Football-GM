@@ -1,5 +1,5 @@
 using FootballGm.Api.Data.Models;
-using FootballGm.Api.Domain;
+using FootballGm.Api.Domain.Interfaces;
 using FootballGm.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,11 +9,10 @@ namespace FootballGm.Api.Controllers;
 [Route("api/[controller]")]
 [Authorize]
 [ApiController]
-public class TeamController(TeamOrchestrator teamOrchestator, ContractOrchestrator contractOrchestrator) : ControllerBase
+public class TeamController(
+    ITeamOrchestrator teamOrchestrator,
+    IContractOrchestrator contractOrchestrator) : ControllerBase
 {
-    private readonly TeamOrchestrator _teamOrchestrator = teamOrchestator;
-    private readonly ContractOrchestrator _contractOrchestrator = contractOrchestrator;
-
     [HttpGet("{teamId}")]
     public async Task<ActionResult<Data.Models.Budget>> GetBudget(
         [FromRoute] int teamId,
@@ -21,7 +20,7 @@ public class TeamController(TeamOrchestrator teamOrchestator, ContractOrchestrat
     {
         try
         {
-            var budget = await _teamOrchestrator.GetBudget(teamId, cancellationToken);
+            var budget = await teamOrchestrator.GetBudget(teamId, cancellationToken);
 
             if (budget == null)
                 return NotFound($"Budget not found for team {teamId}");
@@ -52,7 +51,7 @@ public class TeamController(TeamOrchestrator teamOrchestator, ContractOrchestrat
 
         try
         {
-            var updated = await _teamOrchestrator.UpdateBudget(newBudget, cancellationToken);
+            var updated = await teamOrchestrator.UpdateBudget(newBudget, cancellationToken);
 
             if (!updated)
                 return NotFound($"Budget not found for team {teamId}");
@@ -78,10 +77,10 @@ public class TeamController(TeamOrchestrator teamOrchestator, ContractOrchestrat
     {
         try
         {
-            var team = await _teamOrchestrator.CreateTeamInLeague(leagueId, draftOutcome, cancellationToken);
-            var contracts = await _contractOrchestrator.CreateContractsForTeam(leagueId, team, draftOutcome, cancellationToken);
+            var team = await teamOrchestrator.CreateTeamInLeague(leagueId, draftOutcome, cancellationToken);
+            var contracts = await contractOrchestrator.CreateContractsForTeam(leagueId, team, draftOutcome, cancellationToken);
             var paymentSchedule = BudgetHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractType.Standard);
-            var savedBudget = await _teamOrchestrator.UpdateBudget(new Budget { TeamId = team.TeamId,  PaymentSchedule = paymentSchedule }, cancellationToken);
+            var savedBudget = await teamOrchestrator.UpdateBudget(new Budget { TeamId = team.TeamId,  PaymentSchedule = paymentSchedule }, cancellationToken);
             // Add the TeamPlayerAssociations
                // return NotFound($"Error occured while creating the teams for League: {leagueId}");
 

@@ -8,6 +8,11 @@ namespace FootballGm.Api.Infrastructure;
 
 public class AuthRepository(AppDbContext context) : IAuthRepository
 {
+    public Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return context.Users.AnyAsync(u => u.Email == email, cancellationToken);
+    }
+
     public Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         return context.Users.SingleOrDefaultAsync(u => u.Email == email, cancellationToken);

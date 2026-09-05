@@ -67,6 +67,11 @@ builder.Services.AddScoped<IPlayerOrchestrator, PlayerOrchestrator>();
 builder.Services.AddScoped<ILeagueRepository, LeagueRepository>();
 builder.Services.AddScoped<ILeagueCodeService, LeagueCodeService>();
 builder.Services.AddScoped<ILeagueOrchestrator, LeagueOrchestrator>();
+builder.Services.AddScoped<ITeamRepository, TeamRepository>();
+builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
+builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<ITeamOrchestrator, TeamOrchestrator>();
+builder.Services.AddScoped<IContractOrchestrator, ContractOrchestrator>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

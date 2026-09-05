@@ -1,47 +1,39 @@
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Contrived;
+using FootballGm.Api.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Infrastructure;
 
-public interface IBudgetRepository
+public class BudgetRepository(AppDbContext context) : IBudgetRepository
 {
-    Task<Budget> GetTeamBudgetAsync(int teamId, CancellationToken cancellationToken);
-
-    Task<List<Budget>> GetLeagueBudgetsAsync(int leagueId, CancellationToken cancellationToken);
-
-    Task<bool> UpdateBudgetAsync(Data.Models.Budget budget, CancellationToken cancellationToken);
-}
-
-public class BudgetRepository : IBudgetRepository
-{
-    private AppDbContext _context;
-    public BudgetRepository(AppDbContext dbContext)
+    public Task<Budget?> GetByTeamIdAsync(int teamId, CancellationToken cancellationToken = default)
     {
-        _context = dbContext;
+        return context.Budgets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.TeamId == teamId, cancellationToken);
     }
 
-    public async Task<Budget> GetTeamBudgetAsync(int teamId, CancellationToken cancellationToken)
+    public Task<List<Budget>> GetByLeagueIdAsync(int leagueId, CancellationToken cancellationToken = default)
     {
-        return await _context.Budgets.FirstOrDefaultAsync(b => b.TeamId == teamId, cancellationToken)
-            ?? throw new Exception($"Budget does not exist for teamId {teamId}");
-    }
-
-    public async Task<List<Budget>> GetLeagueBudgetsAsync(int leagueId, CancellationToken cancellationToken)
-    {
-        return await _context.Budgets
+        return context.Budgets
+            .AsNoTracking()
             .Where(b => b.LeagueId == leagueId)
-            .ToListAsync(cancellationToken)
-            ?? throw new Exception($"Budgets do not exist for leagueId {leagueId}");
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<bool> UpdateBudgetAsync(Data.Models.Budget budget, CancellationToken cancellationToken)
+    public async Task<bool> UpdateAsync(
+        int teamId,
+        decimal[] paymentSchedule,
+        CancellationToken cancellationToken = default)
     {
-        var updatedBudget = new Budget { TeamId = budget.TeamId, PaymentSchedule = budget.PaymentSchedule };
+        var existing = await context.Budgets
+            .FirstOrDefaultAsync(b => b.TeamId == teamId, cancellationToken);
 
-        _context.Budgets.Update(updatedBudget);
-        var changed = await _context.SaveChangesAsync(cancellationToken);
+        if (existing is null) return false;
 
-        return changed > 0;
+        existing.PaymentSchedule = paymentSchedule;
+        await context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }

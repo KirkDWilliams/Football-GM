@@ -1,4 +1,4 @@
-﻿using FootballGm.Api.Data;
+using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -14,43 +14,46 @@ public class LeagueRepository(AppDbContext context) : ILeagueRepository
         return league;
     }
 
-    public async Task<League?> GetByIdAsync(int leagueId, CancellationToken cancellationToken = default)
+    public Task<League?> GetByIdAsync(int leagueId, CancellationToken cancellationToken = default)
     {
-        return await context.Leagues
-            .Include(l => l.Settings)
-                .ThenInclude(s => s.Rules)
+        return LeaguesWithSettings()
             .FirstOrDefaultAsync(l => l.LeagueId == leagueId, cancellationToken);
     }
 
-    public async Task<League?> GetByCodeAsync(string leagueCode, CancellationToken cancellationToken = default)
+    public Task<League?> GetByCodeAsync(string leagueCode, CancellationToken cancellationToken = default)
     {
-        return await context.Leagues
-            .Include(l => l.Settings)
-                .ThenInclude(s => s.Rules)
+        return LeaguesWithSettings()
             .FirstOrDefaultAsync(l => l.JoinCode == leagueCode, cancellationToken);
     }
 
-    public async Task<bool> ExistsByJoinCodeAsync(string code, CancellationToken cancellationToken)
+    public Task<bool> ExistsByJoinCodeAsync(string code, CancellationToken cancellationToken = default)
     {
-        return await context.Leagues
-            .AnyAsync(l => l.JoinCode == code, cancellationToken);
+        return context.Leagues.AnyAsync(l => l.JoinCode == code, cancellationToken);
     }
 
-    public async Task<bool> IsMemberAsync(
+    public Task<bool> IsMemberAsync(
         int leagueId,
         string userId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
-        return await context.LeagueMembers
+        return context.LeagueMembers
             .AnyAsync(m => m.LeagueId == leagueId && m.UserId == userId, cancellationToken);
     }
 
     public async Task<LeagueMember> AddMemberAsync(
         LeagueMember leagueMember,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         context.LeagueMembers.Add(leagueMember);
         await context.SaveChangesAsync(cancellationToken);
         return leagueMember;
+    }
+
+    private IQueryable<League> LeaguesWithSettings()
+    {
+        return context.Leagues
+            .AsNoTracking()
+            .Include(l => l.Settings)
+                .ThenInclude(s => s.Rules);
     }
 }

@@ -1,4 +1,4 @@
-using FootballGm.Api.Domain;
+using FootballGm.Api.Domain.Interfaces;
 using FootballGm.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +8,7 @@ namespace FootballGm.Api.Controllers;
 [Route("api/[controller]")]
 [Authorize]
 [ApiController]
-public class ContractController : ControllerBase
+public class ContractController(IContractOrchestrator contractOrchestrator) : ControllerBase
 {
     // User Requests:
     // Get the Contract for 'X'
@@ -25,13 +25,6 @@ public class ContractController : ControllerBase
     // 4.0.  | Extend contract
     // 5.0.  | Delete contract
 
-    private readonly ContractOrchestrator _contractOrchestrator;
-
-    public ContractController(ContractOrchestrator contractOrchestrator)
-    {
-        _contractOrchestrator = contractOrchestrator;
-    }
-
     [HttpGet("{leagueId}/{teamId}")]
     public async Task<ActionResult<List<Data.Models.Contract>>> GetTeamContracts(
         [FromRoute] int leagueId,
@@ -43,7 +36,7 @@ public class ContractController : ControllerBase
 
         try
         {
-            var contracts = await _contractOrchestrator.GetTeamContracts(leagueId, teamId, cancellationToken);
+            var contracts = await contractOrchestrator.GetTeamContracts(leagueId, teamId, cancellationToken);
 
             if (contracts == null)
                 return NotFound($"No contracts were found for Team {teamId}.");
@@ -71,7 +64,7 @@ public class ContractController : ControllerBase
 
         try
         {
-            var contract = await _contractOrchestrator.GetContract(leagueId, teamId, playerId);
+            var contract = await contractOrchestrator.GetContract(leagueId, teamId, playerId);
 
             if (contract == null)
                 return NotFound($"No contract was found for Player {playerId} on Team {teamId}.");
@@ -98,7 +91,7 @@ public class ContractController : ControllerBase
     {
         try
         {
-            var result = await _contractOrchestrator.CreateContract(leagueId, teamId, playerId, contract, cancellationToken);
+            var result = await contractOrchestrator.CreateContract(leagueId, teamId, playerId, contract, cancellationToken);
 
             if (result is null)
                 return BadRequest($"Failed to enact a contract for Player {playerId} for Team {teamId}.");
@@ -122,7 +115,7 @@ public class ContractController : ControllerBase
     {
         try
         {
-            var result = await _contractOrchestrator.ExtendContract(contract, cancellationToken);
+            var result = await contractOrchestrator.ExtendContract(contract, cancellationToken);
 
             if (result is not true)
                 return NotFound($"Either no contract was found for Contract {contract.ContractId}, or the update failed.");
@@ -149,7 +142,7 @@ public class ContractController : ControllerBase
 
         try
         {
-            var result = await _contractOrchestrator.DropContract(contract, cancellationToken);
+            var result = await contractOrchestrator.DropContract(contract, cancellationToken);
 
             if (result is not true)
                 NotFound($"Contract {contract.ContractId} was unsuccessfully eradicated.");

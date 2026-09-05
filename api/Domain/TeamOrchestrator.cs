@@ -1,39 +1,29 @@
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Data.Models;
-using FootballGm.Api.Infrastructure;
+using FootballGm.Api.Domain.Interfaces;
+using FootballGm.Api.Infrastructure.Interfaces;
 
 namespace FootballGm.Api.Domain;
 
-public interface ITeamOrchestrator
+public class TeamOrchestrator(
+    IBudgetRepository budgetRepository,
+    ITeamRepository teamRepository) : ITeamOrchestrator
 {
-    Task<Data.Models.Budget> GetBudget(int teamId, CancellationToken cancelToken);
-    Task<bool> UpdateBudget(Data.Models.Budget budget, CancellationToken cancelToken);
-    Task<Team> CreateTeamInLeague(int leagueId, DraftOutcome draftOutcome, CancellationToken cancellationToken);
-}
-
-public class TeamOrchestrator : ITeamOrchestrator
-{
-    private readonly IBudgetRepository _budgetRepository;
-    private readonly ITeamRepository _teamRepository;
-    public TeamOrchestrator(IBudgetRepository budgetRepository, ITeamRepository teamRepository)
+    public async Task<Data.Models.Budget?> GetBudget(int teamId, CancellationToken cancellationToken)
     {
-        _budgetRepository = budgetRepository;
-        _teamRepository = teamRepository;
+        var budget = await budgetRepository.GetByTeamIdAsync(teamId, cancellationToken);
+        return budget is null ? null : Data.Models.Budget.FromEntity(budget);
     }
 
-    public async Task<Data.Models.Budget> GetBudget(int teamId, CancellationToken cancelToken)
+    public Task<bool> UpdateBudget(Data.Models.Budget budget, CancellationToken cancellationToken)
     {
-        var budget = await _budgetRepository.GetTeamBudgetAsync(teamId, cancelToken);
-
-        return Data.Models.Budget.FromEntity(budget);
+        return budgetRepository.UpdateAsync(budget.TeamId, budget.PaymentSchedule, cancellationToken);
     }
 
-    public async Task<bool> UpdateBudget(Data.Models.Budget budget, CancellationToken cancelToken)
-    {
-        return await _budgetRepository.UpdateBudgetAsync(budget, cancelToken);
-    }
-
-    public async Task<Team> CreateTeamInLeague(int leagueId, DraftOutcome draftOutcome, CancellationToken cancellationToken)
+    public Task<Team> CreateTeamInLeague(
+        int leagueId,
+        DraftOutcome draftOutcome,
+        CancellationToken cancellationToken)
     {
         var team = new Team
         {
@@ -42,10 +32,6 @@ public class TeamOrchestrator : ITeamOrchestrator
             Name = draftOutcome.TeamName
         };
 
-        return await _teamRepository.AddTeamsToLeagueAsync(team, cancellationToken);
-
-        //TODO: figure out why I thought there was more work to be done here...
-        // I think it had to do with seeding the inactive players on the roster...
-        // or the associations table...
+        return teamRepository.AddAsync(team, cancellationToken);
     }
 }

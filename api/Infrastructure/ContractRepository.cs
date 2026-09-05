@@ -1,165 +1,94 @@
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Associations;
+using FootballGm.Api.Data.Entity.Contrived;
+using FootballGm.Api.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Infrastructure;
 
-public interface IContractRepository
+public class ContractRepository(AppDbContext context) : IContractRepository
 {
-    Task<Data.Entity.Contrived.Contract> GetContractByPlayerIdAsync(int leagueId, int teamId, string playerId, CancellationToken cancellationToken = default);
-    Task<List<Data.Entity.Contrived.Contract>> GetContractsByTeamIdAsync(int leagueId, int teamId, CancellationToken cancellationToken = default);
-    Task<Data.Models.Contract> CreateContractAsync(int leagueId, int teamId, string playerId, Data.Models.Contract contract, CancellationToken cancellationToken = default);
-    Task<Data.Models.Contract> UpdateContractAsync(Data.Models.Contract contract, CancellationToken cancellationToken = default);
-    Task<bool> DeleteContractsAsync(List<Data.Models.Contract> contracts, CancellationToken cancellationToken = default);
-    //TODO: this needs to live elsewhere-> Task<bool> RunCompletionOfContractsAsync(CancellationToken cancellationToken = default);
-}
-
-public class ContractRepository : IContractRepository
-{
-    private readonly AppDbContext _context;
-
-    public ContractRepository(AppDbContext context)
+    public Task<Contract?> GetByPlayerAsync(
+        int leagueId,
+        int teamId,
+        string playerId,
+        CancellationToken cancellationToken = default)
     {
-        _context = context;
-    }
-
-    public async Task<Data.Entity.Contrived.Contract> GetContractByPlayerIdAsync(int leagueId, int teamId, string playerId, CancellationToken cancellationToken = default)
-    {
-        var contractId = await _context.TeamPlayers
+        return context.TeamPlayers
+            .AsNoTracking()
             .Where(tp => tp.LeagueId == leagueId && tp.TeamId == teamId && tp.PlayerId == playerId)
-            .Select(tp => tp.ContractId)
+            .Select(tp => tp.Contract)
             .FirstOrDefaultAsync(cancellationToken);
-
-        return await _context.Contracts
-            .Where(c => c.ContractId == contractId)
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? throw new Exception("No contract exists for the given playerId.");
     }
 
-    public async Task<List<Data.Entity.Contrived.Contract>> GetContractsByTeamIdAsync(int leagueId, int teamId, CancellationToken cancellationToken = default)
+    public Task<List<Contract>> GetByTeamAsync(
+        int leagueId,
+        int teamId,
+        CancellationToken cancellationToken = default)
     {
-        return await _context.TeamPlayers
+        return context.TeamPlayers
+            .AsNoTracking()
             .Where(tp => tp.LeagueId == leagueId && tp.TeamId == teamId)
-            .Include(tp => tp.Contract)
             .Select(tp => tp.Contract)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Data.Models.Contract> CreateContractAsync(int leagueId, int teamId, string playerId, Data.Models.Contract contract, CancellationToken cancellationToken = default)
+    public async Task<Contract?> AddAsync(
+        int leagueId,
+        int teamId,
+        string playerId,
+        Contract contract,
+        CancellationToken cancellationToken = default)
     {
-        try
+        var exists = await context.TeamPlayers.AnyAsync(
+            tp => tp.LeagueId == leagueId && tp.TeamId == teamId && tp.PlayerId == playerId,
+            cancellationToken);
+
+        if (exists) return null;
+
+        context.Contracts.Add(contract);
+        context.TeamPlayers.Add(new TeamPlayers
         {
-            if (_context.TeamPlayers.Any(tp => tp.TeamId == teamId && tp.PlayerId == playerId))
-                throw new Exception("Contract already exists.");
+            LeagueId = leagueId,
+            TeamId = teamId,
+            PlayerId = playerId,
+            Contract = contract
+        });
 
-            var contractEntity = CreateEntity(contract);
-            _context.Contracts.Add(contractEntity);
-
-            var teamPlayer = new TeamPlayers
-            {
-                LeagueId = leagueId,
-                TeamId = teamId,
-                PlayerId = playerId,
-                Contract = contractEntity 
-            };
-
-            _context.TeamPlayers.Add(teamPlayer);
-            var changed = await _context.SaveChangesAsync(cancellationToken);
-
-            return changed > 0
-                ? new Data.Models.Contract(contractEntity)
-                : throw new InvalidOperationException("No contract was created.");
-        }
-        catch
-        {
-            return new Data.Models.Contract();
-        }
+        await context.SaveChangesAsync(cancellationToken);
+        return contract;
     }
 
-    public async Task<Data.Models.Contract> UpdateContractAsync(Data.Models.Contract contract, CancellationToken cancellationToken = default)
+    public async Task<Contract?> UpdateAsync(Contract contract, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var existingContract = await _context.Contracts.AnyAsync(c => c.ContractId == contract.ContractId, cancellationToken);
+        var existing = await context.Contracts
+            .FirstOrDefaultAsync(c => c.ContractId == contract.ContractId, cancellationToken);
 
-            if (existingContract is not true)
-                throw new Exception("No contract exists to delete.");
+        if (existing is null) return null;
 
-            var updateContract = CreateEntity(contract);
-
-            _context.Contracts.Update(updateContract);
-            var changed = await _context.SaveChangesAsync(cancellationToken);
-
-            return changed > 0
-                ? new Data.Models.Contract(updateContract)
-                : throw new InvalidOperationException("No contract was updated.");
-        }
-        catch
-        {
-            return new Data.Models.Contract();
-        }
+        existing.StartWeek = contract.StartWeek;
+        existing.EndWeek = contract.EndWeek;
+        existing.SigningBonus = contract.SigningBonus;
+        existing.Salary = contract.Salary;
+        existing.GiftedCapSpace = contract.GiftedCapSpace;
+        await context.SaveChangesAsync(cancellationToken);
+        return existing;
     }
 
-    public async Task<bool> DeleteContractsAsync(List<Data.Models.Contract> contracts, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(
+        IReadOnlyCollection<int> contractIds,
+        CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var contractsToDelete = new List<Data.Entity.Contrived.Contract>();
+        if (contractIds.Count == 0) return false;
 
-            foreach (var contract in contracts)
-            {
-                contractsToDelete.Add(CreateEntity(contract));
-            }
+        var existing = await context.Contracts
+            .Where(c => contractIds.Contains(c.ContractId))
+            .ToListAsync(cancellationToken);
 
-            _context.Contracts.RemoveRange(contractsToDelete);
-            var changed = await _context.SaveChangesAsync(cancellationToken);
-            return changed > 0;
-        }
-        catch
-        {
-            return false;
-        }
+        if (existing.Count == 0) return false;
+
+        context.Contracts.RemoveRange(existing);
+        await context.SaveChangesAsync(cancellationToken);
+        return true;
     }
-
-    // this belongs elsewhere for the automation
-/*    public async Task<bool> RunCompletionOfContractsAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var contracts = await _context.Contracts
-                .Where(c => c.EndWeek == WeekHelper.CurrentWeek).ToListAsync(cancellationToken);
-
-            foreach (var contract in contracts)
-            {
-                var teamPlayer = await _context.TeamPlayers
-                    .FirstOrDefaultAsync(tp => tp.ContractId == contract.ContractId, cancellationToken)
-                    ?? throw new InvalidOperationException($"No TeamPlayers entry found for ContractId {contract.ContractId}");
-
-                _context.TeamPlayers.Remove(teamPlayer);
-            }
-
-            await DeleteContractsAsync(contracts, cancellationToken);
-            var changed = await _context.SaveChangesAsync(cancellationToken);
-
-            return changed > 0;
-        }
-        catch
-        {
-            return false;
-        };
-    }*/
-
-    private Data.Entity.Contrived.Contract CreateEntity(Data.Models.Contract contract)
-    {
-        return new Data.Entity.Contrived.Contract
-        {
-            ContractId = contract.ContractId,
-            StartWeek = contract.StartWeek,
-            EndWeek = contract.EndWeek,
-            SigningBonus = contract.SigningBonus,
-            Salary = contract.Salary,
-            GiftedCapSpace = contract.GiftedCapSpace
-        };
-    }
-
 }

@@ -1,78 +1,105 @@
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Data.Models;
-using FootballGm.Api.Infrastructure;
-using System.Diagnostics.Contracts;
+using FootballGm.Api.Domain.Interfaces;
+using FootballGm.Api.Infrastructure.Interfaces;
+using Entities = FootballGm.Api.Data.Entity.Contrived;
 
 namespace FootballGm.Api.Domain;
 
-public class ContractOrchestrator
+public class ContractOrchestrator(IContractRepository contractRepository) : IContractOrchestrator
 {
-    private readonly IContractRepository _contractRepository;
-
-    public ContractOrchestrator(IContractRepository contractRepository)
+    public async Task<List<Data.Models.Contract>> GetTeamContracts(
+        int leagueId,
+        int teamId,
+        CancellationToken cancellationToken = default)
     {
-        _contractRepository = contractRepository;
+        var contracts = await contractRepository.GetByTeamAsync(leagueId, teamId, cancellationToken);
+        return contracts.Select(Data.Models.Contract.FromEntity).ToList();
     }
 
-    public async Task<List<Data.Models.Contract>> GetTeamContracts(int leagueId, int teamId, CancellationToken cancellationToken = default)
+    public async Task<Data.Models.Contract?> GetContract(
+        int leagueId,
+        int teamId,
+        string playerId,
+        CancellationToken cancellationToken = default)
     {
-        List<Data.Models.Contract> teamContracts = [];
-        var contracts = await _contractRepository.GetContractsByTeamIdAsync(leagueId, teamId, cancellationToken);
-
-        foreach(var contract in contracts)
-        {
-            teamContracts.Add(Data.Models.Contract.FromEntity(contract));
-        }
-
-        return teamContracts;
+        var contract = await contractRepository.GetByPlayerAsync(leagueId, teamId, playerId, cancellationToken);
+        return contract is null ? null : Data.Models.Contract.FromEntity(contract);
     }
 
-    public async Task<Data.Models.Contract> GetContract(int leagueId, int teamId, string playerId, CancellationToken cancellationToken = default)
+    public async Task<List<Data.Models.Contract>> CreateContractsForTeam(
+        int leagueId,
+        Team team,
+        DraftOutcome draftOutcome,
+        CancellationToken cancellationToken)
     {
-        var contract = await _contractRepository.GetContractByPlayerIdAsync(leagueId, teamId, playerId, cancellationToken);
-        return Data.Models.Contract.FromEntity(contract);
-    }
+        var contractsSaved = new List<Data.Models.Contract>();
 
-    public async Task<List<Data.Models.Contract>> CreateContractsForTeam(int leagueId, Team team, DraftOutcome draftOutcome, CancellationToken cancellationToken)
-    {
-        List<Data.Models.Contract> contractsSaved = [];
         foreach (var playerContract in draftOutcome.DraftedPlayers)
         {
-            var created = await _contractRepository.CreateContractAsync(leagueId, team.TeamId, playerContract.Key, playerContract.Value, cancellationToken);
-            if (created is null)
-                break;
+            var created = await contractRepository.AddAsync(
+                leagueId,
+                team.TeamId,
+                playerContract.Key,
+                ToEntity(playerContract.Value),
+                cancellationToken);
 
-            contractsSaved.Add(created);
+            if (created is null)
+                continue;
+
+            contractsSaved.Add(Data.Models.Contract.FromEntity(created));
         }
 
         return contractsSaved;
     }
 
-    public async Task<Data.Models.Contract> CreateContract(int leagueId, int teamId, string playerId, Data.Models.Contract contract, CancellationToken cancellationToken = default)
+    public async Task<Data.Models.Contract?> CreateContract(
+        int leagueId,
+        int teamId,
+        string playerId,
+        Data.Models.Contract contract,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _contractRepository.CreateContractAsync(leagueId, teamId, playerId, contract, cancellationToken);
-        return result;
+        var created = await contractRepository.AddAsync(
+            leagueId,
+            teamId,
+            playerId,
+            ToEntity(contract),
+            cancellationToken);
+
+        return created is null ? null : Data.Models.Contract.FromEntity(created);
     }
 
-    public async Task<bool> ExtendContract(Data.Models.Contract contract, CancellationToken cancellationToken = default)
+    public async Task<bool> ExtendContract(
+        Data.Models.Contract contract,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _contractRepository.UpdateContractAsync(contract, cancellationToken);
-        return result is not null;
+        var updated = await contractRepository.UpdateAsync(ToEntity(contract), cancellationToken);
+        return updated is not null;
     }
 
-    public async Task<bool> DropContract(Data.Models.Contract contract, CancellationToken cancellationToken = default)
+    public async Task<bool> DropContract(
+        Data.Models.Contract contract,
+        CancellationToken cancellationToken = default)
     {
-        var terminatedContract = new Data.Models.Contract
+        var terminated = ToEntity(contract);
+        terminated.Salary = 0;
+        terminated.GiftedCapSpace = 0;
+
+        var updated = await contractRepository.UpdateAsync(terminated, cancellationToken);
+        return updated is not null;
+    }
+
+    private static Entities.Contract ToEntity(Data.Models.Contract contract)
+    {
+        return new Entities.Contract
         {
-            Salary = 0,
-            GiftedCapSpace = 0,
-            SigningBonus = contract.SigningBonus,
             ContractId = contract.ContractId,
-            EndWeek = contract.EndWeek,
             StartWeek = contract.StartWeek,
+            EndWeek = contract.EndWeek,
+            SigningBonus = contract.SigningBonus,
+            Salary = contract.Salary,
+            GiftedCapSpace = contract.GiftedCapSpace
         };
-
-        var result = await _contractRepository.UpdateContractAsync(terminatedContract, cancellationToken);
-        return result is not null;
     }
 }

@@ -26,8 +26,7 @@ public class AuthService(
         if (validationError is not null) return AuthResult.Fail(validationError);
 
         var email = NormalizeEmail(request.Email);
-        var existing = await authRepository.GetUserByEmailAsync(email, cancellationToken);
-        if (existing is not null)
+        if (await authRepository.EmailExistsAsync(email, cancellationToken))
             return AuthResult.Fail(new AuthError(AuthErrorCode.Conflict, "An account with this email already exists."));
 
         var user = new User

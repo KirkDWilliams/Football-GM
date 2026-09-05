@@ -1,81 +1,58 @@
 using FootballGm.Api.Data;
-using Microsoft.EntityFrameworkCore;
-using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Data.Entity.Associations;
+using FootballGm.Api.Data.Entity.Contrived;
+using FootballGm.Api.Infrastructure.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Infrastructure;
 
-public interface ITeamRepository
+public class TeamRepository(AppDbContext context) : ITeamRepository
 {
-    Task<List<Team>> GetTeamsByLeagueId(int leagueId, CancellationToken cancellationToken);
-    Task<TeamPlayers> GetTeamPlayerByPlayerId(string playerId, CancellationToken cancellationToken);
-    Task<List<TeamPlayers>> GetTeamPlayersByTeamId(int teamId, CancellationToken cancellationToken);
-    Task<Team> AddTeamsToLeagueAsync(Team team, CancellationToken cancellationToken);
-    Task<Team> UpdateTeam(Team team, CancellationToken cancellationToken);
-}
-
-public class TeamRepository : ITeamRepository
-{
-    private AppDbContext _context;
-
-    public TeamRepository(AppDbContext appDbContext)
+    public Task<List<Team>> GetByLeagueIdAsync(int leagueId, CancellationToken cancellationToken = default)
     {
-        _context = appDbContext;
+        return context.Teams
+            .AsNoTracking()
+            .Where(t => t.LeagueId == leagueId)
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Team>> GetTeamsByLeagueId(int leagueId, CancellationToken cancellationToken)
+    public Task<TeamPlayers?> GetTeamPlayerByPlayerIdAsync(
+        string playerId,
+        CancellationToken cancellationToken = default)
     {
-        return await _context.Teams
-            .Where(t => t.LeagueId == leagueId).ToListAsync(cancellationToken)
-        ?? throw new Exception("No teams found for the given leagueId.");
+        return context.TeamPlayers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(tp => tp.PlayerId == playerId, cancellationToken);
     }
 
-    public async Task<TeamPlayers> GetTeamPlayerByPlayerId(string playerId, CancellationToken cancellationToken)
+    public Task<List<TeamPlayers>> GetTeamPlayersByTeamIdAsync(
+        int teamId,
+        CancellationToken cancellationToken = default)
     {
-        return await _context.TeamPlayers.FirstOrDefaultAsync(tp => tp.PlayerId == playerId, cancellationToken)
-        ?? throw new Exception("No player exists for the given playerId.");
+        return context.TeamPlayers
+            .AsNoTracking()
+            .Where(tp => tp.TeamId == teamId)
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<TeamPlayers>> GetTeamPlayersByTeamId(int teamId, CancellationToken cancellationToken)
+    public async Task<Team> AddAsync(Team team, CancellationToken cancellationToken = default)
     {
-        return await _context.TeamPlayers
-            .Where(tp => tp.TeamId == teamId).ToListAsync(cancellationToken)
-        ?? throw new Exception("No Players found belonging to the given teamId.");
+        context.Teams.Add(team);
+        await context.SaveChangesAsync(cancellationToken);
+        return team;
     }
 
-    public async Task<Team> AddTeamsToLeagueAsync(Team team, CancellationToken cancellationToken)
+    public async Task<Team?> UpdateAsync(Team team, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            _context.Teams.Add(team);
-            var changed = await _context.SaveChangesAsync(cancellationToken);
+        var existing = await context.Teams
+            .FirstOrDefaultAsync(t => t.TeamId == team.TeamId, cancellationToken);
 
-            if (changed == 0)
-                throw new Exception("Not all Teams were saved to league.");
+        if (existing is null) return null;
 
-            return team;
-        }
-        catch
-        {
-            throw new Exception("Failed to add new team to league.");
-        }
-    }
-
-    public async Task<Team> UpdateTeam(Team team, CancellationToken cancellationToken)
-    {
-        try
-        {
-            _context.Teams.Update(team);
-            var changed = await _context.SaveChangesAsync(cancellationToken);
-
-            if (changed == 0)
-                throw new Exception("Team not updated.");
-
-            return team;
-        }
-        catch
-        {
-            throw new Exception("Failed to add new team to league.");
-        }
+        existing.Name = team.Name;
+        existing.UserId = team.UserId;
+        existing.LeagueId = team.LeagueId;
+        await context.SaveChangesAsync(cancellationToken);
+        return existing;
     }
 }
