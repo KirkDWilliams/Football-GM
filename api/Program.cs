@@ -58,6 +58,7 @@ var corsOptions = corsSection.Get<CorsOptions>() ?? new CorsOptions();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IRefreshTokenMaintenance, RefreshTokenMaintenance>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddHostedService<RefreshTokenCleanupHostedService>();
 builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();

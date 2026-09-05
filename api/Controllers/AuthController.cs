@@ -28,9 +28,7 @@ public class AuthController(IAuthService authService) : ControllerBase
             new RegisterRequest(body.Email, body.Password, body.DisplayName, body.DeviceName),
             cancellationToken);
 
-        if (result.Error is not null) return MapError(result.Error);
-
-        return CreatedAtAction(nameof(Me), ToResponse(result.Success!));
+        return ToActionResult(result, response => CreatedAtAction(nameof(Me), response));
     }
 
     /// <summary>
@@ -49,9 +47,7 @@ public class AuthController(IAuthService authService) : ControllerBase
             new LoginRequest(body.Email, body.Password, body.DeviceName),
             cancellationToken);
 
-        if (result.Error is not null) return MapError(result.Error);
-
-        return Ok(ToResponse(result.Success!));
+        return ToActionResult(result, response => Ok(response));
     }
 
     /// <summary>
@@ -70,9 +66,7 @@ public class AuthController(IAuthService authService) : ControllerBase
             new RefreshRequest(body.RefreshToken),
             cancellationToken);
 
-        if (result.Error is not null) return MapError(result.Error);
-
-        return Ok(ToResponse(result.Success!));
+        return ToActionResult(result, response => Ok(response));
     }
 
     /// <summary>
@@ -91,9 +85,7 @@ public class AuthController(IAuthService authService) : ControllerBase
             new LogoutRequest(body.RefreshToken),
             cancellationToken);
 
-        if (result.Error is not null) return MapError(result.Error);
-
-        return NoContent();
+        return NoContentOrError(result.Error);
     }
 
     /// <summary>
@@ -109,20 +101,15 @@ public class AuthController(IAuthService authService) : ControllerBase
         [FromBody] ChangePasswordBody body,
         CancellationToken cancellationToken)
     {
-        var userId =
-            User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue(JwtClaimNames.Sub);
-
-        if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
 
         var result = await authService.ChangePasswordAsync(
             userId,
             new ChangePasswordRequest(body.CurrentPassword, body.NewPassword),
             cancellationToken);
 
-        if (result.Error is not null) return MapError(result.Error);
-
-        return NoContent();
+        return NoContentOrError(result.Error);
     }
 
     /// <summary>
@@ -134,16 +121,34 @@ public class AuthController(IAuthService authService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<UserDto>> Me(CancellationToken cancellationToken)
     {
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var user = await authService.GetUserByIdAsync(userId, cancellationToken);
+        return user is null ? Unauthorized() : Ok(user);
+    }
+
+    private string? GetUserId()
+    {
         var userId =
             User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.FindFirstValue(JwtClaimNames.Sub);
 
-        if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+        return string.IsNullOrWhiteSpace(userId) ? null : userId;
+    }
 
-        var user = await authService.GetUserByIdAsync(userId, cancellationToken);
-        if (user is null) return Unauthorized();
+    private ActionResult<AuthResponse> ToActionResult(
+        AuthResult result,
+        Func<AuthResponse, ActionResult<AuthResponse>> onSuccess)
+    {
+        return result.Error is not null
+            ? MapError(result.Error)
+            : onSuccess(ToResponse(result.Success!));
+    }
 
-        return Ok(user);
+    private ActionResult NoContentOrError(AuthError? error)
+    {
+        return error is not null ? MapError(error) : NoContent();
     }
 
     private ActionResult MapError(AuthError error)
