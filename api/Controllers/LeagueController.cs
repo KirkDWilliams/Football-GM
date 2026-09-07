@@ -107,7 +107,7 @@ public class LeagueController(ILeagueOrchestrator orchestrator) : ControllerBase
         return result.Status switch
         {
             JoinLeagueStatus.NotFound => NotFound(),
-            JoinLeagueStatus.AlreadyMember => Conflict(new { error = "Already a member of this league." }),
+            JoinLeagueStatus.AlreadyMember => Conflict(result.League),
             JoinLeagueStatus.Joined => Created($"/api/league/{result.League!.LeagueId}", result.League),
             _ => throw new ArgumentOutOfRangeException(nameof(result.Status), result.Status, null)
         };

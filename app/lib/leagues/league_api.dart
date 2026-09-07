@@ -9,7 +9,12 @@ abstract class LeagueApi {
 
   /// Creates a League and returns its id for the information screen to load.
   Future<int> createLeague({required String name, required num weeklyCap});
+
+  /// Joins a League by Join code and returns its id. Already a Member is success.
+  Future<int> joinLeague(String joinCode);
 }
+
+class UnknownJoinCodeException implements Exception {}
 
 class HttpLeagueApi implements LeagueApi {
   HttpLeagueApi({required this._dio});
@@ -51,5 +56,30 @@ class HttpLeagueApi implements LeagueApi {
       return resp.data!['leagueId'] as int;
     }
     throw Exception('Failed to create league: ${resp.statusCode}');
+  }
+
+  @override
+  Future<int> joinLeague(String joinCode) async {
+    try {
+      final resp = await _dio.post<Map<String, dynamic>>(
+        '/api/league/$joinCode',
+      );
+      return _leagueIdFrom(resp.data, resp.statusCode);
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 409) {
+        return _leagueIdFrom(error.response?.data, 409);
+      }
+      if (error.response?.statusCode == 404) {
+        throw UnknownJoinCodeException();
+      }
+      rethrow;
+    }
+  }
+
+  static int _leagueIdFrom(dynamic data, int? statusCode) {
+    if (data is Map && data['leagueId'] is int) {
+      return data['leagueId'] as int;
+    }
+    throw Exception('Failed to join league: $statusCode');
   }
 }

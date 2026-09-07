@@ -93,12 +93,14 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(width: 8),
                 FilledButton.tonal(
-                  onPressed: () {
-                    Navigator.of(context).push(
+                  onPressed: () async {
+                    await Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const JoinLeagueScreen(),
                       ),
                     );
+                    if (!context.mounted) return;
+                    await context.read<LeaguesProvider>().reload();
                   },
                   child: const Text('Join with code'),
                 ),

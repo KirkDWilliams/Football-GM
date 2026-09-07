@@ -214,4 +214,9 @@ class _FakeLeagueApi implements LeagueApi {
   }) async {
     throw UnsupportedError('createLeague is not used by home tests');
   }
+
+  @override
+  Future<int> joinLeague(String joinCode) async {
+    throw UnsupportedError('joinLeague is not used by home tests');
+  }
 }

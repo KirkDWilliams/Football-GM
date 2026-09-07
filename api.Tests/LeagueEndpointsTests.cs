@@ -345,6 +345,8 @@ public class LeagueEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory
             $"/api/league/{created.JoinCode}",
             joiner.AccessToken);
         Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+        using var doc = JsonDocument.Parse(await second.Content.ReadAsStringAsync());
+        Assert.Equal(created.LeagueId, doc.RootElement.GetProperty("leagueId").GetInt32());
     }
 
     [Fact]

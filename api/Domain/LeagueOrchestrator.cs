@@ -29,7 +29,7 @@ public class LeagueOrchestrator(ILeagueRepository repository, ILeagueCodeService
             return new JoinLeagueResult(JoinLeagueStatus.NotFound);
 
         if (await repository.IsMemberAsync(league.LeagueId, userId, cancellationToken))
-            return new JoinLeagueResult(JoinLeagueStatus.AlreadyMember);
+            return new JoinLeagueResult(JoinLeagueStatus.AlreadyMember, League.FromEntity(league));
 
         await repository.AddMemberAsync(
             Entities.LeagueMember.Create(userId, LeagueMemberRole.Member, league.LeagueId),

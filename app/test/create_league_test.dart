@@ -191,4 +191,9 @@ class _FakeLeagueApi implements LeagueApi {
     );
     return id;
   }
+
+  @override
+  Future<int> joinLeague(String joinCode) async {
+    throw UnsupportedError('joinLeague is not used by Create tests');
+  }
 }
