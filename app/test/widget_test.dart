@@ -1,31 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:football_gm_app/app.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/models/league_summary.dart';
 
-import 'logged_in_auth.dart';
+import 'pump_app.dart';
 
 void main() {
   testWidgets(
     'Signed-out users land on home with website nav, not a login wall',
     (tester) async {
-      final auth = loggedInAuth(status: AuthStatus.unauthenticated);
-
-      await tester.pumpWidget(
-        FootballGmApp(
-          authController: auth.controller,
-          authService: auth.service,
-          leagueApi: _EmptyLeagueApi(),
-        ),
+      await pumpApp(
+        tester,
+        leagueApi: _EmptyLeagueApi(),
+        status: AuthStatus.unauthenticated,
       );
-      await tester.pump();
 
       expect(find.text('Home'), findsOneWidget);
       expect(find.text('Leagues'), findsOneWidget);
       expect(find.text('Login'), findsOneWidget);
       expect(find.text('FOOTBALL GM'), findsWidgets);
+      expect(find.text('A retro fantasy football sim.'), findsNothing);
       expect(find.text('Create an account'), findsNothing);
       expect(find.text('My Leagues'), findsNothing);
       expect(find.text('Sync'), findsNothing);
@@ -33,16 +28,11 @@ void main() {
   );
 
   testWidgets('Login in the nav opens the sign-in form', (tester) async {
-    final auth = loggedInAuth(status: AuthStatus.unauthenticated);
-
-    await tester.pumpWidget(
-      FootballGmApp(
-        authController: auth.controller,
-        authService: auth.service,
-        leagueApi: _EmptyLeagueApi(),
-      ),
+    await pumpApp(
+      tester,
+      leagueApi: _EmptyLeagueApi(),
+      status: AuthStatus.unauthenticated,
     );
-    await tester.pump();
 
     await tester.tap(find.text('Login'));
     await tester.pumpAndSettle();

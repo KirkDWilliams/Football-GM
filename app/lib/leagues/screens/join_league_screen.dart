@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/screens/league_information_screen.dart';
-import 'package:football_gm_app/ui/widgets/arcade_page.dart';
-import 'package:football_gm_app/ui/widgets/arcade_submit_button.dart';
-import 'package:football_gm_app/ui/widgets/pixel_panel.dart';
-import 'package:football_gm_app/ui/widgets/status_banner.dart';
+import 'package:football_gm_app/ui/ui.dart';
 import 'package:provider/provider.dart';
 
 class JoinLeagueScreen extends StatefulWidget {

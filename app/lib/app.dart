@@ -8,7 +8,7 @@ import 'package:football_gm_app/leagues/leagues_provider.dart';
 import 'package:football_gm_app/navigation/app_routes.dart';
 import 'package:football_gm_app/navigation/app_shell.dart';
 import 'package:football_gm_app/navigation/navigation_controller.dart';
-import 'package:football_gm_app/ui/arcade_theme.dart';
+import 'package:football_gm_app/ui/ui.dart';
 import 'package:provider/provider.dart';
 
 /// Root widget: providers + themed [MaterialApp] + [AppShell].

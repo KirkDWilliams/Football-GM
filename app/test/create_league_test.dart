@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:football_gm_app/app.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/models/league_summary.dart';
 
-import 'logged_in_auth.dart';
+import 'pump_app.dart';
 
 void main() {
   testWidgets('Create form asks for name and Weekly cap defaulting to 100', (
@@ -166,17 +165,7 @@ void main() {
 }
 
 Future<void> _pumpLoggedIn(WidgetTester tester) async {
-  final auth = loggedInAuth();
-  await tester.pumpWidget(
-    FootballGmApp(
-      authController: auth.controller,
-      authService: auth.service,
-      leagueApi: _FakeLeagueApi(),
-    ),
-  );
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Leagues'));
-  await tester.pumpAndSettle();
+  await pumpApp(tester, leagueApi: _FakeLeagueApi(), openLeagues: true);
 }
 
 class _FakeLeagueApi implements LeagueApi {

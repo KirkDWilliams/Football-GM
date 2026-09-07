@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football_gm_app/ui/widgets/field_backdrop.dart';
 import 'package:football_gm_app/ui/widgets/game_nav_bar.dart';
 
-/// Page frame for every screen: stadium backdrop, website nav, optional back.
+/// Page frame for every screen: pixel field, website nav, optional back.
 ///
 /// New routes should wrap their body in this so chrome stays consistent.
 class ArcadePage extends StatelessWidget {

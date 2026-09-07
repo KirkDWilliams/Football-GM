@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
 import 'package:football_gm_app/navigation/app_routes.dart';
 import 'package:football_gm_app/navigation/app_section.dart';
+import 'package:football_gm_app/navigation/navigate.dart';
 import 'package:football_gm_app/navigation/navigation_controller.dart';
 import 'package:football_gm_app/ui/arcade_assets.dart';
 import 'package:football_gm_app/ui/arcade_colors.dart';
@@ -17,6 +18,7 @@ class GameNavBar extends StatelessWidget {
     final nav = context.watch<NavigationController>();
     final auth = context.watch<AuthController>();
     final signedIn = auth.status == AuthStatus.authenticated;
+    final destinations = AppSection.destinations(signedIn: signedIn);
     final narrow = MediaQuery.sizeOf(context).width < 720;
 
     return Material(
@@ -31,58 +33,32 @@ class GameNavBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: Row(
           children: [
-            _Brand(onTap: () => _go(context, AppSection.home)),
+            _Brand(onTap: () => navigateToSection(context, AppSection.home)),
             const Spacer(),
             if (narrow) ...[
               PopupMenuButton<AppSection>(
                 tooltip: 'Menu',
                 icon: const Icon(Icons.menu, color: ArcadeColors.gold),
-                onSelected: (section) => _go(context, section),
+                onSelected: (section) => navigateToSection(context, section),
                 itemBuilder: (_) => [
-                  const PopupMenuItem(
-                    value: AppSection.home,
-                    child: Text('Home'),
-                  ),
-                  const PopupMenuItem(
-                    value: AppSection.leagues,
-                    child: Text('Leagues'),
-                  ),
-                  if (!signedIn)
-                    const PopupMenuItem(
-                      value: AppSection.login,
-                      child: Text('Login'),
-                    ),
+                  for (final dest in destinations)
+                    PopupMenuItem(value: dest, child: Text(dest.label)),
                 ],
               ),
               if (signedIn) _AccountMenu(auth: auth),
             ] else ...[
-              _NavLink(
-                label: 'Home',
-                selected: nav.section == AppSection.home,
-                onTap: () => _go(context, AppSection.home),
-              ),
-              _NavLink(
-                label: 'Leagues',
-                selected: nav.section == AppSection.leagues,
-                onTap: () => _go(context, AppSection.leagues),
-              ),
-              if (signedIn)
-                _AccountMenu(auth: auth)
-              else
+              for (final dest in destinations)
                 _NavLink(
-                  label: 'Login',
-                  selected: nav.section == AppSection.login,
-                  onTap: () => _go(context, AppSection.login),
+                  label: dest.label,
+                  selected: nav.section == dest,
+                  onTap: () => navigateToSection(context, dest),
                 ),
+              if (signedIn) _AccountMenu(auth: auth),
             ],
           ],
         ),
       ),
     );
-  }
-
-  void _go(BuildContext context, AppSection section) {
-    context.read<NavigationController>().go(section, context);
   }
 }
 

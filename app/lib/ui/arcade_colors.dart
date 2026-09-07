@@ -12,7 +12,6 @@ abstract final class ArcadeColors {
   static const cream = Color(0xFFF5F0D8);
   static const creamMuted = Color(0xFFC9C3A6);
   static const endzone = Color(0xFF8B1E1E);
-  static const leather = Color(0xFF6D4C41);
   static const bevelLight = Color(0xFF4CAF50);
   static const bevelDark = Color(0xFF051008);
   static const scanline = Color(0x33000000);

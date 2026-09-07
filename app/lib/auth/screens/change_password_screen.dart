@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
 import 'package:football_gm_app/navigation/app_section.dart';
-import 'package:football_gm_app/navigation/navigation_controller.dart';
-import 'package:football_gm_app/ui/widgets/arcade_page.dart';
-import 'package:football_gm_app/ui/widgets/arcade_password_field.dart';
-import 'package:football_gm_app/ui/widgets/arcade_submit_button.dart';
-import 'package:football_gm_app/ui/widgets/pixel_panel.dart';
-import 'package:football_gm_app/ui/widgets/status_banner.dart';
+import 'package:football_gm_app/navigation/navigate.dart';
+import 'package:football_gm_app/ui/ui.dart';
 import 'package:provider/provider.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -44,7 +40,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
 
     if (ok && mounted) {
-      context.read<NavigationController>().go(AppSection.login, context);
+      navigateToSection(context, AppSection.login);
     }
   }
 

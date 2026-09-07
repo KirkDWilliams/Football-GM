@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
+import 'package:football_gm_app/auth/email.dart';
 import 'package:football_gm_app/auth/screens/register_screen.dart';
 import 'package:football_gm_app/navigation/app_section.dart';
-import 'package:football_gm_app/navigation/navigation_controller.dart';
-import 'package:football_gm_app/ui/widgets/arcade_page.dart';
-import 'package:football_gm_app/ui/widgets/arcade_password_field.dart';
-import 'package:football_gm_app/ui/widgets/arcade_submit_button.dart';
-import 'package:football_gm_app/ui/widgets/pixel_panel.dart';
-import 'package:football_gm_app/ui/widgets/status_banner.dart';
+import 'package:football_gm_app/navigation/navigate.dart';
+import 'package:football_gm_app/ui/ui.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -40,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
       password: _password.text,
     );
     if (ok && mounted) {
-      context.read<NavigationController>().go(AppSection.home, context);
+      navigateToSection(context, AppSection.home);
     }
   }
 
@@ -80,13 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   keyboardType: TextInputType.emailAddress,
                   enabled: !auth.busy,
                   decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Email is required';
-                    }
-                    if (!v.contains('@')) return 'Enter a valid email';
-                    return null;
-                  },
+                  validator: validateEmail,
                 ),
                 const SizedBox(height: 16),
                 ArcadePasswordField(

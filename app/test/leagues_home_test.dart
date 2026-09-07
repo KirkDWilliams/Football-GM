@@ -1,12 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:football_gm_app/app.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
 import 'package:football_gm_app/auth/models/auth_user.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/models/league_summary.dart';
 
-import 'logged_in_auth.dart';
+import 'pump_app.dart';
 
 void main() {
   testWidgets(
@@ -102,18 +101,7 @@ void main() {
         scoring: ScoringKind.standard,
       ),
     ]);
-    final auth = loggedInAuth();
-
-    await tester.pumpWidget(
-      FootballGmApp(
-        authController: auth.controller,
-        authService: auth.service,
-        leagueApi: api,
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Leagues'));
-    await tester.pumpAndSettle();
+    await pumpApp(tester, leagueApi: api, openLeagues: true);
     expect(find.text('Sunday League'), findsOneWidget);
 
     api.listError = Exception('network');
@@ -136,18 +124,7 @@ void main() {
         scoring: ScoringKind.standard,
       ),
     ]);
-    final auth = loggedInAuth();
-
-    await tester.pumpWidget(
-      FootballGmApp(
-        authController: auth.controller,
-        authService: auth.service,
-        leagueApi: api,
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Leagues'));
-    await tester.pumpAndSettle();
+    final auth = await pumpApp(tester, leagueApi: api, openLeagues: true);
     expect(find.text('Sunday League'), findsOneWidget);
 
     auth.controller
@@ -155,7 +132,9 @@ void main() {
       ..status = AuthStatus.unauthenticated
       ..notifyListeners();
     await tester.pumpAndSettle();
-    expect(find.text('Sign in'), findsWidgets);
+    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Sign in'), findsNothing);
+    expect(find.text('Sunday League'), findsNothing);
 
     api.leagues = [
       const LeagueSummary(
@@ -202,17 +181,11 @@ Future<void> _pumpLoggedIn(
   List<LeagueSummary> leagues = const [],
   Object? listError,
 }) async {
-  final auth = loggedInAuth();
-  await tester.pumpWidget(
-    FootballGmApp(
-      authController: auth.controller,
-      authService: auth.service,
-      leagueApi: _FakeLeagueApi(leagues, listError: listError),
-    ),
+  await pumpApp(
+    tester,
+    leagueApi: _FakeLeagueApi(leagues, listError: listError),
+    openLeagues: true,
   );
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Leagues'));
-  await tester.pumpAndSettle();
 }
 
 class _FakeLeagueApi implements LeagueApi {

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/models/league_details.dart';
-import 'package:football_gm_app/ui/widgets/arcade_accordion.dart';
-import 'package:football_gm_app/ui/widgets/arcade_page.dart';
+import 'package:football_gm_app/ui/ui.dart';
 
 class LeagueInformationScreen extends StatefulWidget {
   const LeagueInformationScreen({
