@@ -3,6 +3,7 @@ using FootballGm.Api.Helpers;
 
 namespace FootballGm.Api.Tests;
 
+[Collection("WeekClock")]
 public class BudgetHelperTests()
 {
     private readonly decimal roundingTolerance = .01M;

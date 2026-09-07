@@ -2,8 +2,11 @@ using FootballGm.Api.Helpers;
 
 namespace FootballGm.Api.Tests;
 
-public class WeekHelperTests
+[Collection("WeekClock")]
+public class WeekHelperTests : IDisposable
 {
+    private readonly Func<DateTime> _original = WeekHelper.NowProvider;
+
     [Theory]
     [InlineData(9, 08, 0)]
     [InlineData(9, 09, 1)]
@@ -33,4 +36,6 @@ public class WeekHelperTests
         // Assert
         Assert.Equal(-1, week);
     }
+
+    public void Dispose() => WeekHelper.NowProvider = _original;
 }

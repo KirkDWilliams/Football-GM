@@ -25,11 +25,15 @@ namespace FootballGm.Api.Helpers
                         obligation -= contracts[contract].GiftedCapSpace;
 
                     var weeklyPayment = decimal.Zero;
+                    var duration = contracts[contract].EndWeek - contracts[contract].StartWeek + 1;
 
                     switch (type)
                     {
                         case ContractType.Standard:
-                            weeklyPayment += contracts[contract].Salary + contracts[contract].SigningBonus;
+                            weeklyPayment += contracts[contract].Salary;
+                            // Signing bonus hits the cap in the start week; salary is spread across the contract.
+                            if (week == contracts[contract].StartWeek)
+                                obligation += contracts[contract].SigningBonus;
                             break;
 
                         case ContractType.Received:
@@ -44,7 +48,7 @@ namespace FootballGm.Api.Helpers
                         default: break;
                     }
 
-                    obligation += weeklyPayment / (contracts[contract].EndWeek - contracts[contract].StartWeek + 1);     
+                    obligation += weeklyPayment / duration;
                 };
 
                 if (decimal.Equals(obligation, decimal.Zero))

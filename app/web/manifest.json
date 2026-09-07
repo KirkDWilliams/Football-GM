@@ -1,12 +1,12 @@
 {
-    "name": "football_gm_app",
-    "short_name": "football_gm_app",
+    "name": "Football GM",
+    "short_name": "Football GM",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#07140C",
+    "theme_color": "#F4C430",
+    "description": "A retro fantasy football sim.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/models/league_details.dart';
+import 'package:football_gm_app/ui/widgets/arcade_accordion.dart';
+import 'package:football_gm_app/ui/widgets/arcade_page.dart';
 
 class LeagueInformationScreen extends StatefulWidget {
   const LeagueInformationScreen({
@@ -56,8 +58,9 @@ class _LeagueInformationScreenState extends State<LeagueInformationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(_league?.name ?? 'League')),
+    return ArcadePage(
+      title: _league?.name ?? 'League',
+      maxWidth: 640,
       body: _body(),
     );
   }
@@ -87,15 +90,16 @@ class _LeagueBody extends StatelessWidget {
     final bonuses = league.rules.whereType<BonusRule>().toList();
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       children: [
         ListTile(
           contentPadding: EdgeInsets.zero,
+          dense: true,
           title: const Text('Name'),
           subtitle: Text(league.name),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
+          dense: true,
           title: const Text('Join code'),
           subtitle: Text(league.joinCode),
           trailing: const Icon(Icons.copy),
@@ -103,11 +107,13 @@ class _LeagueBody extends StatelessWidget {
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
+          dense: true,
           title: const Text('Role'),
           subtitle: Text(league.role.label),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
+          dense: true,
           title: const Text('Weekly cap'),
           subtitle: Text(formatLeagueNumber(league.weeklyCap)),
         ),
@@ -126,13 +132,13 @@ class _LeagueBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        _Accordion(
+        ArcadeAccordion(
           title: 'Scoring weights',
           child: _ScoringWeightGroups(rules: scoringWeights),
         ),
         if (bonuses.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _Accordion(
+          ArcadeAccordion(
             title: 'Bonuses',
             child: Column(
               children: [
@@ -179,36 +185,6 @@ class _ScoringWeightGroups extends StatelessWidget {
               trailing: Text(formatLeagueNumber(rule.weight)),
             ),
         ],
-      ],
-    );
-  }
-}
-
-class _Accordion extends StatefulWidget {
-  const _Accordion({required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  State<_Accordion> createState() => _AccordionState();
-}
-
-class _AccordionState extends State<_Accordion> {
-  bool _open = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(widget.title),
-          trailing: Icon(_open ? Icons.expand_less : Icons.expand_more),
-          onTap: () => setState(() => _open = !_open),
-        ),
-        if (_open) widget.child,
       ],
     );
   }

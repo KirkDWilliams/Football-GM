@@ -284,6 +284,8 @@ Future<void> _pumpLoggedIn(
     ),
   );
   await tester.pumpAndSettle();
+  await tester.tap(find.text('Leagues'));
+  await tester.pumpAndSettle();
 }
 
 class _FakeLeagueApi implements LeagueApi {

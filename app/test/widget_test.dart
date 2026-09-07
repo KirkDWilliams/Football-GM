@@ -8,7 +8,31 @@ import 'package:football_gm_app/leagues/models/league_summary.dart';
 import 'logged_in_auth.dart';
 
 void main() {
-  testWidgets('Signed-out users see the login screen', (tester) async {
+  testWidgets(
+    'Signed-out users land on home with website nav, not a login wall',
+    (tester) async {
+      final auth = loggedInAuth(status: AuthStatus.unauthenticated);
+
+      await tester.pumpWidget(
+        FootballGmApp(
+          authController: auth.controller,
+          authService: auth.service,
+          leagueApi: _EmptyLeagueApi(),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Home'), findsOneWidget);
+      expect(find.text('Leagues'), findsOneWidget);
+      expect(find.text('Login'), findsOneWidget);
+      expect(find.text('FOOTBALL GM'), findsWidgets);
+      expect(find.text('Create an account'), findsNothing);
+      expect(find.text('My Leagues'), findsNothing);
+      expect(find.text('Sync'), findsNothing);
+    },
+  );
+
+  testWidgets('Login in the nav opens the sign-in form', (tester) async {
     final auth = loggedInAuth(status: AuthStatus.unauthenticated);
 
     await tester.pumpWidget(
@@ -20,9 +44,11 @@ void main() {
     );
     await tester.pump();
 
+    await tester.tap(find.text('Login'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Sign in'), findsWidgets);
     expect(find.text('Create an account'), findsOneWidget);
-    expect(find.text('Sync'), findsNothing);
     expect(find.text('My Leagues'), findsNothing);
   });
 }

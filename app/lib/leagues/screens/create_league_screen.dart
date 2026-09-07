@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/screens/league_information_screen.dart';
+import 'package:football_gm_app/ui/widgets/arcade_accordion.dart';
+import 'package:football_gm_app/ui/widgets/arcade_page.dart';
+import 'package:football_gm_app/ui/widgets/arcade_submit_button.dart';
+import 'package:football_gm_app/ui/widgets/pixel_panel.dart';
+import 'package:football_gm_app/ui/widgets/status_banner.dart';
 import 'package:provider/provider.dart';
 
 class CreateLeagueScreen extends StatefulWidget {
@@ -72,81 +77,58 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Create League')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
+    return ArcadePage(
+      title: 'Create League',
+      maxWidth: 480,
+      body: PixelPanel(
+        child: Form(
+          key: _formKey,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        _error!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ),
-                  TextFormField(
-                    controller: _name,
-                    enabled: !_busy,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Name is required';
-                      }
-                      return null;
-                    },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_error != null) StatusBanner(text: _error!),
+                TextFormField(
+                  controller: _name,
+                  enabled: !_busy,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(labelText: 'Name'),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Name is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _weeklyCap,
+                  enabled: !_busy,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _weeklyCap,
-                    enabled: !_busy,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                      signed: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Weekly cap',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      final cap = num.tryParse(value?.trim() ?? '');
-                      if (cap == null || cap <= 0) {
-                        return 'Weekly cap must be greater than 0';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _ScoringWeightEditor(
-                    controllers: _weightControllers,
-                    enabled: !_busy,
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _busy ? null : _submit,
-                    child: _busy
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Create'),
-                  ),
-                ],
-              ),
+                  decoration: const InputDecoration(labelText: 'Weekly cap'),
+                  validator: (value) {
+                    final cap = num.tryParse(value?.trim() ?? '');
+                    if (cap == null || cap <= 0) {
+                      return 'Weekly cap must be greater than 0';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                _ScoringWeightEditor(
+                  controllers: _weightControllers,
+                  enabled: !_busy,
+                ),
+                const SizedBox(height: 24),
+                ArcadeSubmitButton(
+                  label: 'Create',
+                  busy: _busy,
+                  onPressed: _submit,
+                ),
+              ],
             ),
           ),
         ),
@@ -155,7 +137,7 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
   }
 }
 
-class _ScoringWeightEditor extends StatefulWidget {
+class _ScoringWeightEditor extends StatelessWidget {
   const _ScoringWeightEditor({
     required this.controllers,
     required this.enabled,
@@ -165,24 +147,12 @@ class _ScoringWeightEditor extends StatefulWidget {
   final bool enabled;
 
   @override
-  State<_ScoringWeightEditor> createState() => _ScoringWeightEditorState();
-}
-
-class _ScoringWeightEditorState extends State<_ScoringWeightEditor> {
-  bool _open = false;
-
-  @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Scoring weights'),
-          trailing: Icon(_open ? Icons.expand_less : Icons.expand_more),
-          onTap: () => setState(() => _open = !_open),
-        ),
-        if (_open)
+    return ArcadeAccordion(
+      title: 'Scoring weights',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           for (final group in ScoringGroup.values) ...[
             Padding(
               padding: const EdgeInsets.only(top: 8, bottom: 4),
@@ -193,21 +163,19 @@ class _ScoringWeightEditorState extends State<_ScoringWeightEditor> {
             ),
             for (final stat in group.stats) ...[
               TextFormField(
-                controller: widget.controllers[stat],
-                enabled: widget.enabled,
+                controller: controllers[stat],
+                enabled: enabled,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                   signed: true,
                 ),
-                decoration: InputDecoration(
-                  labelText: stat.label,
-                  border: const OutlineInputBorder(),
-                ),
+                decoration: InputDecoration(labelText: stat.label),
               ),
               const SizedBox(height: 12),
             ],
           ],
-      ],
+        ],
+      ),
     );
   }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -11,127 +10,113 @@ namespace FootballGm.Api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Games",
-                columns: table => new
-                {
-                    GameId = table.Column<string>(type: "TEXT", nullable: false),
-                    Season = table.Column<short>(type: "INTEGER", nullable: false),
-                    Week = table.Column<short>(type: "INTEGER", nullable: false),
-                    Date = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    HomeTeam = table.Column<string>(type: "TEXT", nullable: false),
-                    AwayTeam = table.Column<string>(type: "TEXT", nullable: false),
-                    HomeScore = table.Column<string>(type: "TEXT", nullable: false),
-                    AwayScore = table.Column<string>(type: "TEXT", nullable: false),
-                    WindSpeed = table.Column<short>(type: "INTEGER", nullable: true),
-                    Temperature = table.Column<short>(type: "INTEGER", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Games", x => x.GameId);
-                });
+            // Local DBs may already have these tables from older migration IDs
+            // that are no longer in the repo. CREATE IF NOT EXISTS lets Migrate()
+            // catch up without wiping ingested data.
+            migrationBuilder.Sql(
+                """
+                CREATE TABLE IF NOT EXISTS "Games" (
+                    "GameId" TEXT NOT NULL CONSTRAINT "PK_Games" PRIMARY KEY,
+                    "Season" INTEGER NOT NULL,
+                    "Week" INTEGER NOT NULL,
+                    "Date" TEXT NOT NULL,
+                    "HomeTeam" TEXT NOT NULL,
+                    "AwayTeam" TEXT NOT NULL,
+                    "HomeScore" TEXT NOT NULL,
+                    "AwayScore" TEXT NOT NULL,
+                    "WindSpeed" INTEGER NULL,
+                    "Temperature" INTEGER NULL
+                );
+                """);
 
-            migrationBuilder.CreateTable(
-                name: "InjuryStatus",
-                columns: table => new
-                {
-                    Season = table.Column<short>(type: "INTEGER", nullable: false),
-                    Week = table.Column<short>(type: "INTEGER", nullable: false),
-                    PlayerId = table.Column<string>(type: "TEXT", nullable: false),
-                    OfficialReportStatus = table.Column<string>(type: "TEXT", nullable: false),
-                    PracticePrimaryStatus = table.Column<string>(type: "TEXT", nullable: false),
-                    PracticeStatus = table.Column<string>(type: "TEXT", nullable: false),
-                    LastUpdated = table.Column<string>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_InjuryStatus", x => new { x.Season, x.Week, x.PlayerId });
-                });
+            migrationBuilder.Sql(
+                """
+                CREATE TABLE IF NOT EXISTS "InjuryStatus" (
+                    "Season" INTEGER NOT NULL,
+                    "Week" INTEGER NOT NULL,
+                    "PlayerId" TEXT NOT NULL,
+                    "OfficialReportStatus" TEXT NOT NULL,
+                    "PracticePrimaryStatus" TEXT NOT NULL,
+                    "PracticeStatus" TEXT NOT NULL,
+                    "LastUpdated" TEXT NOT NULL,
+                    CONSTRAINT "PK_InjuryStatus" PRIMARY KEY ("Season", "Week", "PlayerId")
+                );
+                """);
 
-            migrationBuilder.CreateTable(
-                name: "PlayerGame",
-                columns: table => new
-                {
-                    PlayerId = table.Column<string>(type: "TEXT", nullable: false),
-                    GameId = table.Column<string>(type: "TEXT", nullable: false),
-                    PassAttempts = table.Column<short>(type: "INTEGER", nullable: false),
-                    PassCompletions = table.Column<short>(type: "INTEGER", nullable: false),
-                    PassingYards = table.Column<short>(type: "INTEGER", nullable: false),
-                    PassingTouchdowns = table.Column<short>(type: "INTEGER", nullable: false),
-                    RushAttempts = table.Column<short>(type: "INTEGER", nullable: false),
-                    RushingYards = table.Column<short>(type: "INTEGER", nullable: false),
-                    RushingFirstDowns = table.Column<short>(type: "INTEGER", nullable: false),
-                    RushingTouchdowns = table.Column<short>(type: "INTEGER", nullable: false),
-                    Receptions = table.Column<short>(type: "INTEGER", nullable: false),
-                    ReceivingYards = table.Column<short>(type: "INTEGER", nullable: false),
-                    ReceivingTouchdowns = table.Column<short>(type: "INTEGER", nullable: false),
-                    Interceptions = table.Column<short>(type: "INTEGER", nullable: false),
-                    Fumbles = table.Column<short>(type: "INTEGER", nullable: false),
-                    Sacks = table.Column<short>(type: "INTEGER", nullable: false),
-                    FieldGoalsMade = table.Column<string>(type: "TEXT", nullable: false),
-                    FieldGoalsMissed = table.Column<string>(type: "TEXT", nullable: false),
-                    ExtraPointsMade = table.Column<short>(type: "INTEGER", nullable: false),
-                    ExtraPointsAttempted = table.Column<short>(type: "INTEGER", nullable: false),
-                    PassingTwoPointConversions = table.Column<short>(type: "INTEGER", nullable: false),
-                    RushingTwoPointConversions = table.Column<short>(type: "INTEGER", nullable: false),
-                    ReceivingTwoPointConversions = table.Column<short>(type: "INTEGER", nullable: false),
-                    ReturnedTouchdowns = table.Column<short>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PlayerGame", x => new { x.PlayerId, x.GameId });
-                });
+            migrationBuilder.Sql(
+                """
+                CREATE TABLE IF NOT EXISTS "PlayerGame" (
+                    "PlayerId" TEXT NOT NULL,
+                    "GameId" TEXT NOT NULL,
+                    "PassAttempts" INTEGER NOT NULL,
+                    "PassCompletions" INTEGER NOT NULL,
+                    "PassingYards" INTEGER NOT NULL,
+                    "PassingTouchdowns" INTEGER NOT NULL,
+                    "RushAttempts" INTEGER NOT NULL,
+                    "RushingYards" INTEGER NOT NULL,
+                    "RushingFirstDowns" INTEGER NOT NULL,
+                    "RushingTouchdowns" INTEGER NOT NULL,
+                    "Receptions" INTEGER NOT NULL,
+                    "ReceivingYards" INTEGER NOT NULL,
+                    "ReceivingTouchdowns" INTEGER NOT NULL,
+                    "Interceptions" INTEGER NOT NULL,
+                    "Fumbles" INTEGER NOT NULL,
+                    "Sacks" INTEGER NOT NULL,
+                    "FieldGoalsMade" TEXT NOT NULL,
+                    "FieldGoalsMissed" TEXT NOT NULL,
+                    "ExtraPointsMade" INTEGER NOT NULL,
+                    "ExtraPointsAttempted" INTEGER NOT NULL,
+                    "PassingTwoPointConversions" INTEGER NOT NULL,
+                    "RushingTwoPointConversions" INTEGER NOT NULL,
+                    "ReceivingTwoPointConversions" INTEGER NOT NULL,
+                    "ReturnedTouchdowns" INTEGER NOT NULL,
+                    CONSTRAINT "PK_PlayerGame" PRIMARY KEY ("PlayerId", "GameId")
+                );
+                """);
 
-            migrationBuilder.CreateTable(
-                name: "Players",
-                columns: table => new
-                {
-                    PlayerId = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    PictureUrl = table.Column<string>(type: "TEXT", nullable: false),
-                    Team = table.Column<string>(type: "TEXT", nullable: false),
-                    Position = table.Column<string>(type: "TEXT", nullable: false),
-                    JerseyNumber = table.Column<short>(type: "INTEGER", nullable: false),
-                    DraftYear = table.Column<short>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Players", x => x.PlayerId);
-                });
+            migrationBuilder.Sql(
+                """
+                CREATE TABLE IF NOT EXISTS "Players" (
+                    "PlayerId" TEXT NOT NULL CONSTRAINT "PK_Players" PRIMARY KEY,
+                    "Name" TEXT NOT NULL,
+                    "PictureUrl" TEXT NOT NULL,
+                    "Team" TEXT NOT NULL,
+                    "Position" TEXT NOT NULL,
+                    "JerseyNumber" INTEGER NOT NULL,
+                    "DraftYear" INTEGER NOT NULL
+                );
+                """);
 
-            migrationBuilder.CreateTable(
-                name: "PlayerSeason",
-                columns: table => new
-                {
-                    PlayerId = table.Column<string>(type: "TEXT", nullable: false),
-                    Season = table.Column<short>(type: "INTEGER", nullable: false),
-                    PassAttempts = table.Column<short>(type: "INTEGER", nullable: false),
-                    PassCompletions = table.Column<short>(type: "INTEGER", nullable: false),
-                    PassingYards = table.Column<short>(type: "INTEGER", nullable: false),
-                    PassingTouchdowns = table.Column<short>(type: "INTEGER", nullable: false),
-                    RushAttempts = table.Column<short>(type: "INTEGER", nullable: false),
-                    RushingYards = table.Column<short>(type: "INTEGER", nullable: false),
-                    RushingBrokenTackles = table.Column<short>(type: "INTEGER", nullable: false),
-                    RushingFirstDowns = table.Column<short>(type: "INTEGER", nullable: false),
-                    RushingTouchdowns = table.Column<short>(type: "INTEGER", nullable: false),
-                    Receptions = table.Column<short>(type: "INTEGER", nullable: false),
-                    ReceivingYards = table.Column<short>(type: "INTEGER", nullable: false),
-                    ReceivingTouchdowns = table.Column<short>(type: "INTEGER", nullable: false),
-                    Interceptions = table.Column<short>(type: "INTEGER", nullable: false),
-                    Fumbles = table.Column<short>(type: "INTEGER", nullable: false),
-                    Sacks = table.Column<short>(type: "INTEGER", nullable: false),
-                    FieldGoalsMade = table.Column<string>(type: "TEXT", nullable: false),
-                    FieldGoalsMissed = table.Column<string>(type: "TEXT", nullable: false),
-                    ExtraPointsMade = table.Column<short>(type: "INTEGER", nullable: false),
-                    ExtraPointsAttempted = table.Column<short>(type: "INTEGER", nullable: false),
-                    PassingTwoPointConversions = table.Column<short>(type: "INTEGER", nullable: false),
-                    TwoPointConversionsMade = table.Column<short>(type: "INTEGER", nullable: false),
-                    ReturnedTouchdowns = table.Column<short>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PlayerSeason", x => new { x.PlayerId, x.Season });
-                });
+            migrationBuilder.Sql(
+                """
+                CREATE TABLE IF NOT EXISTS "PlayerSeason" (
+                    "PlayerId" TEXT NOT NULL,
+                    "Season" INTEGER NOT NULL,
+                    "PassAttempts" INTEGER NOT NULL,
+                    "PassCompletions" INTEGER NOT NULL,
+                    "PassingYards" INTEGER NOT NULL,
+                    "PassingTouchdowns" INTEGER NOT NULL,
+                    "RushAttempts" INTEGER NOT NULL,
+                    "RushingYards" INTEGER NOT NULL,
+                    "RushingBrokenTackles" INTEGER NOT NULL,
+                    "RushingFirstDowns" INTEGER NOT NULL,
+                    "RushingTouchdowns" INTEGER NOT NULL,
+                    "Receptions" INTEGER NOT NULL,
+                    "ReceivingYards" INTEGER NOT NULL,
+                    "ReceivingTouchdowns" INTEGER NOT NULL,
+                    "Interceptions" INTEGER NOT NULL,
+                    "Fumbles" INTEGER NOT NULL,
+                    "Sacks" INTEGER NOT NULL,
+                    "FieldGoalsMade" TEXT NOT NULL,
+                    "FieldGoalsMissed" TEXT NOT NULL,
+                    "ExtraPointsMade" INTEGER NOT NULL,
+                    "ExtraPointsAttempted" INTEGER NOT NULL,
+                    "PassingTwoPointConversions" INTEGER NOT NULL,
+                    "TwoPointConversionsMade" INTEGER NOT NULL,
+                    "ReturnedTouchdowns" INTEGER NOT NULL,
+                    CONSTRAINT "PK_PlayerSeason" PRIMARY KEY ("PlayerId", "Season")
+                );
+                """);
         }
 
         /// <inheritdoc />

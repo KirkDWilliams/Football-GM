@@ -112,6 +112,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Leagues'));
+    await tester.pumpAndSettle();
     expect(find.text('Sunday League'), findsOneWidget);
 
     api.listError = Exception('network');
@@ -143,6 +145,8 @@ void main() {
         leagueApi: api,
       ),
     );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Leagues'));
     await tester.pumpAndSettle();
     expect(find.text('Sunday League'), findsOneWidget);
 
@@ -206,6 +210,8 @@ Future<void> _pumpLoggedIn(
       leagueApi: _FakeLeagueApi(leagues, listError: listError),
     ),
   );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Leagues'));
   await tester.pumpAndSettle();
 }
 

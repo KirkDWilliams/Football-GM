@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/screens/league_information_screen.dart';
+import 'package:football_gm_app/ui/widgets/arcade_page.dart';
+import 'package:football_gm_app/ui/widgets/arcade_submit_button.dart';
+import 'package:football_gm_app/ui/widgets/pixel_panel.dart';
+import 'package:football_gm_app/ui/widgets/status_banner.dart';
 import 'package:provider/provider.dart';
 
 class JoinLeagueScreen extends StatefulWidget {
@@ -54,56 +58,36 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Join with code')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
+    return ArcadePage(
+      title: 'Join with code',
+      maxWidth: 440,
+      body: PixelPanel(
+        child: Form(
+          key: _formKey,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        _error!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ),
-                  TextFormField(
-                    controller: _joinCode,
-                    enabled: !_busy,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: const InputDecoration(
-                      labelText: 'Join code',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Join code is required';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _busy ? null : _submit,
-                    child: _busy
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Join'),
-                  ),
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_error != null) StatusBanner(text: _error!),
+                TextFormField(
+                  controller: _joinCode,
+                  enabled: !_busy,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: const InputDecoration(labelText: 'Join code'),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Join code is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                ArcadeSubmitButton(
+                  label: 'Join',
+                  busy: _busy,
+                  onPressed: _submit,
+                ),
+              ],
             ),
           ),
         ),

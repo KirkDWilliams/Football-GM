@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
+import 'package:football_gm_app/navigation/app_section.dart';
+import 'package:football_gm_app/navigation/navigation_controller.dart';
+import 'package:football_gm_app/ui/widgets/arcade_page.dart';
+import 'package:football_gm_app/ui/widgets/arcade_password_field.dart';
+import 'package:football_gm_app/ui/widgets/arcade_submit_button.dart';
+import 'package:football_gm_app/ui/widgets/pixel_panel.dart';
+import 'package:football_gm_app/ui/widgets/status_banner.dart';
 import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -36,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     if (ok && mounted) {
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      context.read<NavigationController>().go(AppSection.home, context);
     }
   }
 
@@ -44,107 +51,82 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Create account')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
+    return ArcadePage(
+      title: 'Create account',
+      maxWidth: 440,
+      body: PixelPanel(
+        child: Form(
+          key: _formKey,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (auth.errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        auth.errorMessage!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ),
-                  TextFormField(
-                    controller: _name,
-                    enabled: !auth.busy,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Display name',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Display name is required';
-                      }
-                      if (v.trim().length > 100) {
-                        return 'Max 100 characters';
-                      }
-                      return null;
-                    },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (auth.errorMessage != null)
+                  StatusBanner(
+                    text: auth.errorMessage!,
+                    onClose: auth.clearError,
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _email,
-                    enabled: !auth.busy,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Email is required';
-                      if (!v.contains('@')) return 'Enter a valid email';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _password,
-                    obscureText: _hidePassword,
-                    enabled: !auth.busy,
-                    onFieldSubmitted: (_) => _submit(),
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      helperText: 'At least 8 characters',
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _hidePassword ? Icons.visibility : Icons.visibility_off,
-                        ),
-                        onPressed: () =>
-                            setState(() => _hidePassword = !_hidePassword),
-                      ),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Password is required';
-                      if (v.length < 8) return 'At least 8 characters';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: auth.busy ? null : _submit,
-                    child: auth.busy
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Create account'),
-                  ),
-                  TextButton(
-                    onPressed: auth.busy
-                        ? null
-                        : () {
-                            auth.clearError();
-                            Navigator.of(context).pop();
-                          },
-                    child: const Text('Already have an account? Sign in'),
-                  ),
-                ],
-              ),
+                TextFormField(
+                  controller: _name,
+                  enabled: !auth.busy,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(labelText: 'Display name'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Display name is required';
+                    }
+                    if (v.trim().length > 100) {
+                      return 'Max 100 characters';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _email,
+                  enabled: !auth.busy,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Email is required';
+                    }
+                    if (!v.contains('@')) return 'Enter a valid email';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                ArcadePasswordField(
+                  controller: _password,
+                  label: 'Password',
+                  helperText: 'At least 8 characters',
+                  obscure: _hidePassword,
+                  onToggle: () =>
+                      setState(() => _hidePassword = !_hidePassword),
+                  enabled: !auth.busy,
+                  onFieldSubmitted: _submit,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Password is required';
+                    if (v.length < 8) return 'At least 8 characters';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                ArcadeSubmitButton(
+                  label: 'Create account',
+                  busy: auth.busy,
+                  onPressed: _submit,
+                ),
+                TextButton(
+                  onPressed: auth.busy
+                      ? null
+                      : () {
+                          auth.clearError();
+                          Navigator.of(context).pop();
+                        },
+                  child: const Text('Already have an account? Sign in'),
+                ),
+              ],
             ),
           ),
         ),
