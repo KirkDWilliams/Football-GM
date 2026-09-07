@@ -47,19 +47,7 @@ public class LeagueOrchestrator(ILeagueRepository repository, ILeagueCodeService
         return
         [
             .. memberships.Select(membership =>
-            {
-                var league = League.FromEntity(membership.League);
-                return new LeagueSummary
-                {
-                    LeagueId = league.LeagueId,
-                    Name = league.Name,
-                    JoinCode = league.JoinCode,
-                    Role = membership.Role,
-                    Scoring = Rule.UsesDefaultScoringWeights(league.Rules)
-                        ? ScoringKind.Standard
-                        : ScoringKind.Custom
-                };
-            })
+                LeagueSummary.From(membership.League, membership.Role))
         ];
     }
 
@@ -74,7 +62,7 @@ public class LeagueOrchestrator(ILeagueRepository repository, ILeagueCodeService
 
         return new GetLeagueResult(
             GetLeagueStatus.Found,
-            LeagueDetails.From(League.FromEntity(membership.League), membership.Role));
+            LeagueDetails.From(membership.League, membership.Role));
     }
 }
 
@@ -93,4 +81,4 @@ public enum GetLeagueStatus
     NotFound
 }
 
-public sealed record GetLeagueResult(GetLeagueStatus Status, LeagueDetails? League = null);
+public sealed record GetLeagueResult(GetLeagueStatus Status, LeagueDetails? Details = null);

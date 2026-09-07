@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using FootballGm.Api.Data.Enums;
 using FootballGm.Api.Serialization;
+using Entities = FootballGm.Api.Data.Entity.Contrived;
 
 namespace FootballGm.Api.Data.Models;
 
@@ -26,4 +27,7 @@ public sealed class LeagueDetails
         Positions = league.Positions,
         Role = role
     };
+
+    public static LeagueDetails From(Entities.League entity, LeagueMemberRole role) =>
+        From(League.FromEntity(entity), role);
 }

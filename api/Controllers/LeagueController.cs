@@ -49,7 +49,7 @@ public class LeagueController(ILeagueOrchestrator orchestrator) : ControllerBase
         return result.Status switch
         {
             GetLeagueStatus.NotFound => NotFound(),
-            GetLeagueStatus.Found => Ok(result.League),
+            GetLeagueStatus.Found => Ok(result.Details),
             _ => throw new ArgumentOutOfRangeException(nameof(result.Status), result.Status, null)
         };
     }
