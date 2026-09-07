@@ -37,6 +37,45 @@ public class LeagueOrchestrator(ILeagueRepository repository, ILeagueCodeService
 
         return new JoinLeagueResult(JoinLeagueStatus.Joined, League.FromEntity(league));
     }
+
+    public async Task<IReadOnlyList<LeagueSummary>> GetMyLeagues(
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        var memberships = await repository.ListForUserAsync(userId, cancellationToken);
+
+        return
+        [
+            .. memberships.Select(membership =>
+            {
+                var league = League.FromEntity(membership.League);
+                return new LeagueSummary
+                {
+                    LeagueId = league.LeagueId,
+                    Name = league.Name,
+                    JoinCode = league.JoinCode,
+                    Role = membership.Role,
+                    Scoring = Rule.UsesDefaultScoringWeights(league.Rules)
+                        ? ScoringKind.Standard
+                        : ScoringKind.Custom
+                };
+            })
+        ];
+    }
+
+    public async Task<GetLeagueResult> GetLeague(
+        string userId,
+        int leagueId,
+        CancellationToken cancellationToken)
+    {
+        var membership = await repository.GetMembershipAsync(leagueId, userId, cancellationToken);
+        if (membership is null)
+            return new GetLeagueResult(GetLeagueStatus.NotFound);
+
+        return new GetLeagueResult(
+            GetLeagueStatus.Found,
+            LeagueDetails.From(League.FromEntity(membership.League), membership.Role));
+    }
 }
 
 public enum JoinLeagueStatus
@@ -47,3 +86,11 @@ public enum JoinLeagueStatus
 }
 
 public sealed record JoinLeagueResult(JoinLeagueStatus Status, League? League = null);
+
+public enum GetLeagueStatus
+{
+    Found,
+    NotFound
+}
+
+public sealed record GetLeagueResult(GetLeagueStatus Status, LeagueDetails? League = null);

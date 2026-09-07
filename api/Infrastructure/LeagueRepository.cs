@@ -49,6 +49,45 @@ public class LeagueRepository(AppDbContext context) : ILeagueRepository
         return leagueMember;
     }
 
+    public async Task<IReadOnlyList<LeagueMembership>> ListForUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var members = await context.LeagueMembers
+            .AsNoTracking()
+            .Where(member => member.UserId == userId)
+            .Include(member => member.League)
+                .ThenInclude(league => league.Settings)
+                    .ThenInclude(settings => settings.Rules)
+            .ToListAsync(cancellationToken);
+
+        return
+        [
+            .. members.Select(member => new LeagueMembership(member.League, member.Role))
+        ];
+    }
+
+    public async Task<LeagueMembership?> GetMembershipAsync(
+        int leagueId,
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var member = await context.LeagueMembers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                membership => membership.LeagueId == leagueId && membership.UserId == userId,
+                cancellationToken);
+
+        if (member is null)
+            return null;
+
+        var league = await GetByIdAsync(leagueId, cancellationToken);
+        if (league is null)
+            return null;
+
+        return new LeagueMembership(league, member.Role);
+    }
+
     private IQueryable<League> LeaguesWithSettings()
     {
         return context.Leagues

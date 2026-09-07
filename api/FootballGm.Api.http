@@ -94,6 +94,16 @@ Accept: application/json
   "name": "Poop League"
 }
 
+### List my leagues (slim summaries)
+GET {{FootballGm.Api_HostAddress}}/api/league
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+### Get one league I belong to (full settings + role)
+GET {{FootballGm.Api_HostAddress}}/api/league/1
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
 ### Get a player identity only (requires access token)
 GET {{FootballGm.Api_HostAddress}}/api/player/00-0033873
 Authorization: Bearer {{accessToken}}

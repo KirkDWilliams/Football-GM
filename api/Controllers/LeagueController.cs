@@ -12,6 +12,48 @@ namespace FootballGm.Api.Controllers;
 [Route("api/[controller]")]
 public class LeagueController(ILeagueOrchestrator orchestrator) : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<LeagueSummary>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IReadOnlyList<LeagueSummary>>> GetMyLeagues(
+        CancellationToken cancellationToken)
+    {
+        var userId =
+            User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub");
+
+        if (string.IsNullOrWhiteSpace(userId))
+            return Unauthorized();
+
+        var leagues = await orchestrator.GetMyLeagues(userId, cancellationToken);
+        return Ok(leagues);
+    }
+
+    [HttpGet("{leagueId:int}")]
+    [ProducesResponseType(typeof(LeagueDetails), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<LeagueDetails>> GetLeague(
+        int leagueId,
+        CancellationToken cancellationToken)
+    {
+        var userId =
+            User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub");
+
+        if (string.IsNullOrWhiteSpace(userId))
+            return Unauthorized();
+
+        var result = await orchestrator.GetLeague(userId, leagueId, cancellationToken);
+
+        return result.Status switch
+        {
+            GetLeagueStatus.NotFound => NotFound(),
+            GetLeagueStatus.Found => Ok(result.League),
+            _ => throw new ArgumentOutOfRangeException(nameof(result.Status), result.Status, null)
+        };
+    }
+
     /// <summary>
     /// Create a league for the authenticated user. Omitting rules uses standard scoring weights.
     /// </summary>

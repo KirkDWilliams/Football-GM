@@ -11,6 +11,21 @@ public class Rule
     public RuleType RuleType { get; set; }
     public StatType Stat { get; set; }
 
+    public static bool UsesDefaultScoringWeights(IEnumerable<Rule> rules)
+    {
+        var expected = CreateDefaultScoringWeights()
+            .OfType<ScoringWeightRule>()
+            .Select(rule => (rule.Stat, rule.Weight))
+            .OrderBy(rule => rule.Stat);
+
+        var actual = rules
+            .OfType<ScoringWeightRule>()
+            .Select(rule => (rule.Stat, rule.Weight))
+            .OrderBy(rule => rule.Stat);
+
+        return expected.SequenceEqual(actual);
+    }
+
     public static List<Rule> CreateDefaultScoringWeights() =>
     [
         new ScoringWeightRule { Stat = StatType.PassAttempts, Weight = 0m },
