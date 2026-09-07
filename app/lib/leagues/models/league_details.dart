@@ -127,6 +127,31 @@ enum StatType {
     returnedTouchdowns => 'Returned touchdowns',
   };
 
+  num get defaultWeight => switch (this) {
+    passAttempts => 0,
+    passCompletions => 0,
+    passingYards => 0.04,
+    passingTouchdowns => 4,
+    rushingAttempts => 0,
+    rushingYards => 0.1,
+    rushingFirstDowns => 0,
+    rushingTouchdowns => 6,
+    receptions => 0,
+    receivingYards => 0.1,
+    receivingTouchdowns => 6,
+    interceptions => -2,
+    fumbles => -2,
+    sacks => 0,
+    fieldGoalsMade => 3,
+    fieldGoalsMissed => 0,
+    extraPointsMade => 1,
+    extraPointsAttempted => 0,
+    passingTwoPointConversions => 2,
+    rushingTwoPointConversions => 2,
+    receivingTwoPointConversions => 2,
+    returnedTouchdowns => 6,
+  };
+
   ScoringGroup get group => switch (this) {
     passAttempts ||
     passCompletions ||
@@ -240,6 +265,27 @@ final class ScoringWeightRule extends Rule {
   const ScoringWeightRule({required super.stat, required this.weight});
 
   final num weight;
+
+  Map<String, dynamic> toJson() => {
+    r'$type': 'scoringWeight',
+    'stat': stat.index,
+    'weight': weight,
+  };
+
+  static List<ScoringWeightRule> defaults() => [
+    for (final stat in StatType.values)
+      ScoringWeightRule(stat: stat, weight: stat.defaultWeight),
+  ];
+
+  static bool usesDefaultScoringWeights(Iterable<ScoringWeightRule> rules) {
+    final expected = {for (final rule in defaults()) rule.stat: rule.weight};
+    final actual = {for (final rule in rules) rule.stat: rule.weight};
+    if (expected.length != actual.length) return false;
+    for (final entry in expected.entries) {
+      if (actual[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
 }
 
 final class BonusRule extends Rule {

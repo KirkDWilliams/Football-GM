@@ -8,7 +8,12 @@ abstract class LeagueApi {
   Future<LeagueDetails> getLeague(int leagueId);
 
   /// Creates a League and returns its id for the information screen to load.
-  Future<int> createLeague({required String name, required num weeklyCap});
+  /// Omitting [scoringWeights] keeps default scoring-weight Rules.
+  Future<int> createLeague({
+    required String name,
+    required num weeklyCap,
+    List<ScoringWeightRule>? scoringWeights,
+  });
 
   /// Joins a League by Join code and returns its id. Already a Member is success.
   Future<int> joinLeague(String joinCode);
@@ -47,10 +52,15 @@ class HttpLeagueApi implements LeagueApi {
   Future<int> createLeague({
     required String name,
     required num weeklyCap,
+    List<ScoringWeightRule>? scoringWeights,
   }) async {
+    final data = <String, dynamic>{'name': name, 'weeklyCapSpace': weeklyCap};
+    if (scoringWeights != null) {
+      data['rules'] = [for (final rule in scoringWeights) rule.toJson()];
+    }
     final resp = await _dio.post<Map<String, dynamic>>(
       '/api/league',
-      data: {'name': name, 'weeklyCapSpace': weeklyCap},
+      data: data,
     );
     if (resp.statusCode == 201 && resp.data != null) {
       return resp.data!['leagueId'] as int;

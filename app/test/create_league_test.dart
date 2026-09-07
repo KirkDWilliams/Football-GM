@@ -24,9 +24,50 @@ void main() {
     expect(find.widgetWithText(TextFormField, 'Name'), findsOneWidget);
     expect(find.widgetWithText(TextFormField, 'Weekly cap'), findsOneWidget);
     expect(find.widgetWithText(TextFormField, '100'), findsOneWidget);
-    expect(find.text('Scoring weights'), findsNothing);
+    expect(find.text('Scoring weights'), findsOneWidget);
     expect(find.text('Passing'), findsNothing);
+    expect(find.text('Bonuses'), findsNothing);
+    expect(find.text('Eligible positions'), findsNothing);
   });
+
+  testWidgets(
+    'Opened scoring-weight editor is grouped and prefilled with defaults',
+    (tester) async {
+      await _pumpLoggedIn(tester);
+
+      await tester.tap(find.text('Create League'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Scoring weights'));
+      await tester.pump();
+
+      expect(find.text('Passing'), findsOneWidget);
+      expect(find.text('Rushing'), findsOneWidget);
+      expect(find.text('Receiving'), findsOneWidget);
+      expect(find.text('Turnovers'), findsOneWidget);
+      expect(find.text('Kicking'), findsOneWidget);
+      expect(
+        find.widgetWithText(TextFormField, 'Passing yards'),
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(TextFormField, '0.04'), findsOneWidget);
+      expect(
+        find.widgetWithText(TextFormField, 'Rushing yards'),
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(TextFormField, 'Receptions'), findsOneWidget);
+      expect(
+        find.widgetWithText(TextFormField, 'Interceptions'),
+        findsOneWidget,
+      );
+      expect(
+        find.widgetWithText(TextFormField, 'Field goals made'),
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(TextFormField, '3'), findsOneWidget);
+      expect(find.text('Bonuses'), findsNothing);
+      expect(find.text('Eligible positions'), findsNothing);
+    },
+  );
 
   testWidgets('Blank name stays on the Create form with an error', (
     tester,
@@ -108,6 +149,36 @@ void main() {
       expect(find.text('Standard scoring'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'Changing a scoring weight creates a League with Custom scoring',
+    (tester) async {
+      await _pumpLoggedIn(tester);
+
+      await tester.tap(find.text('Create League'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Name'),
+        'Sunday League',
+      );
+      await tester.tap(find.text('Scoring weights'));
+      await tester.pump();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Passing yards'),
+        '0.05',
+      );
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Create'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+      await tester.pumpAndSettle();
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sunday League'), findsOneWidget);
+      expect(find.text('Custom scoring'), findsOneWidget);
+      expect(find.text('Standard scoring'), findsNothing);
+    },
+  );
 }
 
 Future<void> _pumpLoggedIn(WidgetTester tester) async {
@@ -160,9 +231,11 @@ class _FakeLeagueApi implements LeagueApi {
   Future<int> createLeague({
     required String name,
     required num weeklyCap,
+    List<ScoringWeightRule>? scoringWeights,
   }) async {
     final id = _nextId++;
     const joinCode = 'JOINCODE1';
+    final rules = scoringWeights ?? ScoringWeightRule.defaults();
     _details[id] = LeagueDetails(
       leagueId: id,
       name: name,
@@ -176,9 +249,7 @@ class _FakeLeagueApi implements LeagueApi {
         Position.tightEnd,
         Position.kicker,
       ],
-      rules: const [
-        ScoringWeightRule(stat: StatType.passingYards, weight: 0.04),
-      ],
+      rules: rules,
     );
     _leagues.add(
       LeagueSummary(
@@ -186,7 +257,9 @@ class _FakeLeagueApi implements LeagueApi {
         name: name,
         joinCode: joinCode,
         role: LeagueRole.commissioner,
-        scoring: ScoringKind.standard,
+        scoring: ScoringWeightRule.usesDefaultScoringWeights(rules)
+            ? ScoringKind.standard
+            : ScoringKind.custom,
       ),
     );
     return id;

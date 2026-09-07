@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
+import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/screens/league_information_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -14,6 +15,10 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _weeklyCap = TextEditingController(text: '100');
+  final _weightControllers = {
+    for (final stat in StatType.values)
+      stat: TextEditingController(text: _formatNumber(stat.defaultWeight)),
+  };
   bool _busy = false;
   String? _error;
 
@@ -21,6 +26,9 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
   void dispose() {
     _name.dispose();
     _weeklyCap.dispose();
+    for (final controller in _weightControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -31,9 +39,20 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
     setState(() => _busy = true);
     try {
       final api = context.read<LeagueApi>();
+      final scoringWeights = [
+        for (final stat in StatType.values)
+          ScoringWeightRule(
+            stat: stat,
+            weight: num.parse(_weightControllers[stat]!.text.trim()),
+          ),
+      ];
       final leagueId = await api.createLeague(
         name: _name.text.trim(),
         weeklyCap: num.parse(_weeklyCap.text.trim()),
+        scoringWeights:
+            ScoringWeightRule.usesDefaultScoringWeights(scoringWeights)
+            ? null
+            : scoringWeights,
       );
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -110,6 +129,11 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
+                  _ScoringWeightEditor(
+                    controllers: _weightControllers,
+                    enabled: !_busy,
+                  ),
                   const SizedBox(height: 24),
                   FilledButton(
                     onPressed: _busy ? null : _submit,
@@ -129,4 +153,69 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
       ),
     );
   }
+}
+
+class _ScoringWeightEditor extends StatefulWidget {
+  const _ScoringWeightEditor({
+    required this.controllers,
+    required this.enabled,
+  });
+
+  final Map<StatType, TextEditingController> controllers;
+  final bool enabled;
+
+  @override
+  State<_ScoringWeightEditor> createState() => _ScoringWeightEditorState();
+}
+
+class _ScoringWeightEditorState extends State<_ScoringWeightEditor> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Scoring weights'),
+          trailing: Icon(_open ? Icons.expand_less : Icons.expand_more),
+          onTap: () => setState(() => _open = !_open),
+        ),
+        if (_open)
+          for (final group in ScoringGroup.values) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: Text(
+                group.label,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+            for (final stat in StatType.values.where(
+              (stat) => stat.group == group,
+            )) ...[
+              TextFormField(
+                controller: widget.controllers[stat],
+                enabled: widget.enabled,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: stat.label,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ],
+      ],
+    );
+  }
+}
+
+String _formatNumber(num value) {
+  if (value is int) return value.toString();
+  if (value == value.roundToDouble()) return value.toInt().toString();
+  return value.toString();
 }

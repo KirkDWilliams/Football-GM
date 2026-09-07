@@ -52,6 +52,7 @@ class _EmptyLeagueApi implements LeagueApi {
   Future<int> createLeague({
     required String name,
     required num weeklyCap,
+    List<ScoringWeightRule>? scoringWeights,
   }) async {
     throw UnsupportedError('createLeague is not used by signed-out tests');
   }
