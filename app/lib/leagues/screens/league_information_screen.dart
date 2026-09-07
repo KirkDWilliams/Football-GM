@@ -109,7 +109,7 @@ class _LeagueBody extends StatelessWidget {
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Weekly cap'),
-          subtitle: Text(_formatNumber(league.weeklyCap)),
+          subtitle: Text(formatLeagueNumber(league.weeklyCap)),
         ),
         const SizedBox(height: 8),
         Text(
@@ -141,7 +141,7 @@ class _LeagueBody extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     title: Text(bonus.stat.label),
                     trailing: Text(
-                      '${_formatNumber(bonus.points)} points at ${_formatNumber(bonus.threshold)}',
+                      '${formatLeagueNumber(bonus.points)} points at ${formatLeagueNumber(bonus.threshold)}',
                     ),
                   ),
               ],
@@ -176,7 +176,7 @@ class _ScoringWeightGroups extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               dense: true,
               title: Text(rule.stat.label),
-              trailing: Text(_formatNumber(rule.weight)),
+              trailing: Text(formatLeagueNumber(rule.weight)),
             ),
         ],
       ],
@@ -212,10 +212,4 @@ class _AccordionState extends State<_Accordion> {
       ],
     );
   }
-}
-
-String _formatNumber(num value) {
-  if (value is int) return value.toString();
-  if (value == value.roundToDouble()) return value.toInt().toString();
-  return value.toString();
 }

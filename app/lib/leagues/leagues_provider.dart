@@ -8,14 +8,16 @@ class LeaguesProvider extends ChangeNotifier {
   final LeagueApi _api;
   List<LeagueSummary> leagues = [];
   bool loading = true;
+  String? error;
 
   Future<void> reload() async {
     loading = true;
+    error = null;
     notifyListeners();
     try {
       leagues = await _api.listMyLeagues();
     } catch (_) {
-      leagues = [];
+      error = 'Could not load Leagues';
     }
     loading = false;
     notifyListeners();

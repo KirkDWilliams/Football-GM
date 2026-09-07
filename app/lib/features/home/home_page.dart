@@ -60,10 +60,7 @@ class _HomePageState extends State<HomePage> {
                 value: _Menu.changePassword,
                 child: Text('Change password'),
               ),
-              PopupMenuItem(
-                value: _Menu.signOut,
-                child: Text('Sign out'),
-              ),
+              PopupMenuItem(value: _Menu.signOut, child: Text('Sign out')),
             ],
           ),
         ],
@@ -110,34 +107,50 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: leagues.loading
                 ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: leagues.leagues.length,
-                    itemBuilder: (context, index) {
-                      final league = leagues.leagues[index];
-                      return ListTile(
-                        title: Text(league.name),
-                        subtitle: Text(league.joinCode),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(league.role.label),
-                            Text(league.scoring.label),
-                          ],
-                        ),
-                        onTap: () {
-                          final api = context.read<LeagueApi>();
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => LeagueInformationScreen(
-                                leagueId: league.leagueId,
-                                leagueApi: api,
-                              ),
+                : Column(
+                    children: [
+                      if (leagues.error != null)
+                        Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Text(
+                            leagues.error!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
                             ),
-                          );
-                        },
-                      );
-                    },
+                          ),
+                        ),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: leagues.leagues.length,
+                          itemBuilder: (context, index) {
+                            final league = leagues.leagues[index];
+                            return ListTile(
+                              title: Text(league.name),
+                              subtitle: Text(league.joinCode),
+                              trailing: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(league.role.label),
+                                  Text(league.scoring.label),
+                                ],
+                              ),
+                              onTap: () {
+                                final api = context.read<LeagueApi>();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => LeagueInformationScreen(
+                                      leagueId: league.leagueId,
+                                      leagueApi: api,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
           ),
         ],

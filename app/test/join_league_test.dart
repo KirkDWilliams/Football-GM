@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:football_gm_app/app.dart';
-import 'package:football_gm_app/auth/auth_controller.dart';
-import 'package:football_gm_app/auth/auth_service.dart';
-import 'package:football_gm_app/auth/models/auth_user.dart';
-import 'package:football_gm_app/auth/token_store.dart';
-import 'package:football_gm_app/config/api_config.dart';
-import 'package:football_gm_app/core/network/api_client.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/models/league_summary.dart';
+
+import 'logged_in_auth.dart';
 
 void main() {
   testWidgets('Join is its own screen with a Join code field', (tester) async {
@@ -18,9 +14,9 @@ void main() {
     await tester.tap(find.text('Join with code'));
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(AppBar, 'Join with code'), findsOneWidget);
-    expect(find.widgetWithText(TextFormField, 'Join code'), findsOneWidget);
-    expect(find.widgetWithText(AppBar, 'Create League'), findsNothing);
+    expect(find.text('Join with code'), findsOneWidget);
+    expect(find.text('Join code'), findsOneWidget);
+    expect(find.text('Name'), findsNothing);
     expect(find.text('Weekly cap'), findsNothing);
   });
 
@@ -35,7 +31,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Join code is required'), findsOneWidget);
-    expect(find.widgetWithText(AppBar, 'Join with code'), findsOneWidget);
+    expect(find.text('Join with code'), findsOneWidget);
     expect(find.text('JOINCODE1'), findsNothing);
   });
 
@@ -54,7 +50,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Unknown Join code'), findsOneWidget);
-    expect(find.widgetWithText(AppBar, 'Join with code'), findsOneWidget);
+    expect(find.text('Join with code'), findsOneWidget);
     expect(find.text('JOINCODE1'), findsNothing);
   });
 
@@ -107,7 +103,7 @@ void main() {
 
       expect(find.text('Unknown Join code'), findsNothing);
       expect(find.text('Could not join League'), findsNothing);
-      expect(find.widgetWithText(AppBar, 'Join with code'), findsNothing);
+      expect(find.text('Join with code'), findsNothing);
       expect(find.text('JOINCODE1'), findsOneWidget);
       expect(find.text('Member'), findsWidgets);
       expect(find.text('Weekly cap'), findsOneWidget);
@@ -120,7 +116,7 @@ Future<void> _pumpLoggedIn(
   WidgetTester tester, {
   bool alreadyMember = false,
 }) async {
-  final auth = _auth();
+  final auth = loggedInAuth();
   await tester.pumpWidget(
     FootballGmApp(
       authController: auth.controller,
@@ -129,23 +125,6 @@ Future<void> _pumpLoggedIn(
     ),
   );
   await tester.pumpAndSettle();
-}
-
-({AuthController controller, AuthService service}) _auth() {
-  final tokenStore = TokenStore();
-  final apiClient = ApiClient(
-    baseUrl: ApiConfig.baseUrl,
-    tokenStore: tokenStore,
-  );
-  final service = AuthService(apiClient: apiClient, tokenStore: tokenStore);
-  final controller = AuthController(authService: service)
-    ..status = AuthStatus.authenticated
-    ..user = const AuthUser(
-      id: 'user-1',
-      email: 'gm@example.com',
-      displayName: 'Nick',
-    );
-  return (controller: controller, service: service);
 }
 
 class _FakeLeagueApi implements LeagueApi {

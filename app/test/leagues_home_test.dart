@@ -1,15 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:football_gm_app/app.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
-import 'package:football_gm_app/auth/auth_service.dart';
 import 'package:football_gm_app/auth/models/auth_user.dart';
-import 'package:football_gm_app/auth/token_store.dart';
-import 'package:football_gm_app/config/api_config.dart';
-import 'package:football_gm_app/core/network/api_client.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/models/league_summary.dart';
+
+import 'logged_in_auth.dart';
 
 void main() {
   testWidgets(
@@ -20,11 +17,22 @@ void main() {
       expect(find.text('My Leagues'), findsOneWidget);
       expect(find.text('Create League'), findsOneWidget);
       expect(find.text('Join with code'), findsOneWidget);
+      expect(find.text('Could not load Leagues'), findsNothing);
       expect(find.text('Teams'), findsNothing);
       expect(find.text('Sync'), findsNothing);
       expect(find.text('No teams found'), findsNothing);
     },
   );
+
+  testWidgets('Failed list get is not shown as belonging to no Leagues', (
+    tester,
+  ) async {
+    await _pumpLoggedIn(tester, listError: Exception('network'));
+
+    expect(find.text('Could not load Leagues'), findsOneWidget);
+    expect(find.text('Create League'), findsOneWidget);
+    expect(find.text('Join with code'), findsOneWidget);
+  });
 
   testWidgets(
     'Signed-in user sees each league name, join code, role, and scoring',
@@ -63,144 +71,156 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Create and Join open as two separate actions',
-    (tester) async {
-      await _pumpLoggedIn(tester, leagues: const []);
+  testWidgets('Create and Join open as two separate actions', (tester) async {
+    await _pumpLoggedIn(tester, leagues: const []);
 
-      await tester.tap(find.text('Create League'));
-      await tester.pumpAndSettle();
-      expect(find.widgetWithText(AppBar, 'Create League'), findsOneWidget);
-      expect(find.widgetWithText(AppBar, 'Join with code'), findsNothing);
+    await tester.tap(find.text('Create League'));
+    await tester.pumpAndSettle();
+    expect(find.text('Name'), findsOneWidget);
+    expect(find.text('Weekly cap'), findsOneWidget);
+    expect(find.text('Join code'), findsNothing);
 
-      await tester.pageBack();
-      await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Join with code'));
-      await tester.pumpAndSettle();
-      expect(find.widgetWithText(AppBar, 'Join with code'), findsOneWidget);
-      expect(find.widgetWithText(AppBar, 'Create League'), findsNothing);
-    },
-  );
+    await tester.tap(find.text('Join with code'));
+    await tester.pumpAndSettle();
+    expect(find.text('Join code'), findsOneWidget);
+    expect(find.text('Weekly cap'), findsNothing);
+    expect(find.text('Name'), findsNothing);
+  });
 
-  testWidgets(
-    'Signing in loads leagues from the list get',
-    (tester) async {
-      final api = _FakeLeagueApi([
-        const LeagueSummary(
-          leagueId: 1,
-          name: 'Sunday League',
-          joinCode: 'ABCD1234',
-          role: LeagueRole.commissioner,
-          scoring: ScoringKind.standard,
-        ),
-      ]);
-      final auth = _auth(status: AuthStatus.authenticated);
+  testWidgets('Failed list reload keeps the Leagues already on screen', (
+    tester,
+  ) async {
+    final api = _FakeLeagueApi([
+      const LeagueSummary(
+        leagueId: 1,
+        name: 'Sunday League',
+        joinCode: 'ABCD1234',
+        role: LeagueRole.commissioner,
+        scoring: ScoringKind.standard,
+      ),
+    ]);
+    final auth = loggedInAuth();
 
-      await tester.pumpWidget(
-        FootballGmApp(
-          authController: auth.controller,
-          authService: auth.service,
-          leagueApi: api,
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Sunday League'), findsOneWidget);
+    await tester.pumpWidget(
+      FootballGmApp(
+        authController: auth.controller,
+        authService: auth.service,
+        leagueApi: api,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Sunday League'), findsOneWidget);
 
-      auth.controller
-        ..user = null
-        ..status = AuthStatus.unauthenticated
-        ..notifyListeners();
-      await tester.pumpAndSettle();
-      expect(find.text('Sign in'), findsWidgets);
+    api.listError = Exception('network');
+    await tester.tap(find.text('Create League'));
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
 
-      api.leagues = [
-        const LeagueSummary(
-          leagueId: 2,
-          name: 'Custom League',
-          joinCode: 'WXYZ9876',
-          role: LeagueRole.member,
-          scoring: ScoringKind.custom,
-        ),
-      ];
-      auth.controller
-        ..user = const AuthUser(
-          id: 'user-2',
-          email: 'other@example.com',
-          displayName: 'Sam',
-        )
-        ..status = AuthStatus.authenticated
-        ..notifyListeners();
-      await tester.pumpAndSettle();
+    expect(find.text('Sunday League'), findsOneWidget);
+    expect(find.text('Could not load Leagues'), findsOneWidget);
+  });
 
-      expect(find.text('Custom League'), findsOneWidget);
-      expect(find.text('WXYZ9876'), findsOneWidget);
-      expect(find.text('Sunday League'), findsNothing);
-    },
-  );
+  testWidgets('Signing in loads leagues from the list get', (tester) async {
+    final api = _FakeLeagueApi([
+      const LeagueSummary(
+        leagueId: 1,
+        name: 'Sunday League',
+        joinCode: 'ABCD1234',
+        role: LeagueRole.commissioner,
+        scoring: ScoringKind.standard,
+      ),
+    ]);
+    final auth = loggedInAuth();
 
-  testWidgets(
-    'Signed-in user still has change password and sign out',
-    (tester) async {
-      await _pumpLoggedIn(tester, leagues: const []);
+    await tester.pumpWidget(
+      FootballGmApp(
+        authController: auth.controller,
+        authService: auth.service,
+        leagueApi: api,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Sunday League'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Account'));
-      await tester.pumpAndSettle();
-      expect(find.text('Change password'), findsOneWidget);
-      expect(find.text('Sign out'), findsOneWidget);
+    auth.controller
+      ..user = null
+      ..status = AuthStatus.unauthenticated
+      ..notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.text('Sign in'), findsWidgets);
 
-      await tester.tap(find.text('Change password'));
-      await tester.pumpAndSettle();
-      expect(find.text('Update password'), findsOneWidget);
-    },
-  );
+    api.leagues = [
+      const LeagueSummary(
+        leagueId: 2,
+        name: 'Custom League',
+        joinCode: 'WXYZ9876',
+        role: LeagueRole.member,
+        scoring: ScoringKind.custom,
+      ),
+    ];
+    auth.controller
+      ..user = const AuthUser(
+        id: 'user-2',
+        email: 'other@example.com',
+        displayName: 'Sam',
+      )
+      ..status = AuthStatus.authenticated
+      ..notifyListeners();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Custom League'), findsOneWidget);
+    expect(find.text('WXYZ9876'), findsOneWidget);
+    expect(find.text('Sunday League'), findsNothing);
+  });
+
+  testWidgets('Signed-in user still has change password and sign out', (
+    tester,
+  ) async {
+    await _pumpLoggedIn(tester, leagues: const []);
+
+    await tester.tap(find.byTooltip('Account'));
+    await tester.pumpAndSettle();
+    expect(find.text('Change password'), findsOneWidget);
+    expect(find.text('Sign out'), findsOneWidget);
+
+    await tester.tap(find.text('Change password'));
+    await tester.pumpAndSettle();
+    expect(find.text('Update password'), findsOneWidget);
+  });
 }
 
 Future<void> _pumpLoggedIn(
   WidgetTester tester, {
-  required List<LeagueSummary> leagues,
+  List<LeagueSummary> leagues = const [],
+  Object? listError,
 }) async {
-  final auth = _auth(status: AuthStatus.authenticated);
+  final auth = loggedInAuth();
   await tester.pumpWidget(
     FootballGmApp(
       authController: auth.controller,
       authService: auth.service,
-      leagueApi: _FakeLeagueApi(leagues),
+      leagueApi: _FakeLeagueApi(leagues, listError: listError),
     ),
   );
   await tester.pumpAndSettle();
 }
 
-({AuthController controller, AuthService service}) _auth({
-  required AuthStatus status,
-}) {
-  final tokenStore = TokenStore();
-  final apiClient = ApiClient(
-    baseUrl: ApiConfig.baseUrl,
-    tokenStore: tokenStore,
-  );
-  final service = AuthService(
-    apiClient: apiClient,
-    tokenStore: tokenStore,
-  );
-  final controller = AuthController(authService: service)..status = status;
-  if (status == AuthStatus.authenticated) {
-    controller.user = const AuthUser(
-      id: 'user-1',
-      email: 'gm@example.com',
-      displayName: 'Nick',
-    );
-  }
-  return (controller: controller, service: service);
-}
-
 class _FakeLeagueApi implements LeagueApi {
-  _FakeLeagueApi(this.leagues);
+  _FakeLeagueApi(this.leagues, {this.listError});
 
   List<LeagueSummary> leagues;
+  Object? listError;
 
   @override
-  Future<List<LeagueSummary>> listMyLeagues() async => leagues;
+  Future<List<LeagueSummary>> listMyLeagues() async {
+    final error = listError;
+    if (error != null) throw error;
+    return leagues;
+  }
 
   @override
   Future<LeagueDetails> getLeague(int leagueId) async {

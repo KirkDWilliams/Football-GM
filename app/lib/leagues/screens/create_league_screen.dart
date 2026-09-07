@@ -17,7 +17,7 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
   final _weeklyCap = TextEditingController(text: '100');
   final _weightControllers = {
     for (final stat in StatType.values)
-      stat: TextEditingController(text: _formatNumber(stat.defaultWeight)),
+      stat: TextEditingController(text: formatLeagueNumber(stat.defaultWeight)),
   };
   bool _busy = false;
   String? _error;
@@ -191,9 +191,7 @@ class _ScoringWeightEditorState extends State<_ScoringWeightEditor> {
                 style: Theme.of(context).textTheme.titleSmall,
               ),
             ),
-            for (final stat in StatType.values.where(
-              (stat) => stat.group == group,
-            )) ...[
+            for (final stat in group.stats) ...[
               TextFormField(
                 controller: widget.controllers[stat],
                 enabled: widget.enabled,
@@ -212,10 +210,4 @@ class _ScoringWeightEditorState extends State<_ScoringWeightEditor> {
       ],
     );
   }
-}
-
-String _formatNumber(num value) {
-  if (value is int) return value.toString();
-  if (value == value.roundToDouble()) return value.toInt().toString();
-  return value.toString();
 }

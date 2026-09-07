@@ -229,6 +229,15 @@ enum ScoringGroup {
     turnovers => 'Turnovers',
     kicking => 'Kicking',
   };
+
+  Iterable<StatType> get stats =>
+      StatType.values.where((stat) => stat.group == this);
+}
+
+String formatLeagueNumber(num value) {
+  if (value is int) return value.toString();
+  if (value == value.roundToDouble()) return value.toInt().toString();
+  return value.toString();
 }
 
 sealed class Rule {

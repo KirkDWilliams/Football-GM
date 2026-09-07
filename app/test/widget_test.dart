@@ -1,32 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:football_gm_app/app.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
-import 'package:football_gm_app/auth/auth_service.dart';
-import 'package:football_gm_app/auth/token_store.dart';
-import 'package:football_gm_app/config/api_config.dart';
-import 'package:football_gm_app/core/network/api_client.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/models/league_summary.dart';
 
+import 'logged_in_auth.dart';
+
 void main() {
   testWidgets('Signed-out users see the login screen', (tester) async {
-    final tokenStore = TokenStore();
-    final apiClient = ApiClient(
-      baseUrl: ApiConfig.baseUrl,
-      tokenStore: tokenStore,
-    );
-    final authService = AuthService(
-      apiClient: apiClient,
-      tokenStore: tokenStore,
-    );
-    final authController = AuthController(authService: authService)
-      ..status = AuthStatus.unauthenticated;
+    final auth = loggedInAuth(status: AuthStatus.unauthenticated);
 
     await tester.pumpWidget(
       FootballGmApp(
-        authController: authController,
-        authService: authService,
+        authController: auth.controller,
+        authService: auth.service,
         leagueApi: _EmptyLeagueApi(),
       ),
     );

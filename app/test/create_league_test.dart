@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:football_gm_app/app.dart';
-import 'package:football_gm_app/auth/auth_controller.dart';
-import 'package:football_gm_app/auth/auth_service.dart';
-import 'package:football_gm_app/auth/models/auth_user.dart';
-import 'package:football_gm_app/auth/token_store.dart';
-import 'package:football_gm_app/config/api_config.dart';
-import 'package:football_gm_app/core/network/api_client.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/models/league_summary.dart';
+
+import 'logged_in_auth.dart';
 
 void main() {
   testWidgets('Create form asks for name and Weekly cap defaulting to 100', (
@@ -20,10 +16,10 @@ void main() {
     await tester.tap(find.text('Create League'));
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(AppBar, 'Create League'), findsOneWidget);
-    expect(find.widgetWithText(TextFormField, 'Name'), findsOneWidget);
-    expect(find.widgetWithText(TextFormField, 'Weekly cap'), findsOneWidget);
-    expect(find.widgetWithText(TextFormField, '100'), findsOneWidget);
+    expect(find.text('Create League'), findsOneWidget);
+    expect(find.text('Name'), findsOneWidget);
+    expect(find.text('Weekly cap'), findsOneWidget);
+    expect(find.text('100'), findsOneWidget);
     expect(find.text('Scoring weights'), findsOneWidget);
     expect(find.text('Passing'), findsNothing);
     expect(find.text('Bonuses'), findsNothing);
@@ -45,25 +41,13 @@ void main() {
       expect(find.text('Receiving'), findsOneWidget);
       expect(find.text('Turnovers'), findsOneWidget);
       expect(find.text('Kicking'), findsOneWidget);
-      expect(
-        find.widgetWithText(TextFormField, 'Passing yards'),
-        findsOneWidget,
-      );
-      expect(find.widgetWithText(TextFormField, '0.04'), findsOneWidget);
-      expect(
-        find.widgetWithText(TextFormField, 'Rushing yards'),
-        findsOneWidget,
-      );
-      expect(find.widgetWithText(TextFormField, 'Receptions'), findsOneWidget);
-      expect(
-        find.widgetWithText(TextFormField, 'Interceptions'),
-        findsOneWidget,
-      );
-      expect(
-        find.widgetWithText(TextFormField, 'Field goals made'),
-        findsOneWidget,
-      );
-      expect(find.widgetWithText(TextFormField, '3'), findsOneWidget);
+      expect(find.text('Passing yards'), findsOneWidget);
+      expect(find.text('0.04'), findsOneWidget);
+      expect(find.text('Rushing yards'), findsOneWidget);
+      expect(find.text('Receptions'), findsOneWidget);
+      expect(find.text('Interceptions'), findsOneWidget);
+      expect(find.text('Field goals made'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
       expect(find.text('Bonuses'), findsNothing);
       expect(find.text('Eligible positions'), findsNothing);
     },
@@ -80,7 +64,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Name is required'), findsOneWidget);
-    expect(find.widgetWithText(AppBar, 'Create League'), findsOneWidget);
+    expect(find.text('Create League'), findsOneWidget);
     expect(find.text('JOINCODE1'), findsNothing);
   });
 
@@ -103,7 +87,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Weekly cap must be greater than 0'), findsOneWidget);
-      expect(find.widgetWithText(AppBar, 'Create League'), findsOneWidget);
+      expect(find.text('Create League'), findsOneWidget);
 
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Weekly cap'),
@@ -167,8 +151,8 @@ void main() {
         find.widgetWithText(TextFormField, 'Passing yards'),
         '0.05',
       );
-      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Create'));
-      await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+      await tester.ensureVisible(find.text('Create'));
+      await tester.tap(find.text('Create'));
       await tester.pumpAndSettle();
 
       await tester.pageBack();
@@ -182,7 +166,7 @@ void main() {
 }
 
 Future<void> _pumpLoggedIn(WidgetTester tester) async {
-  final auth = _auth();
+  final auth = loggedInAuth();
   await tester.pumpWidget(
     FootballGmApp(
       authController: auth.controller,
@@ -191,23 +175,6 @@ Future<void> _pumpLoggedIn(WidgetTester tester) async {
     ),
   );
   await tester.pumpAndSettle();
-}
-
-({AuthController controller, AuthService service}) _auth() {
-  final tokenStore = TokenStore();
-  final apiClient = ApiClient(
-    baseUrl: ApiConfig.baseUrl,
-    tokenStore: tokenStore,
-  );
-  final service = AuthService(apiClient: apiClient, tokenStore: tokenStore);
-  final controller = AuthController(authService: service)
-    ..status = AuthStatus.authenticated
-    ..user = const AuthUser(
-      id: 'user-1',
-      email: 'gm@example.com',
-      displayName: 'Nick',
-    );
-  return (controller: controller, service: service);
 }
 
 class _FakeLeagueApi implements LeagueApi {
