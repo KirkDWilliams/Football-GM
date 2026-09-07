@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:football_gm_app/leagues/league_api.dart';
-import 'package:football_gm_app/leagues/models/league_details.dart';
-import 'package:football_gm_app/leagues/screens/league_information_screen.dart';
+import 'package:football_gm_app/features/leagues/league_api.dart';
+import 'package:football_gm_app/features/leagues/models/league_details.dart';
+import 'package:football_gm_app/features/leagues/screens/league_information_screen.dart';
 import 'package:football_gm_app/ui/ui.dart';
 import 'package:provider/provider.dart';
 

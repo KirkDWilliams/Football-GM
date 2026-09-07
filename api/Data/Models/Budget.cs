@@ -12,7 +12,7 @@ public record Budget
 
     public int TeamId { get; set; }
 
-    public decimal[] PaymentSchedule { get; set; } = [];
+    public float[] PaymentSchedule { get; set; } = [];
 
     public static Budget FromEntity(Entity.Contrived.Budget budget) => new (budget);
 }

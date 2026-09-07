@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:football_gm_app/leagues/models/league_details.dart';
-import 'package:football_gm_app/leagues/models/league_summary.dart';
+import 'package:football_gm_app/features/leagues/models/league_details.dart';
+import 'package:football_gm_app/features/leagues/models/league_summary.dart';
 
 /// Leagues the signed-in User belongs to.
 abstract class LeagueApi {

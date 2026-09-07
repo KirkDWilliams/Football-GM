@@ -1,12 +1,12 @@
 using FootballGm.Api.Data.Enums;
 
-namespace FootballGm.Api.Helpers
+namespace FootballGm.Api.Services.Helpers
 {
     public static class BudgetHelper
     {
-        public static decimal[] CreatePaymentSchedule(List<Data.Models.Contract> contracts, ContractType type)
+        public static float[] CreatePaymentSchedule(List<Data.Models.Contract> contracts, ContractType type)
         {
-            var weekObligations = new decimal[WeekHelper.NumberOfWeeksInSeason+1];
+            var weekObligations = new float[WeekHelper.NumberOfWeeksInSeason+1];
             var startingWeek = WeekHelper.CurrentWeek;
 
             if (startingWeek == 0)
@@ -14,7 +14,7 @@ namespace FootballGm.Api.Helpers
 
             for (var week = startingWeek; week <= WeekHelper.NumberOfWeeksInSeason; week++)
             {
-                var obligation = decimal.Zero;
+                var obligation = 0f;
 
                 for (var contract = 0; contract < contracts.Count; contract++)
                 {
@@ -24,7 +24,7 @@ namespace FootballGm.Api.Helpers
                     if (week == contracts[contract].StartWeek)
                         obligation -= contracts[contract].GiftedCapSpace;
 
-                    var weeklyPayment = decimal.Zero;
+                    var weeklyPayment = 0f;
                     var duration = contracts[contract].EndWeek - contracts[contract].StartWeek + 1;
 
                     switch (type)
@@ -51,19 +51,19 @@ namespace FootballGm.Api.Helpers
                     obligation += weeklyPayment / duration;
                 };
 
-                if (decimal.Equals(obligation, decimal.Zero))
+                if (obligation == 0f)
                     break;
 
-                weekObligations[week] = Math.Round(obligation,2);
+                weekObligations[week] = (float)Math.Round(obligation,2);
             }
 
             return weekObligations;
         }
 
-        public static (decimal[] Salary, decimal[] Bonus) CreatePaymentSchedule(List<Data.Models.Contract> contracts)
+        public static (float[] Salary, float[] Bonus) CreatePaymentSchedule(List<Data.Models.Contract> contracts)
         {
-            var salaryObligations = new decimal[WeekHelper.NumberOfWeeksInSeason + 1];
-            var bonusObligations = new decimal[WeekHelper.NumberOfWeeksInSeason + 1];
+            var salaryObligations = new float[WeekHelper.NumberOfWeeksInSeason + 1];
+            var bonusObligations = new float[WeekHelper.NumberOfWeeksInSeason + 1];
 
             var startingWeek = WeekHelper.CurrentWeek;
 
@@ -72,8 +72,8 @@ namespace FootballGm.Api.Helpers
 
             for (var week = startingWeek; week <= WeekHelper.NumberOfWeeksInSeason; week++)
             {
-                var salaryObligation = decimal.Zero;
-                var bonusObligation = decimal.Zero;
+                var salaryObligation = 0f;
+                var bonusObligation = 0f;
 
                 for (var contract = 0; contract < contracts.Count; contract++)
                 {
@@ -96,8 +96,8 @@ namespace FootballGm.Api.Helpers
                 if (salaryObligation == 0 && bonusObligation == 0)
                     break;
 
-                salaryObligations[week] = Math.Round(salaryObligation, 2);
-                bonusObligations[week] = Math.Round(bonusObligation, 2);
+                salaryObligations[week] = (float)Math.Round(salaryObligation, 2);
+                bonusObligations[week] = (float)Math.Round(bonusObligation, 2);
             }
 
             return (salaryObligations, bonusObligations);
@@ -108,7 +108,7 @@ namespace FootballGm.Api.Helpers
             List<Data.Models.Contract> tradesFromTeamB,
             Data.Models.Budget budgetA,
             Data.Models.Budget budgetB,
-            decimal capCeiling)
+            float capCeiling)
         {
             (bool teamAValid, bool teamBValid) = (true, true);
 
@@ -131,29 +131,32 @@ namespace FootballGm.Api.Helpers
             return (teamAValid, teamBValid);
         }
 
-        public static decimal GetContractRating(Data.Models.Contract contract)
+        public static float GetContractRating(Data.Models.Contract contract)
         {
             if (contract.StartWeek - 1 != WeekHelper.CurrentWeek)
                 throw new InvalidOperationException("Contracts must be made one week prior to starting.");
 
             var paymentSchedule = CreatePaymentSchedule([contract], ContractType.Standard);
 
-            var rating = decimal.Zero;
+            var rating = 0f;
             var week = contract.StartWeek;
             var discount = 0.0625D;
 
             do
             {
-                rating += Math.Round(Decimal.Add(1, Decimal.Multiply(paymentSchedule[week], (decimal)Math.Pow(1 - discount, week++ - (contract.StartWeek - 1)))),2);
+                rating += (float)Math.Round(
+                            1 + paymentSchedule[week] * Math.Pow(
+                                1 - discount, week++ - contract.StartWeek - 1)
+                            , 2);
             }
             while (paymentSchedule[week] > 0);
 
             return rating;
         }
 
-        private static decimal[] PaymentScheduleOperation(decimal[] a, decimal[] b, decimal[] c, Func<decimal,decimal,decimal,decimal> operand)
+        private static float[] PaymentScheduleOperation(float[] a, float[] b, float[] c, Func<float,float,float,float> operand)
         {
-            var diff = new decimal[WeekHelper.NumberOfWeeksInSeason + 1];
+            var diff = new float[WeekHelper.NumberOfWeeksInSeason + 1];
 
             for (var week = 0; week <= WeekHelper.NumberOfWeeksInSeason; week++)
             {

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using FootballGm.Api.Data.Enums;
 
 namespace FootballGm.Api.Data.Entity.Contrived;
@@ -19,7 +19,7 @@ public class ScoringWeightRule : Rule
         RuleType = RuleType.ScoringWeight;
     }
 
-    public decimal Weight { get; init; }
+    public float Weight { get; init; }
 }
 
 public class BonusRule : Rule
@@ -29,6 +29,6 @@ public class BonusRule : Rule
         RuleType = RuleType.Bonus;
     }
 
-    public decimal Threshold { get; init; }
-    public decimal Points { get; init; }
+    public float Threshold { get; init; }
+    public float Points { get; init; }
 }

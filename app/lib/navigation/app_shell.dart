@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
 import 'package:football_gm_app/auth/screens/login_screen.dart';
 import 'package:football_gm_app/features/home/home_page.dart';
-import 'package:football_gm_app/leagues/screens/leagues_page.dart';
+import 'package:football_gm_app/features/leagues/screens/leagues_page.dart';
 import 'package:football_gm_app/navigation/app_section.dart';
 import 'package:football_gm_app/navigation/navigation_controller.dart';
 import 'package:football_gm_app/ui/widgets/arcade_page.dart';
@@ -29,7 +29,7 @@ class AppShell extends StatelessWidget {
       AppSection.leagues => const LeaguesPage(),
       AppSection.login =>
         auth.status == AuthStatus.authenticated
-            ? const HomePage()
+            ? const LeaguesPage()
             : const LoginScreen(),
     };
   }

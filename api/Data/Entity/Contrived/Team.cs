@@ -7,6 +7,8 @@ public class Team
 {
     [Key]
     public int TeamId { get; set; }
+
+    [MaxLength(32)]
     public required string UserId { get; set; }
     public required int LeagueId { get; set; }
 

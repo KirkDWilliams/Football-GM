@@ -1,3 +1,4 @@
-﻿Opportunities:
+Opportunities:
 [ ] Clean up DbContext - Regen snapshot and migrations
 [ ] Add User Repository - Move stuff out of services
+[ ] Clean up and make standard the Entity -> Model and Model -> Entity mapping.

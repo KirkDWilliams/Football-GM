@@ -1,6 +1,6 @@
 using FootballGm.Api.Data.Models;
 using FootballGm.Api.Domain.Interfaces;
-using FootballGm.Api.Helpers;
+using FootballGm.Api.Services.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -68,7 +68,13 @@ public class TeamController(
         }
     }
 
-
+    /// <summary>
+    /// This action is to be performed per team after the draft has concluded, and never again throughout the season.
+    /// </summary>
+    /// <param name="leagueId"> the league identifier</param>
+    /// <param name="draftOutcome"> the team's bids</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns> true if all went swell</returns>
     [HttpPost("{leagueId}")]
     public async Task<ActionResult<bool>> CreateTeam(
         [FromRoute] int leagueId,

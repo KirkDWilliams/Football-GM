@@ -5,17 +5,17 @@ namespace FootballGm.Api.Data.Models;
 
 public sealed class StatLine
 {
-    private IReadOnlyDictionary<StatType, decimal> Values { get; }
+    private IReadOnlyDictionary<StatType, float> Values { get; }
 
-    public decimal this[StatType stat] =>
+    public float this[StatType stat] =>
         Values.GetValueOrDefault(stat);
 
-    private StatLine(IReadOnlyDictionary<StatType, decimal> values)
+    private StatLine(IReadOnlyDictionary<StatType, float> values)
     {
         Values = values;
     }
 
-    public static StatLine From(PlayerGame game) => new(new Dictionary<StatType, decimal>
+    public static StatLine From(PlayerGame game) => new(new Dictionary<StatType, float>
     {
         [StatType.PassAttempts]                 = game.PassAttempts,
         [StatType.PassCompletions]              = game.PassCompletions,
@@ -41,7 +41,7 @@ public sealed class StatLine
         [StatType.ReturnedTouchdowns]           = game.ReturnedTouchdowns
     });
 
-    public static StatLine From(PlayerSeason season) => new(new Dictionary<StatType, decimal>
+    public static StatLine From(PlayerSeason season) => new(new Dictionary<StatType, float>
     {
         [StatType.PassAttempts]                 = season.PassAttempts,
         [StatType.PassCompletions]              = season.PassCompletions,
@@ -78,37 +78,37 @@ public sealed class StatLine
         if (list.Count == 1)
             return From(list[0]);
 
-        return new StatLine(new Dictionary<StatType, decimal>
+        return new StatLine(new Dictionary<StatType, float>
         {
-            [StatType.PassAttempts]                 = list.Sum(g => (decimal) g.PassAttempts),
-            [StatType.PassCompletions]              = list.Sum(g => (decimal) g.PassCompletions),
-            [StatType.PassingYards]                 = list.Sum(g => (decimal) g.PassingYards),
-            [StatType.PassingTouchdowns]            = list.Sum(g => (decimal) g.PassingTouchdowns),
-            [StatType.RushingAttempts]              = list.Sum(g => (decimal) g.RushAttempts),
-            [StatType.RushingYards]                 = list.Sum(g => (decimal) g.RushingYards),
-            [StatType.RushingFirstDowns]            = list.Sum(g => (decimal) g.RushingFirstDowns),
-            [StatType.RushingTouchdowns]            = list.Sum(g => (decimal) g.RushingTouchdowns),
-            [StatType.Receptions]                   = list.Sum(g => (decimal) g.Receptions),
-            [StatType.ReceivingYards]               = list.Sum(g => (decimal) g.ReceivingYards),
-            [StatType.ReceivingTouchdowns]          = list.Sum(g => (decimal) g.ReceivingTouchdowns),
-            [StatType.Interceptions]                = list.Sum(g => (decimal) g.Interceptions),
-            [StatType.Fumbles]                      = list.Sum(g => (decimal) g.Fumbles),
-            [StatType.Sacks]                        = list.Sum(g => (decimal) g.Sacks),
+            [StatType.PassAttempts]                 = list.Sum(g => (float) g.PassAttempts),
+            [StatType.PassCompletions]              = list.Sum(g => (float) g.PassCompletions),
+            [StatType.PassingYards]                 = list.Sum(g => (float) g.PassingYards),
+            [StatType.PassingTouchdowns]            = list.Sum(g => (float) g.PassingTouchdowns),
+            [StatType.RushingAttempts]              = list.Sum(g => (float) g.RushAttempts),
+            [StatType.RushingYards]                 = list.Sum(g => (float) g.RushingYards),
+            [StatType.RushingFirstDowns]            = list.Sum(g => (float) g.RushingFirstDowns),
+            [StatType.RushingTouchdowns]            = list.Sum(g => (float) g.RushingTouchdowns),
+            [StatType.Receptions]                   = list.Sum(g => (float) g.Receptions),
+            [StatType.ReceivingYards]               = list.Sum(g => (float) g.ReceivingYards),
+            [StatType.ReceivingTouchdowns]          = list.Sum(g => (float) g.ReceivingTouchdowns),
+            [StatType.Interceptions]                = list.Sum(g => (float) g.Interceptions),
+            [StatType.Fumbles]                      = list.Sum(g => (float) g.Fumbles),
+            [StatType.Sacks]                        = list.Sum(g => (float) g.Sacks),
             [StatType.FieldGoalsMade]               = list.Sum(g => CountKickList(g.FieldGoalsMade)),
             [StatType.FieldGoalsMissed]             = list.Sum(g => CountKickList(g.FieldGoalsMissed)),
-            [StatType.ExtraPointsMade]              = list.Sum(g => (decimal) g.ExtraPointsMade),
-            [StatType.ExtraPointsAttempted]         = list.Sum(g => (decimal) g.ExtraPointsAttempted),
-            [StatType.PassingTwoPointConversions]   = list.Sum(g => (decimal) g.PassingTwoPointConversions),
-            [StatType.RushingTwoPointConversions]   = list.Sum(g => (decimal) g.RushingTwoPointConversions),
-            [StatType.ReceivingTwoPointConversions] = list.Sum(g => (decimal) g.ReceivingTwoPointConversions),
-            [StatType.ReturnedTouchdowns]           = list.Sum(g => (decimal) g.ReturnedTouchdowns)
+            [StatType.ExtraPointsMade]              = list.Sum(g => (float) g.ExtraPointsMade),
+            [StatType.ExtraPointsAttempted]         = list.Sum(g => (float) g.ExtraPointsAttempted),
+            [StatType.PassingTwoPointConversions]   = list.Sum(g => (float) g.PassingTwoPointConversions),
+            [StatType.RushingTwoPointConversions]   = list.Sum(g => (float) g.RushingTwoPointConversions),
+            [StatType.ReceivingTwoPointConversions] = list.Sum(g => (float) g.ReceivingTwoPointConversions),
+            [StatType.ReturnedTouchdowns]           = list.Sum(g => (float) g.ReturnedTouchdowns)
         });
     }
 
-    private static decimal CountKickList(string list)
+    private static float CountKickList(string list)
     {
         if (string.IsNullOrWhiteSpace(list))
-            return 0;
+            return 0f;
 
         return list
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)

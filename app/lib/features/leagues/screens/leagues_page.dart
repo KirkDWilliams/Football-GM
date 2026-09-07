@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
-import 'package:football_gm_app/leagues/league_api.dart';
-import 'package:football_gm_app/leagues/leagues_provider.dart';
-import 'package:football_gm_app/leagues/screens/create_league_screen.dart';
-import 'package:football_gm_app/leagues/screens/join_league_screen.dart';
-import 'package:football_gm_app/leagues/screens/league_information_screen.dart';
+import 'package:football_gm_app/features/leagues/league_api.dart';
+import 'package:football_gm_app/features/leagues/leagues_provider.dart';
+import 'package:football_gm_app/features/leagues/screens/create_league_screen.dart';
+import 'package:football_gm_app/features/leagues/screens/join_league_screen.dart';
+import 'package:football_gm_app/features/leagues/screens/league_information_screen.dart';
 import 'package:football_gm_app/ui/ui.dart';
 import 'package:provider/provider.dart';
 

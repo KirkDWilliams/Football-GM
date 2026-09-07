@@ -24,7 +24,7 @@ public class BudgetRepository(AppDbContext context) : IBudgetRepository
 
     public async Task<bool> UpdateAsync(
         int teamId,
-        decimal[] paymentSchedule,
+        float[] paymentSchedule,
         CancellationToken cancellationToken = default)
     {
         var existing = await context.Budgets

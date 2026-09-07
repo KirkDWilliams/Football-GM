@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:football_gm_app/leagues/league_api.dart';
-import 'package:football_gm_app/leagues/models/league_details.dart';
+import 'package:football_gm_app/features/leagues/league_api.dart';
+import 'package:football_gm_app/features/leagues/models/league_details.dart';
 import 'package:football_gm_app/ui/ui.dart';
 
 class LeagueInformationScreen extends StatefulWidget {
@@ -78,7 +78,12 @@ class _LeagueInformationScreenState extends State<LeagueInformationScreen> {
 }
 
 class _LeagueBody extends StatelessWidget {
-  const _LeagueBody({required this.league, required this.onCopyJoinCode});
+  const _LeagueBody(
+    {
+      required this.league, 
+      required this.onCopyJoinCode
+    }
+  );
 
   final LeagueDetails league;
   final VoidCallback onCopyJoinCode;
@@ -153,6 +158,22 @@ class _LeagueBody extends StatelessWidget {
             ),
           ),
         ],
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.tonal(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => PlayersAvailableScreen(
+                  leagueId: league.leagueId,
+                  leagueApi: widget.draftApi,
+                  leagueName: league.name,
+                ),
+              ),
+            ),
+          child: const Text('Start Auction / View Players'),
+        ),
+      )
       ],
     );
   }

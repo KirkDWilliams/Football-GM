@@ -1,5 +1,5 @@
 using FootballGm.Api.Domain.Interfaces;
-using FootballGm.Api.Helpers;
+using FootballGm.Api.Services.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

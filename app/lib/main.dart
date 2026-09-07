@@ -5,7 +5,7 @@ import 'package:football_gm_app/auth/auth_service.dart';
 import 'package:football_gm_app/auth/token_store.dart';
 import 'package:football_gm_app/config/api_config.dart';
 import 'package:football_gm_app/core/network/api_client.dart';
-import 'package:football_gm_app/leagues/league_api.dart';
+import 'package:football_gm_app/features/leagues/league_api.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

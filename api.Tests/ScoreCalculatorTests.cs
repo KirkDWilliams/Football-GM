@@ -13,8 +13,8 @@ public class ScoreCalculatorTests
     private readonly ScoreCalculator _calculator = new();
     private readonly List<Rule> _passingYardRules =
     [
-        new ScoringWeightRule { Stat = StatType.PassingYards, Weight = 0.04m },
-        new ScoringWeightRule { Stat = StatType.PassingTouchdowns, Weight = 4m }
+        new ScoringWeightRule { Stat = StatType.PassingYards, Weight = 0.04f },
+        new ScoringWeightRule { Stat = StatType.PassingTouchdowns, Weight = 4f }
     ];
 
     [Fact]
@@ -30,9 +30,9 @@ public class ScoreCalculatorTests
 
         var scores = _calculator.CalculateSeason(season, _passingYardRules);
 
-        Assert.Equal(20m, Total(scores));
-        Assert.Equal(12m, ScoreFor(scores, StatType.PassingYards));
-        Assert.Equal(8m, ScoreFor(scores, StatType.PassingTouchdowns));
+        Assert.Equal(20f, Total(scores));
+        Assert.Equal(12f, ScoreFor(scores, StatType.PassingYards));
+        Assert.Equal(8f, ScoreFor(scores, StatType.PassingTouchdowns));
     }
 
     [Fact]
@@ -47,9 +47,9 @@ public class ScoreCalculatorTests
 
         var scores = _calculator.CalculateRecentThreeGames(games, _passingYardRules);
 
-        Assert.Equal(4m, ScoreFor(scores, StatType.PassingYards));
-        Assert.Equal(8m / 3m, ScoreFor(scores, StatType.PassingTouchdowns));
-        Assert.Equal(20m / 3m, Total(scores));
+        Assert.Equal(4f, ScoreFor(scores, StatType.PassingYards));
+        Assert.Equal(8f / 3f, ScoreFor(scores, StatType.PassingTouchdowns));
+        Assert.Equal(20f / 3f, Total(scores));
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public class ScoreCalculatorTests
 
         var scores = _calculator.CalculateRecentThreeGames(games, _passingYardRules);
 
-        Assert.Equal(4m, Total(scores));
+        Assert.Equal(4f, Total(scores));
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public class ScoreCalculatorTests
 
         var scores = _calculator.CalculateRecentThreeGames(games, _passingYardRules);
 
-        Assert.Equal(5m, Total(scores));
+        Assert.Equal(5f, Total(scores));
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class ScoreCalculatorTests
 
         var scores = _calculator.CalculateRecentThreeGames(games, _passingYardRules);
 
-        Assert.Equal(18m, Total(scores));
+        Assert.Equal(18f, Total(scores));
     }
 
     [Fact]
@@ -108,8 +108,8 @@ public class ScoreCalculatorTests
     {
         List<Rule> rules =
         [
-            new ScoringWeightRule { Stat = StatType.PassingYards, Weight = 0.04m },
-            new BonusRule { Stat = StatType.PassingYards, Threshold = 100, Points = 5m }
+            new ScoringWeightRule { Stat = StatType.PassingYards, Weight = 0.04f },
+            new BonusRule { Stat = StatType.PassingYards, Threshold = 100, Points = 5f }
         ];
 
         var games = new List<PlayerGame>
@@ -120,7 +120,7 @@ public class ScoreCalculatorTests
 
         var scores = _calculator.CalculateRecentThreeGames(games, rules);
 
-        Assert.Equal(7.1m, Total(scores));
+        Assert.Equal(7.1f, Total(scores));
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public class ScoreCalculatorTests
 
         var line = StatLine.From(games);
 
-        Assert.Equal(3m, line[StatType.FieldGoalsMade]);
+        Assert.Equal(3f, line[StatType.FieldGoalsMade]);
     }
 
     private static PlayerGame Game(short passingYards = 0, short passingTouchdowns = 0) => new()
@@ -143,8 +143,8 @@ public class ScoreCalculatorTests
         PassingTouchdowns = passingTouchdowns
     };
 
-    private static decimal Total(IEnumerable<StatScore> scores) => scores.Sum(s => s.Value);
+    private static float Total(IEnumerable<StatScore> scores) => scores.Sum(s => s.Value);
 
-    private static decimal ScoreFor(IEnumerable<StatScore> scores, StatType stat) =>
+    private static float ScoreFor(IEnumerable<StatScore> scores, StatType stat) =>
         scores.Single(s => s.StatType == stat).Value;
 }

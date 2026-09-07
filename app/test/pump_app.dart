@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:football_gm_app/app.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
 import 'package:football_gm_app/auth/auth_service.dart';
-import 'package:football_gm_app/leagues/league_api.dart';
+import 'package:football_gm_app/features/leagues/league_api.dart';
 
 import 'logged_in_auth.dart';
 

@@ -37,11 +37,19 @@ public class ContractOrchestrator(IContractRepository contractRepository) : ICon
 
         foreach (var playerContract in draftOutcome.DraftedPlayers)
         {
+            var contract = new Data.Models.Contract
+            {
+                StartWeek = 1,
+                EndWeek = playerContract.Duration,
+                Salary = playerContract.Salary,
+                SigningBonus = playerContract.SigningBonus,
+            };
+
             var created = await contractRepository.AddAsync(
                 leagueId,
                 team.TeamId,
-                playerContract.Key,
-                ToEntity(playerContract.Value),
+                playerContract.PlayerId,
+                ToEntity(contract),
                 cancellationToken);
 
             if (created is null)

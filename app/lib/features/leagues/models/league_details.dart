@@ -1,4 +1,4 @@
-import 'package:football_gm_app/leagues/models/league_summary.dart';
+import 'package:football_gm_app/features/leagues/models/league_summary.dart';
 
 /// Full Settings for a League the User belongs to, plus their role.
 class LeagueDetails {

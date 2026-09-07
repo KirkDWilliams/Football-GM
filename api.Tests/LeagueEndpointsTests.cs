@@ -59,7 +59,7 @@ public class LeagueEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.All(created.Rules, rule => Assert.IsType<ScoringWeightRule>(rule));
         Assert.Equal(Rule.CreateDefaultScoringWeights().Count, created.Rules.Count);
         Assert.False(string.IsNullOrWhiteSpace(created.JoinCode));
-        Assert.Equal(100m, created.WeeklyCapSpace);
+        Assert.Equal(100f, created.WeeklyCapSpace);
     }
 
     [Theory]
@@ -88,7 +88,7 @@ public class LeagueEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory
             "Sunday League",
             new { name = "Sunday League", weeklyCapSpace = 150 });
 
-        Assert.Equal(150m, created.WeeklyCapSpace);
+        Assert.Equal(150f, created.WeeklyCapSpace);
 
         var get = await SendAuthorized(
             HttpMethod.Get,
@@ -96,7 +96,7 @@ public class LeagueEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory
             auth.AccessToken);
         Assert.Equal(HttpStatusCode.OK, get.StatusCode);
         using var doc = JsonDocument.Parse(await get.Content.ReadAsStringAsync());
-        Assert.Equal(150m, doc.RootElement.GetProperty("weeklyCapSpace").GetDecimal());
+        Assert.Equal(150f, doc.RootElement.GetProperty("weeklyCapSpace").GetInt32());
     }
 
     [Fact]
@@ -180,7 +180,7 @@ public class LeagueEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory
     {
         var auth = await RegisterAsync();
         var rules = Rule.CreateDefaultScoringWeights();
-        ((ScoringWeightRule)rules.First(rule => rule.Stat == StatType.PassingYards)).Weight = 0.05m;
+        ((ScoringWeightRule)rules.First(rule => rule.Stat == StatType.PassingYards)).Weight = 0.05f;
 
         var created = await CreateLeagueAsync(auth.AccessToken, "Custom League", new { name = "Custom League", rules });
         Assert.Equal("Custom League", created.Name);
@@ -245,7 +245,7 @@ public class LeagueEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal(created.LeagueId, commissionerLeague.GetProperty("leagueId").GetInt32());
         Assert.Equal("Sunday League", commissionerLeague.GetProperty("name").GetString());
         Assert.Equal(created.JoinCode, commissionerLeague.GetProperty("joinCode").GetString());
-        Assert.Equal(100m, commissionerLeague.GetProperty("weeklyCapSpace").GetDecimal());
+        Assert.Equal(100f, commissionerLeague.GetProperty("weeklyCapSpace").GetInt32());
         Assert.Equal("commissioner", commissionerLeague.GetProperty("role").GetString());
         Assert.Equal(Rule.CreateDefaultScoringWeights().Count, commissionerLeague.GetProperty("rules").GetArrayLength());
         Assert.True(commissionerLeague.GetProperty("positions").GetArrayLength() > 0);
@@ -258,7 +258,7 @@ public class LeagueEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory
         using var joinerDoc = JsonDocument.Parse(await joinerGet.Content.ReadAsStringAsync());
         Assert.Equal("member", joinerDoc.RootElement.GetProperty("role").GetString());
         Assert.Equal(created.LeagueId, joinerDoc.RootElement.GetProperty("leagueId").GetInt32());
-        Assert.Equal(100m, joinerDoc.RootElement.GetProperty("weeklyCapSpace").GetDecimal());
+        Assert.Equal(100f, joinerDoc.RootElement.GetProperty("weeklyCapSpace").GetInt32());
         Assert.True(joinerDoc.RootElement.GetProperty("rules").GetArrayLength() > 0);
     }
 

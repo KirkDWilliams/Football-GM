@@ -17,7 +17,7 @@ public class BudgetEvaluator
         _contractRep = contractRepository;
         _teamRepo = teamRepository;
     }
-
+    //TODO: this is another example of a background service
    /* public async Task<bool> ExactObligationsFromTeamBudgetsAsync(int leagueId)
     {
         var teams = await _teamRepo.GetTeamsByLeagueId(leagueId);

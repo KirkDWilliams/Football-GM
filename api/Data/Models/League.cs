@@ -8,7 +8,7 @@ public class League
     public int LeagueId { get; init; }
     public string Name { get; init; } = string.Empty;
     public string JoinCode { get; init; } = string.Empty;
-    public decimal WeeklyCapSpace { get; init; } = 100M;
+    public float WeeklyCapSpace { get; init; } = 100f;
     public List<Rule> Rules { get; init; } = Rule.CreateDefaultScoringWeights();
     public List<Position> Positions { get; init; } =
     [

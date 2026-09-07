@@ -1,12 +1,12 @@
 using FootballGm.Api.Data.Models;
-using FootballGm.Api.Helpers;
+using FootballGm.Api.Services.Helpers;
 
 namespace FootballGm.Api.Tests;
 
 [Collection("WeekClock")]
 public class BudgetHelperTests()
 {
-    private readonly decimal roundingTolerance = .01M;
+    private readonly float roundingTolerance = .01f;
 
     #region Payment Schedule
 
@@ -24,7 +24,7 @@ public class BudgetHelperTests()
 
             // Assert
             Assert.Equal(WeekHelper.NumberOfWeeksInSeason+1, obligation.Length);
-            Assert.True(obligation.All(obl => obl.Equals(decimal.Zero)));
+            Assert.True(obligation.All(obl => obl == 0f));
         }
         finally
         {
@@ -90,9 +90,9 @@ public class BudgetHelperTests()
 
             // Assert
             Assert.Equal(0, obligation[0]);
-            Assert.True(3.666M - obligation[1] < roundingTolerance);
-            Assert.True(0.666M - obligation[2] < roundingTolerance);
-            Assert.True(0.666M - obligation[3] < roundingTolerance);
+            Assert.True(3.666f - obligation[1] < roundingTolerance);
+            Assert.True(0.666f - obligation[2] < roundingTolerance);
+            Assert.True(0.666f - obligation[3] < roundingTolerance);
             Assert.Equal(0, obligation[4]);
         }
         finally
@@ -237,7 +237,7 @@ public class BudgetHelperTests()
             Assert.Equal(0, obligation[7]);
             Assert.Equal(2, obligation[8]);
             Assert.Equal(2, obligation[16]);
-            Assert.Equal(2.5M, obligation[17]);
+            Assert.Equal(2.5f, obligation[17]);
             Assert.Equal(19, obligation.Length);
         }
         finally

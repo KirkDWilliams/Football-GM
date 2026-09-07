@@ -5,6 +5,7 @@ namespace FootballGm.Api.Data.Entity.Contrived;
 public class User
 {
     [Key]
+    [MaxLength(32)]
     public string Id { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;

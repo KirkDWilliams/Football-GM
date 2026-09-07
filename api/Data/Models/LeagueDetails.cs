@@ -10,7 +10,7 @@ public sealed class LeagueDetails
     public required int LeagueId { get; init; }
     public required string Name { get; init; }
     public required string JoinCode { get; init; }
-    public required decimal WeeklyCapSpace { get; init; }
+    public required float WeeklyCapSpace { get; init; }
     public required List<Rule> Rules { get; init; }
     public required List<Position> Positions { get; init; }
 

@@ -8,7 +8,7 @@ class TokenStore {
   TokenStore({FlutterSecureStorage? storage})
       : _storage = storage ??
             const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
+              aOptions: AndroidOptions(),
             );
 
   static const _sessionKey = 'football_gm.auth_session';

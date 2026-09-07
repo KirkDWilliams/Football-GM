@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
-import 'package:football_gm_app/leagues/league_api.dart';
-import 'package:football_gm_app/leagues/models/league_details.dart';
-import 'package:football_gm_app/leagues/models/league_summary.dart';
+import 'package:football_gm_app/features/leagues/league_api.dart';
+import 'package:football_gm_app/features/leagues/models/league_details.dart';
+import 'package:football_gm_app/features/leagues/models/league_summary.dart';
 
 import 'pump_app.dart';
 

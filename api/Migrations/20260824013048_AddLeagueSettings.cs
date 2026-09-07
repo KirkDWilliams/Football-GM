@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -16,7 +16,7 @@ namespace FootballGm.Api.Migrations
                 {
                     TeamId = table.Column<int>(type: "INTEGER", nullable: false),
                     Week = table.Column<int>(type: "INTEGER", nullable: false),
-                    CurrentObligations = table.Column<decimal>(type: "TEXT", nullable: false)
+                    CurrentObligations = table.Column<float>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -31,9 +31,9 @@ namespace FootballGm.Api.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     StartWeek = table.Column<int>(type: "INTEGER", nullable: false),
                     EndWeek = table.Column<int>(type: "INTEGER", nullable: false),
-                    SigningBonus = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Salary = table.Column<decimal>(type: "TEXT", nullable: false),
-                    GiftedCapSpace = table.Column<decimal>(type: "TEXT", nullable: false)
+                    SigningBonus = table.Column<float>(type: "TEXT", nullable: false),
+                    Salary = table.Column<float>(type: "TEXT", nullable: false),
+                    GiftedCapSpace = table.Column<float>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -62,7 +62,7 @@ namespace FootballGm.Api.Migrations
                     SettingsId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     LeagueId = table.Column<int>(type: "INTEGER", nullable: false),
-                    WeeklyCapSpace = table.Column<decimal>(type: "TEXT", nullable: false),
+                    WeeklyCapSpace = table.Column<float>(type: "TEXT", nullable: false),
                     EligiblePositions = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -108,9 +108,9 @@ namespace FootballGm.Api.Migrations
                     SettingsId = table.Column<int>(type: "INTEGER", nullable: false),
                     RuleType = table.Column<short>(type: "INTEGER", nullable: false),
                     Stat = table.Column<short>(type: "INTEGER", nullable: true),
-                    Threshold = table.Column<decimal>(type: "TEXT", nullable: true),
-                    Points = table.Column<decimal>(type: "TEXT", nullable: true),
-                    Weight = table.Column<decimal>(type: "TEXT", nullable: true)
+                    Threshold = table.Column<float>(type: "TEXT", nullable: true),
+                    Points = table.Column<float>(type: "TEXT", nullable: true),
+                    Weight = table.Column<float>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
