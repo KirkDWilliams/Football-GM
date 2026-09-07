@@ -206,4 +206,12 @@ class _FakeLeagueApi implements LeagueApi {
   Future<LeagueDetails> getLeague(int leagueId) async {
     throw UnsupportedError('getLeague is not used by home tests');
   }
+
+  @override
+  Future<int> createLeague({
+    required String name,
+    required num weeklyCap,
+  }) async {
+    throw UnsupportedError('createLeague is not used by home tests');
+  }
 }

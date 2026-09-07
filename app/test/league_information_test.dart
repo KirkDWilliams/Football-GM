@@ -324,4 +324,12 @@ class _FakeLeagueApi implements LeagueApi {
     }
     return league;
   }
+
+  @override
+  Future<int> createLeague({
+    required String name,
+    required num weeklyCap,
+  }) async {
+    throw UnsupportedError('createLeague is not used by information tests');
+  }
 }

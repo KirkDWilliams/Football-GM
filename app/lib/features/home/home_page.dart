@@ -80,12 +80,14 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const Spacer(),
                 FilledButton.tonal(
-                  onPressed: () {
-                    Navigator.of(context).push(
+                  onPressed: () async {
+                    await Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const CreateLeagueScreen(),
                       ),
                     );
+                    if (!context.mounted) return;
+                    await context.read<LeaguesProvider>().reload();
                   },
                   child: const Text('Create League'),
                 ),

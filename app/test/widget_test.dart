@@ -47,4 +47,12 @@ class _EmptyLeagueApi implements LeagueApi {
   Future<LeagueDetails> getLeague(int leagueId) async {
     throw UnsupportedError('getLeague is not used by signed-out tests');
   }
+
+  @override
+  Future<int> createLeague({
+    required String name,
+    required num weeklyCap,
+  }) async {
+    throw UnsupportedError('createLeague is not used by signed-out tests');
+  }
 }

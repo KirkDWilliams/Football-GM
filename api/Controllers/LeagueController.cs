@@ -75,6 +75,9 @@ public class LeagueController(ILeagueOrchestrator orchestrator) : ControllerBase
         if (string.IsNullOrWhiteSpace(league.Name))
             return BadRequest(new { error = "Name is required." });
 
+        if (league.WeeklyCapSpace <= 0)
+            return BadRequest(new { error = "Weekly cap must be greater than 0." });
+
         var created = await orchestrator.CreateLeague(userId, league, cancellationToken);
         return Created($"/api/league/{created.LeagueId}", created);
     }

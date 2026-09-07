@@ -6,6 +6,9 @@ import 'package:football_gm_app/leagues/models/league_summary.dart';
 abstract class LeagueApi {
   Future<List<LeagueSummary>> listMyLeagues();
   Future<LeagueDetails> getLeague(int leagueId);
+
+  /// Creates a League and returns its id for the information screen to load.
+  Future<int> createLeague({required String name, required num weeklyCap});
 }
 
 class HttpLeagueApi implements LeagueApi {
@@ -33,5 +36,20 @@ class HttpLeagueApi implements LeagueApi {
       return LeagueDetails.fromJson(Map<String, dynamic>.from(resp.data!));
     }
     throw Exception('Failed to load league: ${resp.statusCode}');
+  }
+
+  @override
+  Future<int> createLeague({
+    required String name,
+    required num weeklyCap,
+  }) async {
+    final resp = await _dio.post<Map<String, dynamic>>(
+      '/api/league',
+      data: {'name': name, 'weeklyCapSpace': weeklyCap},
+    );
+    if (resp.statusCode == 201 && resp.data != null) {
+      return resp.data!['leagueId'] as int;
+    }
+    throw Exception('Failed to create league: ${resp.statusCode}');
   }
 }

@@ -59,6 +59,44 @@ public class LeagueEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.All(created.Rules, rule => Assert.IsType<ScoringWeightRule>(rule));
         Assert.Equal(Rule.CreateDefaultScoringWeights().Count, created.Rules.Count);
         Assert.False(string.IsNullOrWhiteSpace(created.JoinCode));
+        Assert.Equal(100m, created.WeeklyCapSpace);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task Create_league_rejects_weekly_cap_not_greater_than_zero(int weeklyCap)
+    {
+        var auth = await RegisterAsync();
+
+        var response = await SendAuthorized(
+            HttpMethod.Post,
+            "/api/league",
+            auth.AccessToken,
+            new { name = "Sunday League", weeklyCapSpace = weeklyCap });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_league_stores_weekly_cap()
+    {
+        var auth = await RegisterAsync();
+
+        var created = await CreateLeagueAsync(
+            auth.AccessToken,
+            "Sunday League",
+            new { name = "Sunday League", weeklyCapSpace = 150 });
+
+        Assert.Equal(150m, created.WeeklyCapSpace);
+
+        var get = await SendAuthorized(
+            HttpMethod.Get,
+            $"/api/league/{created.LeagueId}",
+            auth.AccessToken);
+        Assert.Equal(HttpStatusCode.OK, get.StatusCode);
+        using var doc = JsonDocument.Parse(await get.Content.ReadAsStringAsync());
+        Assert.Equal(150m, doc.RootElement.GetProperty("weeklyCapSpace").GetDecimal());
     }
 
     [Fact]
