@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
 import 'package:football_gm_app/auth/screens/change_password_screen.dart';
+import 'package:football_gm_app/leagues/league_api.dart';
 import 'package:football_gm_app/leagues/leagues_provider.dart';
 import 'package:football_gm_app/leagues/screens/create_league_screen.dart';
 import 'package:football_gm_app/leagues/screens/join_league_screen.dart';
+import 'package:football_gm_app/leagues/screens/league_information_screen.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -119,6 +121,17 @@ class _HomePageState extends State<HomePage> {
                             Text(league.scoring.label),
                           ],
                         ),
+                        onTap: () {
+                          final api = context.read<LeagueApi>();
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => LeagueInformationScreen(
+                                leagueId: league.leagueId,
+                                leagueApi: api,
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),

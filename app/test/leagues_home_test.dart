@@ -8,6 +8,7 @@ import 'package:football_gm_app/auth/token_store.dart';
 import 'package:football_gm_app/config/api_config.dart';
 import 'package:football_gm_app/core/network/api_client.dart';
 import 'package:football_gm_app/leagues/league_api.dart';
+import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/models/league_summary.dart';
 
 void main() {
@@ -200,4 +201,9 @@ class _FakeLeagueApi implements LeagueApi {
 
   @override
   Future<List<LeagueSummary>> listMyLeagues() async => leagues;
+
+  @override
+  Future<LeagueDetails> getLeague(int leagueId) async {
+    throw UnsupportedError('getLeague is not used by home tests');
+  }
 }

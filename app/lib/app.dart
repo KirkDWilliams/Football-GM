@@ -27,6 +27,7 @@ class FootballGmApp extends StatelessWidget {
         ChangeNotifierProvider<AuthController>.value(value: authController),
         Provider<AuthService>.value(value: authService),
         Provider<TokenStore>.value(value: authService.tokenStore),
+        Provider<LeagueApi>.value(value: leagueApi),
         ChangeNotifierProvider<LeaguesProvider>(
           create: (_) => LeaguesProvider(leagueApi),
         ),

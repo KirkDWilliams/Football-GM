@@ -1,13 +1,15 @@
 import 'package:dio/dio.dart';
+import 'package:football_gm_app/leagues/models/league_details.dart';
 import 'package:football_gm_app/leagues/models/league_summary.dart';
 
-/// List of Leagues the signed-in User belongs to.
+/// Leagues the signed-in User belongs to.
 abstract class LeagueApi {
   Future<List<LeagueSummary>> listMyLeagues();
+  Future<LeagueDetails> getLeague(int leagueId);
 }
 
 class HttpLeagueApi implements LeagueApi {
-  HttpLeagueApi({required Dio this._dio});
+  HttpLeagueApi({required this._dio});
 
   final Dio _dio;
 
@@ -22,5 +24,14 @@ class HttpLeagueApi implements LeagueApi {
           .toList();
     }
     throw Exception('Failed to load leagues: ${resp.statusCode}');
+  }
+
+  @override
+  Future<LeagueDetails> getLeague(int leagueId) async {
+    final resp = await _dio.get<Map<String, dynamic>>('/api/league/$leagueId');
+    if (resp.statusCode == 200 && resp.data != null) {
+      return LeagueDetails.fromJson(Map<String, dynamic>.from(resp.data!));
+    }
+    throw Exception('Failed to load league: ${resp.statusCode}');
   }
 }
