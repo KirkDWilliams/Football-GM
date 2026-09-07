@@ -5,9 +5,7 @@ import 'package:football_gm_app/auth/auth_service.dart';
 import 'package:football_gm_app/auth/token_store.dart';
 import 'package:football_gm_app/config/api_config.dart';
 import 'package:football_gm_app/core/network/api_client.dart';
-import 'package:football_gm_app/core/network/api_service.dart';
-import 'package:football_gm_app/data/db_provider.dart';
-import 'package:football_gm_app/data/team_repository.dart';
+import 'package:football_gm_app/leagues/league_api.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,16 +24,11 @@ Future<void> main() async {
   final authController = AuthController(authService: authService);
   await authController.bootstrap();
 
-  final teamRepository = TeamRepository(
-    apiService: ApiService.fromClient(apiClient),
-    dbProvider: DbProvider(),
-  );
-
   runApp(
     FootballGmApp(
       authController: authController,
       authService: authService,
-      teamRepository: teamRepository,
+      leagueApi: HttpLeagueApi(dio: apiClient.dio),
     ),
   );
 }

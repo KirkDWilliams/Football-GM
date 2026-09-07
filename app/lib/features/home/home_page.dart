@@ -1,15 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:football_gm_app/auth/auth_controller.dart';
 import 'package:football_gm_app/auth/screens/change_password_screen.dart';
-import 'package:football_gm_app/features/home/teams_provider.dart';
+import 'package:football_gm_app/leagues/leagues_provider.dart';
+import 'package:football_gm_app/leagues/screens/create_league_screen.dart';
+import 'package:football_gm_app/leagues/screens/join_league_screen.dart';
 import 'package:provider/provider.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<LeaguesProvider>().reload();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final teams = context.watch<TeamsProvider>();
+    final leagues = context.watch<LeaguesProvider>();
     final auth = context.watch<AuthController>();
     final name = auth.user?.displayName ?? 'GM';
 
@@ -55,36 +71,54 @@ class HomePage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Teams',
+                  'My Leagues',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                FilledButton.tonalIcon(
-                  onPressed: teams.loading ? null : teams.sync,
-                  icon: teams.loading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.sync),
-                  label: const Text('Sync'),
+                const Spacer(),
+                FilledButton.tonal(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CreateLeagueScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Create League'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.tonal(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const JoinLeagueScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Join with code'),
                 ),
               ],
             ),
           ),
           Expanded(
-            child: teams.teams.isEmpty
-                ? const Center(child: Text('No teams found'))
+            child: leagues.loading
+                ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
-                    itemCount: teams.teams.length,
+                    itemCount: leagues.leagues.length,
                     itemBuilder: (context, index) {
-                      final t = teams.teams[index];
+                      final league = leagues.leagues[index];
                       return ListTile(
-                        title: Text(t.name),
-                        subtitle: Text(t.city),
+                        title: Text(league.name),
+                        subtitle: Text(league.joinCode),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(league.role.label),
+                            Text(league.scoring.label),
+                          ],
+                        ),
                       );
                     },
                   ),

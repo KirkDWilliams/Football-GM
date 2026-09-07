@@ -5,9 +5,8 @@ import 'package:football_gm_app/auth/auth_service.dart';
 import 'package:football_gm_app/auth/token_store.dart';
 import 'package:football_gm_app/config/api_config.dart';
 import 'package:football_gm_app/core/network/api_client.dart';
-import 'package:football_gm_app/core/network/api_service.dart';
-import 'package:football_gm_app/data/db_provider.dart';
-import 'package:football_gm_app/data/team_repository.dart';
+import 'package:football_gm_app/leagues/league_api.dart';
+import 'package:football_gm_app/leagues/models/league_summary.dart';
 
 void main() {
   testWidgets('Signed-out users see the login screen', (tester) async {
@@ -27,10 +26,7 @@ void main() {
       FootballGmApp(
         authController: authController,
         authService: authService,
-        teamRepository: TeamRepository(
-          apiService: ApiService.fromClient(apiClient),
-          dbProvider: DbProvider(),
-        ),
+        leagueApi: _EmptyLeagueApi(),
       ),
     );
     await tester.pump();
@@ -38,5 +34,11 @@ void main() {
     expect(find.text('Sign in'), findsWidgets);
     expect(find.text('Create an account'), findsOneWidget);
     expect(find.text('Sync'), findsNothing);
+    expect(find.text('My Leagues'), findsNothing);
   });
+}
+
+class _EmptyLeagueApi implements LeagueApi {
+  @override
+  Future<List<LeagueSummary>> listMyLeagues() async => const [];
 }
