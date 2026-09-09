@@ -46,7 +46,7 @@ public class AuctionOrchestrator(IAuctionRepository auctionRepository, ILeagueRe
         if (existing != null)
             throw new InvalidOperationException($"Auction already exists for player {playerId}");
 
-        var auction = new Data.Entity.Contrived.Auction
+        var auction = new Auction
         {
             LeagueId = leagueId,
             PlayerId = playerId,
@@ -168,7 +168,7 @@ public class AuctionOrchestrator(IAuctionRepository auctionRepository, ILeagueRe
         return await GetAuctionStateAsync(leagueId, bid.PlayerId, cancellationToken);
     }
 
-    private static string? GetNextBidderId(Data.Entity.Contrived.Auction auction)
+    private static string? GetNextBidderId(Auction auction)
     {
         var activeBidders = auction.AuctionMembers
             .Where(p => !p.HasPassed)

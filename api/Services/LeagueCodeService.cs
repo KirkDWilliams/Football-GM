@@ -1,4 +1,4 @@
-﻿using FootballGm.Api.Infrastructure.Interfaces;
+using FootballGm.Api.Infrastructure.Interfaces;
 
 namespace FootballGm.Api.Services;
 

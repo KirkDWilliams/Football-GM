@@ -1,5 +1,3 @@
-using FootballGm.Api.Data.Enums;
-
 namespace FootballGm.Api.Data.Models;
 
 public class Auction
