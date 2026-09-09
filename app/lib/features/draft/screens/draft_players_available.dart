@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:football_gm_app/features/draft/draft_api.dart';
+import 'package:football_gm_app/features/draft/screens/draft_auction.dart';
 import 'package:football_gm_app/features/leagues/league_api.dart';
 import 'package:football_gm_app/models/player.dart';
-import 'package:football_gm_app/leagues/screens/auction_screen.dart';
 import 'package:football_gm_app/ui/ui.dart';
 import 'package:provider/provider.dart';
 
@@ -92,8 +92,7 @@ class _PlayersAvailableScreenState extends State<PlayersAvailableScreen> {
                     ),
                   ),
                   title: Text(player.name),
-                  subtitle: Text('${player.} • ${player.position}'),
-///                  trailing: Text('\$${ here we should indicate how expensive the player is likely to be to start the draft... might give some indication that the player is expected to be a star or a fremium)}'),
+                  subtitle: Text('${player.nflTeam} • ${player.position}'),
                   onTap: () => _navigateToAuction(context, player),
                 ),
               );
@@ -110,6 +109,7 @@ class _PlayersAvailableScreenState extends State<PlayersAvailableScreen> {
         builder: (_) => AuctionScreen(
           leagueId: widget.leagueId,
           player: player,
+          draftApi: widget.draftApi,
           leagueApi: context.read<LeagueApi>(),
         ),
       ),

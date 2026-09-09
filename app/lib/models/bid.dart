@@ -16,7 +16,7 @@ class Bid {
     {
       this.id, 
       required this.playerId,
-      this.userId, 
+      required this.userId, 
       required this.duration,
       this.salary,
       this.signingBonus,

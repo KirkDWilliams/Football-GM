@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:football_gm_app/features/draft/draft_api.dart';
+import 'package:football_gm_app/features/draft/screens/draft_players_available.dart';
 import 'package:football_gm_app/features/leagues/league_api.dart';
 import 'package:football_gm_app/features/leagues/models/league_details.dart';
 import 'package:football_gm_app/ui/ui.dart';
+import 'package:provider/provider.dart';
 
 class LeagueInformationScreen extends StatefulWidget {
   const LeagueInformationScreen({
@@ -162,18 +165,21 @@ class _LeagueBody extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: FilledButton.tonal(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => PlayersAvailableScreen(
-                  leagueId: league.leagueId,
-                  leagueApi: widget.draftApi,
-                  leagueName: league.name,
+            onPressed: () {
+              final draftApi = context.read<DraftApi>();
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => PlayersAvailableScreen(
+                    leagueId: league.leagueId,
+                    draftApi: draftApi,
+                    leagueName: league.name,
+                  ),
                 ),
-              ),
-            ),
-          child: const Text('Start Auction / View Players'),
+              );
+            },
+            child: const Text('Start Auction / View Players'),
+          ),
         ),
-      )
       ],
     );
   }

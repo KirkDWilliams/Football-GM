@@ -142,18 +142,18 @@ public class PlayerMappingTests
 
         var previousWeek = StatSet.From(
             StatSetKind.PreviousWeek,
-            [new StatScore { StatType = StatType.PassingYards, Value = 12m }]);
+            [new StatScore { StatType = StatType.PassingYards, Value = 12 }]);
         var season = StatSet.From(
             StatSetKind.Season,
-            [new StatScore { StatType = StatType.PassingYards, Value = 80m }]);
+            [new StatScore { StatType = StatType.PassingYards, Value = 80 }]);
 
         var withOneSet = player with { Stats = [previousWeek] };
         var withTwoSets = player with { Stats = [previousWeek, season] };
 
-        Assert.Equal(12m, previousWeek.Total);
+        Assert.Equal(12, previousWeek.Total);
         Assert.Single(withOneSet.Stats);
         Assert.Equal(StatSetKind.PreviousWeek, withOneSet.Stats[0].Kind);
         Assert.Equal(2, withTwoSets.Stats.Count);
-        Assert.Equal(80m, withTwoSets.Stats[1].Total);
+        Assert.Equal(80, withTwoSets.Stats[1].Total);
     }
 }

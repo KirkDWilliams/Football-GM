@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:football_gm_app/features/draft/draft_api.dart';
 import 'package:football_gm_app/models/player.dart';
-import 'package:football_gm_app/models/bid.dart';
 
 class DraftProvider extends ChangeNotifier {
-  DraftProvider(this._api);
+  DraftProvider(this._api, {required this.leagueId});
 
-  final HttpDraftApi _api;
+  final DraftApi _api;
+  final int leagueId;
   List<Player> players = [];
   bool loading = true;
   String? error;
@@ -16,7 +17,7 @@ class DraftProvider extends ChangeNotifier {
     notifyListeners();
     try 
     {
-      players = await _api.getAvailablePlayers();
+      players = await _api.getAvailablePlayers(leagueId);
     } catch (_) {
       error = 'Could not load Players';
     }

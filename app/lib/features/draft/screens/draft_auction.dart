@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:football_gm_app/auth/auth_controller.dart';
 import 'package:football_gm_app/features/leagues/league_api.dart';
 import 'package:football_gm_app/features/draft/draft_api.dart';
 import 'package:football_gm_app/models/bid.dart';
 import 'package:football_gm_app/models/player.dart';
 import 'package:football_gm_app/ui/ui.dart';
+import 'package:provider/provider.dart';
 
 class AuctionScreen extends StatefulWidget {
   const AuctionScreen(
@@ -37,10 +39,24 @@ class _AuctionScreenState extends State<AuctionScreen> {
 
   final _bidAmountController = TextEditingController();
 
+  num get _prevailingAmount =>
+      _currentBid.contractRating ?? _currentBid.salary ?? 0;
+
+  int get _userId {
+    final id = context.read<AuthController>().user?.id;
+    return int.tryParse(id ?? '') ?? 0;
+  }
+
   @override
   void initState() {
     super.initState();
-    _currentBid = Bid(salary: 0, signingBonus: 0, duration: 3);
+    _currentBid = Bid(
+      playerId: widget.player.id,
+      userId: 0,
+      salary: 0,
+      signingBonus: 0,
+      duration: 3,
+    );
     _startAuction();
     _startBidRefresh();
   }
@@ -90,7 +106,7 @@ class _AuctionScreenState extends State<AuctionScreen> {
 
   Future<void> _placeBid() async {
     final amount = num.tryParse(_bidAmountController.text);
-    if (amount == null || amount <= _currentBid) 
+    if (amount == null || amount <= _prevailingAmount) 
     {
       _showError('Your bid is less preferred than the current prevailing bid');
       return;
@@ -99,7 +115,14 @@ class _AuctionScreenState extends State<AuctionScreen> {
     setState(() => _isLoading = true);
     try 
     {
-      await widget.draftApi.placeBid(widget.leagueId, widget.userId, widget.player.id, amount);
+      await widget.draftApi.placeBid(
+        widget.leagueId,
+        _userId,
+        widget.player.id,
+        _currentBid.duration ?? 3,
+        amount,
+        _currentBid.signingBonus,
+      );
       _bidAmountController.clear();
       await _refreshBids();
     } on Object catch (e) {
@@ -112,7 +135,7 @@ class _AuctionScreenState extends State<AuctionScreen> {
   Future<void> _pass() async {
     setState(() => _isLoading = true);
     try {
-      await widget.draftApi.passAuction(widget.leagueId, widget.player.id);
+      await widget.draftApi.passAuction(widget.leagueId, _userId);
       setState(() => _hasPasssed = true);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -200,7 +223,7 @@ class _AuctionScreenState extends State<AuctionScreen> {
                 controller: _bidAmountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'Enter bid amount (min: \$${(_currentBid + 1).toStringAsFixed(0)})',
+                  labelText: 'Enter bid amount (min: \$${(_prevailingAmount + 1).toStringAsFixed(0)})',
                   border: const OutlineInputBorder(),
                 ),
               ),
