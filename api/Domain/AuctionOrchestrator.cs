@@ -1,47 +1,25 @@
 using FootballGm.Api.Data.Entity.Contrived;
+using FootballGm.Api.Domain.Interfaces;
 using FootballGm.Api.Infrastructure;
 using FootballGm.Api.Infrastructure.Interfaces;
 using static FootballGm.Api.Data.Models.Auction;
 
 namespace FootballGm.Api.Domain;
-public interface IAuctionOrchestrator
+
+public class AuctionOrchestrator(
+    IAuctionRepository auctionRepository,
+    ILeagueRepository leagueRepository,
+    IPlayerRepository playerRepository) : IAuctionOrchestrator
 {
-    /// <summary>
-    /// Starts a new auction for a player in a league. Initializes all participants and sets the first bidder.
-    /// </summary>
-    Task<AuctionState> StartAuctionAsync(int leagueId, string playerId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Places a bid during an auction. Validates bid amount and transitions to next bidder if valid.
-    /// </summary>
-    Task<AuctionState> PlaceBidAsync(int leagueId, Data.Models.Bid bid, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Marks the current bidder as passed, transitioning to the next active participant.
-    /// </summary>
-    Task<AuctionState> PassAsync(int leagueId, string playerId, string userId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the current auction state.
-    /// </summary>
-    Task<AuctionState> GetAuctionStateAsync(int leagueId, string playerId, CancellationToken cancellationToken = default);
-}
-
-public class AuctionOrchestrator(IAuctionRepository auctionRepository, ILeagueRepository leagueRepository, IPlayerRepository playerRepository) : IAuctionOrchestrator
-{
-    private readonly IAuctionRepository _auctionRepository = auctionRepository;
-    private readonly ILeagueRepository _leagueRepository = leagueRepository;
-    private readonly IPlayerRepository _playerRepository = playerRepository;
-
-
-    public async Task<AuctionState> StartAuctionAsync(int leagueId, string playerId, CancellationToken cancellationToken = default)
+    public async Task<AuctionState> StartAuctionAsync(
+        int leagueId, string playerId, CancellationToken cancellationToken = default)
     {
-        var league = await _leagueRepository.GetByIdAsync(leagueId, cancellationToken)
+        var league = await leagueRepository.GetByIdAsync(leagueId, cancellationToken)
             ?? throw new Exception("League does not exist.");
 
         var memberIds = league.Members.Select(m => m.UserId).ToList();
 
-        var existing = await _auctionRepository.GetAuctionAsync(leagueId, playerId, cancellationToken);
+        var existing = await auctionRepository.GetAuctionAsync(leagueId, playerId, cancellationToken);
 
         if (existing != null)
             throw new InvalidOperationException($"Auction already exists for player {playerId}");
@@ -55,30 +33,31 @@ public class AuctionOrchestrator(IAuctionRepository auctionRepository, ILeagueRe
             HighestBidRating = 0f,
             CurrentTurnStartedAtUtc = DateTimeOffset.UtcNow,
             Status = AuctionStatus.Active,
-            AuctionMembers = memberIds.Select((id, index) =>
-            new AuctionMember
-            {
-                UserId = id,
-                TurnOrder = index,
-                HasPassed = false
-            }).ToList()
+            AuctionMembers =
+            [
+                .. memberIds.Select((id, index) =>
+                    new AuctionMember
+                    {
+                        UserId = id,
+                        TurnOrder = index,
+                        HasPassed = false
+                    })
+            ]
         };
 
-        return await _auctionRepository.CreateAuctionAsync(auction, cancellationToken);
+        return await auctionRepository.CreateAuctionAsync(auction, cancellationToken);
     }
 
     public async Task<AuctionState> GetAuctionStateAsync(int leagueId, string playerId, CancellationToken cancellationToken = default)
     {
-        var league = await _leagueRepository.GetByIdAsync(leagueId, cancellationToken)
+        var league = await leagueRepository.GetByIdAsync(leagueId, cancellationToken)
             ?? throw new InvalidOperationException("League not found");
 
-        var auction = await _auctionRepository.GetAuctionAsync(leagueId, playerId, cancellationToken)
+        var auction = await auctionRepository.GetAuctionAsync(leagueId, playerId, cancellationToken)
             ?? throw new InvalidOperationException("Auction not found");
 
-        var player = await _playerRepository.GetPlayerByIdAsync(playerId, cancellationToken)
+        var player = await playerRepository.GetPlayerByIdAsync(playerId, cancellationToken)
             ?? throw new InvalidOperationException("Player not found");
-
-        var userIds = auction.AuctionMembers.Select(p => p.UserId).ToList();
 
         var userIdToName = league.Members.ToDictionary(u => u.UserId, u => u.User.DisplayName);
         return AuctionState.From(auction, player.Name, player.Position, player.Team, userIdToName);
@@ -86,7 +65,7 @@ public class AuctionOrchestrator(IAuctionRepository auctionRepository, ILeagueRe
 
     public async Task<AuctionState> PassAsync(int leagueId, string playerId, string userId, CancellationToken cancellationToken = default)
     {
-        var auction = await _auctionRepository.GetAuctionAsync(leagueId, playerId, cancellationToken)
+        var auction = await auctionRepository.GetAuctionAsync(leagueId, playerId, cancellationToken)
             ?? throw new InvalidOperationException("Auction not found");
 
         if (auction.Status != AuctionStatus.Active)
@@ -114,14 +93,14 @@ public class AuctionOrchestrator(IAuctionRepository auctionRepository, ILeagueRe
             auction.CurrentBidderId = nextBidderId;
         }
 
-        await _auctionRepository.UpdateAuctionAsync(auction, cancellationToken);
+        await auctionRepository.UpdateAuctionAsync(auction, cancellationToken);
 
         return await GetAuctionStateAsync(leagueId, playerId, cancellationToken);
     }
 
     public async Task<AuctionState> PlaceBidAsync(int leagueId, Data.Models.Bid bid, CancellationToken cancellationToken = default)
     {
-        var auction = await _auctionRepository.GetAuctionAsync(leagueId, bid.PlayerId, cancellationToken)
+        var auction = await auctionRepository.GetAuctionAsync(leagueId, bid.PlayerId, cancellationToken)
             ?? throw new InvalidOperationException("Auction not found");
 
         if (auction.Status != AuctionStatus.Active)
@@ -140,7 +119,7 @@ public class AuctionOrchestrator(IAuctionRepository auctionRepository, ILeagueRe
             throw new InvalidOperationException(
                 $"Bid rating must exceed current bid of {auction.HighestBidRating}");
 
-        var newHighestBid = new Data.Entity.Contrived.Bid
+        var newHighestBid = new Bid
         {
             AuctionId = auction.AuctionId,
             PlayerId = bid.PlayerId,
@@ -163,7 +142,7 @@ public class AuctionOrchestrator(IAuctionRepository auctionRepository, ILeagueRe
             auction.CurrentBidderId = nextBidderId;
         }
 
-        await _auctionRepository.UpdateAuctionAsync(auction, cancellationToken);
+        await auctionRepository.UpdateAuctionAsync(auction, cancellationToken);
 
         return await GetAuctionStateAsync(leagueId, bid.PlayerId, cancellationToken);
     }

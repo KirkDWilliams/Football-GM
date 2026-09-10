@@ -19,11 +19,11 @@ public class ContractController(IContractOrchestrator contractOrchestrator) : Co
 
     // Service Actions
     // ----------------------
-    // 1.0.  | Get team contracts
-    // 2.0.  | Get player contract
-    // 3.0.  | Sign new contract
-    // 4.0.  | Extend contract
-    // 5.0.  | Delete contract
+    // 1.0. | Get team contracts
+    // 2.0. | Get player contract
+    // 3.0. | Sign new contract
+    // 4.0. | Extend contract
+    // 5.0. | Delete contract
 
     [HttpGet("{leagueId}/{teamId}")]
     public async Task<ActionResult<List<Data.Models.Contract>>> GetTeamContracts(

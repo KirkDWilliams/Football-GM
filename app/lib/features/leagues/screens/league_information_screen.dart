@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:football_gm_app/auth/token_store.dart'; // PLAYGROUND
+import 'package:football_gm_app/config/api_config.dart'; // PLAYGROUND
 import 'package:football_gm_app/features/draft/draft_api.dart';
+import 'package:football_gm_app/features/draft/draft_hub_client.dart'; // PLAYGROUND
 import 'package:football_gm_app/features/draft/screens/draft_players_available.dart';
+import 'package:football_gm_app/features/draft/screens/draft_playground_screen.dart'; // PLAYGROUND
 import 'package:football_gm_app/features/leagues/league_api.dart';
 import 'package:football_gm_app/features/leagues/models/league_details.dart';
 import 'package:football_gm_app/ui/ui.dart';
@@ -83,7 +87,7 @@ class _LeagueInformationScreenState extends State<LeagueInformationScreen> {
 class _LeagueBody extends StatelessWidget {
   const _LeagueBody(
     {
-      required this.league, 
+      required this.league,
       required this.onCopyJoinCode
     }
   );
@@ -162,6 +166,27 @@ class _LeagueBody extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 24),
+        // PLAYGROUND: remove this button.
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.tonal(
+            onPressed: () {
+              final tokens = context.read<TokenStore>();
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => DraftPlaygroundScreen(
+                    client: SignalRDraftHubClient(
+                      hubUrl: '${ApiConfig.baseUrl}/hubs/draft',
+                      accessToken: () async => tokens.accessToken,
+                    ),
+                  ),
+                ),
+              );
+            },
+            child: const Text('SignalR playground'),
+          ),
+        ),
+        const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
           child: FilledButton.tonal(
