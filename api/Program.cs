@@ -8,6 +8,7 @@ using FootballGm.Api.Domain.Interfaces;
 using FootballGm.Api.Infrastructure;
 using FootballGm.Api.Infrastructure.Interfaces;
 using FootballGm.Api.Services;
+using FootballGm.Api.Services.BackgroundServices;
 using FootballGm.Api.Services.GameAnalysis;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -72,6 +73,7 @@ builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<ITeamOrchestrator, TeamOrchestrator>();
 builder.Services.AddScoped<IContractOrchestrator, ContractOrchestrator>();
+builder.Services.AddHostedService<MasterBackgroundService>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -33,7 +33,6 @@ public class AuctionOrchestrator(IAuctionRepository auctionRepository, ILeagueRe
     private readonly ILeagueRepository _leagueRepository = leagueRepository;
     private readonly IPlayerRepository _playerRepository = playerRepository;
 
-
     public async Task<AuctionState> StartAuctionAsync(int leagueId, string playerId, CancellationToken cancellationToken = default)
     {
         var league = await _leagueRepository.GetByIdAsync(leagueId, cancellationToken)
