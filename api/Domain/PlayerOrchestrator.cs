@@ -1,5 +1,6 @@
 using FootballGm.Api.Data.Enums;
 using FootballGm.Api.Data.Models;
+using FootballGm.Api.Domain.Interfaces;
 using FootballGm.Api.Infrastructure.Interfaces;
 using FootballGm.Api.Services.GameAnalysis;
 using PlayerGame = FootballGm.Api.Data.Entity.Ingested.PlayerGame;

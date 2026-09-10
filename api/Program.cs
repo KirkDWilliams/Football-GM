@@ -5,6 +5,7 @@ using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Domain;
 using FootballGm.Api.Domain.Interfaces;
+using FootballGm.Api.Hubs;
 using FootballGm.Api.Infrastructure;
 using FootballGm.Api.Infrastructure.Interfaces;
 using FootballGm.Api.Services;
@@ -61,7 +62,6 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IRefreshTokenMaintenance, RefreshTokenMaintenance>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddHostedService<RefreshTokenCleanupHostedService>();
 builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
 builder.Services.AddScoped<IScoreCalculator, ScoreCalculator>();
 builder.Services.AddScoped<IPlayerOrchestrator, PlayerOrchestrator>();
@@ -73,6 +73,7 @@ builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<ITeamOrchestrator, TeamOrchestrator>();
 builder.Services.AddScoped<IContractOrchestrator, ContractOrchestrator>();
+builder.Services.AddHostedService<RefreshTokenCleanupHostedService>();
 builder.Services.AddHostedService<MasterBackgroundService>();
 
 builder.Services
@@ -92,6 +93,18 @@ builder.Services
             NameClaimType = ClaimTypes.Name,
             RoleClaimType = ClaimTypes.Role
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    context.Token = accessToken;
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -108,7 +121,8 @@ builder.Services.AddCors(options =>
             policy
                 .SetIsOriginAllowed(IsLocalFlutterOrigin)
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .AllowAnyMethod()
+                .AllowCredentials();
             return;
         }
 
@@ -129,9 +143,12 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(origins)
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
+
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -174,6 +191,7 @@ app.UseCors(corsPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<DraftHub>("/hubs/draft");
 
 app.Run();
 
