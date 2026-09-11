@@ -11,6 +11,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Include="Scripts\NFLVerse.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
