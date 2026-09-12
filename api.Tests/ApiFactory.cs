@@ -31,7 +31,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Testing uses EnsureCreated (see Program.cs) so we avoid broken empty-DB migrations.
+        // Testing uses EnsureCreated (see DatabaseInitializer) so we avoid broken empty-DB migrations.
         builder.UseEnvironment("Testing");
 
         // UseSetting is applied early and reliably for WebApplicationFactory hosts.
