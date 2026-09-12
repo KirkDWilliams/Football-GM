@@ -10,7 +10,7 @@ library(RSQLite)
 library(nflreadr)
 library(dplyr)
 
-all_games <-load_schedules(2026)
+all_games <-load_schedules(most_recent_season())
 
 games <- data.frame(
 	GameId = all_games$game_id,

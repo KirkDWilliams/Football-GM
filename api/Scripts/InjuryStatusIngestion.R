@@ -10,7 +10,7 @@ library(RSQLite)
 library(nflreadr)
 library(dplyr)
 
-all_injuries <- load_injuries(2026)
+all_injuries <- load_injuries(most_recent_season())
 
 off_injuries <- all_injuries[all_injuries$position %in% c("QB", "RB", "WR", "TE", "K", "P"),]
 

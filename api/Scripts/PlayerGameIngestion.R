@@ -10,7 +10,7 @@ library(RSQLite)
 library(nflreadr)
 library(dplyr)
 
-player_stats <- load_player_stats(2026)
+player_stats <- load_player_stats(most_recent_season())
 
 off_player_stats <- player_stats[player_stats$position %in% c("QB", "RB", "WR", "TE", "K", "P"),]
 
