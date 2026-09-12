@@ -29,7 +29,7 @@ public interface IContractOrchestrator
         Data.Models.Contract contract,
         CancellationToken cancellationToken = default);
 
-    Task<bool> ExtendContract(Data.Models.Contract contract, CancellationToken cancellationToken = default);
+    Task<bool> UpdateContract(Data.Models.Contract contract, CancellationToken cancellationToken = default);
 
     Task<bool> DropContract(Data.Models.Contract contract, CancellationToken cancellationToken = default);
 }

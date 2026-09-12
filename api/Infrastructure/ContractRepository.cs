@@ -72,6 +72,7 @@ public class ContractRepository(AppDbContext context) : IContractRepository
         existing.Salary = contract.Salary;
         existing.GiftedCapSpace = contract.GiftedCapSpace;
         await context.SaveChangesAsync(cancellationToken);
+
         return existing;
     }
 

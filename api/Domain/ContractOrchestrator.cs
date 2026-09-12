@@ -78,11 +78,13 @@ public class ContractOrchestrator(IContractRepository contractRepository) : ICon
         return created is null ? null : Data.Models.Contract.FromEntity(created);
     }
 
-    public async Task<bool> ExtendContract(
+    public async Task<bool> UpdateContract(
         Data.Models.Contract contract,
         CancellationToken cancellationToken = default)
     {
-        var updated = await contractRepository.UpdateAsync(ToEntity(contract), cancellationToken);
+        var updated = await contractRepository
+            .UpdateAsync(ToEntity(contract), cancellationToken);
+
         return updated is not null;
     }
 

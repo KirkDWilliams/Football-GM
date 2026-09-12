@@ -1,3 +1,4 @@
+using FootballGm.Api.Data.Models;
 using FootballGm.Api.Domain.Interfaces;
 using FootballGm.Api.Services.Helpers;
 using Microsoft.AspNetCore.Authorization;
@@ -5,157 +6,108 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FootballGm.Api.Controllers;
 
-[Route("api/[controller]")]
-[Authorize]
 [ApiController]
+[Authorize]
+[Route("api/[controller]")]
 public class ContractController(IContractOrchestrator contractOrchestrator) : ControllerBase
 {
-    // User Requests:
-    // Get the Contract for 'X'
-    // Get the Contracts for Team 'A' !
-    // Sign a new Contract for player 'X'!
-    // Extend a Contract for player 'X'!
-    // Terminate a Contract for player 'G'!
-
-    // Service Actions
-    // ----------------------
-    // 1.0. | Get team contracts
-    // 2.0. | Get player contract
-    // 3.0. | Sign new contract
-    // 4.0. | Extend contract
-    // 5.0. | Delete contract
-
-    [HttpGet("{leagueId}/{teamId}")]
-    public async Task<ActionResult<List<Data.Models.Contract>>> GetTeamContracts(
+    [HttpGet("{leagueId:int}/{teamId:int}")]
+    [ProducesResponseType(typeof(IReadOnlyList<Contract>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IReadOnlyList<Contract>>> GetTeamContracts(
         [FromRoute] int leagueId,
         [FromRoute] int teamId,
         CancellationToken cancellationToken)
     {
-        if (leagueId == default || teamId == default)
-            return BadRequest($"League {leagueId} or Team {teamId} must have valid values.");
+        if (IsInvalidTeamRoute(leagueId, teamId))
+            return BadRequest(new { error = $"League {leagueId} or Team {teamId} must have valid values." });
 
-        try
-        {
-            var contracts = await contractOrchestrator.GetTeamContracts(leagueId, teamId, cancellationToken);
-
-            if (contracts == null)
-                return NotFound($"No contracts were found for Team {teamId}.");
-
-            return Ok(contracts);
-        }
-        catch (OperationCanceledException)
-        {
-            return StatusCode(StatusCodes.Status408RequestTimeout, "Request was cancelled.");
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while retrieving the contracts for team {teamId}.");
-        }
+        var contracts = await contractOrchestrator.GetTeamContracts(leagueId, teamId, cancellationToken);
+        return Ok(contracts);
     }
 
-    [HttpGet("{leagueId}/{teamId}/{playerId}")]
-    public async Task<ActionResult<Data.Models.Contract>> GetContract(
-        [FromRoute] int leagueId,
-        [FromRoute] int teamId,
-        [FromRoute] string playerId)
-    {
-        if (leagueId == default || teamId == default || string.IsNullOrWhiteSpace(playerId))
-            return BadRequest($"League {leagueId}, Team {teamId}, or Player {playerId} must have valid values.");
-
-        try
-        {
-            var contract = await contractOrchestrator.GetContract(leagueId, teamId, playerId);
-
-            if (contract == null)
-                return NotFound($"No contract was found for Player {playerId} on Team {teamId}.");
-
-            return Ok(contract);
-        }
-        catch (OperationCanceledException)
-        {
-            return StatusCode(StatusCodes.Status408RequestTimeout, "Request was cancelled.");
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while retrieving the contract for Player {playerId} on Team {teamId}.");
-        }
-    }
-
-    [HttpPost("{leagueId}/{teamId}/{playerId}/Enact")]
-    public async Task<ActionResult<bool>> Enact(
+    [HttpGet("{leagueId:int}/{teamId:int}/{playerId}")]
+    [ProducesResponseType(typeof(Contract), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Contract>> GetContract(
         [FromRoute] int leagueId,
         [FromRoute] int teamId,
         [FromRoute] string playerId,
-        [FromBody] Data.Models.Contract contract,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var result = await contractOrchestrator.CreateContract(leagueId, teamId, playerId, contract, cancellationToken);
+        if (IsInvalidTeamRoute(leagueId, teamId) || string.IsNullOrWhiteSpace(playerId))
+            return BadRequest(new { error = $"League {leagueId}, Team {teamId}, or Player {playerId} must have valid values." });
 
-            if (result is null)
-                return BadRequest($"Failed to enact a contract for Player {playerId} for Team {teamId}.");
+        var contract = await contractOrchestrator.GetContract(leagueId, teamId, playerId, cancellationToken);
+        if (contract is null)
+            return NotFound($"No contract was found for Player {playerId} on Team {teamId}.");
 
-            return Ok(result);
-        }
-        catch (OperationCanceledException)
-        {
-            return StatusCode(StatusCodes.Status408RequestTimeout, "Request was cancelled.");
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while creating the contract for Player {playerId} on Team {teamId}.");
-        }
+        return Ok(contract);
     }
 
-    [HttpPut("Extend")]
-    public async Task<ActionResult<bool>> Extend(
-        [FromBody] Data.Models.Contract contract,
+    [HttpPost("{leagueId:int}/{teamId:int}/{playerId}/Create")]
+    [ProducesResponseType(typeof(Contract), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<Contract>> Create(
+        [FromRoute] int leagueId,
+        [FromRoute] int teamId,
+        [FromRoute] string playerId,
+        [FromBody] Contract contract,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var result = await contractOrchestrator.ExtendContract(contract, cancellationToken);
+        if (IsInvalidTeamRoute(leagueId, teamId) || string.IsNullOrWhiteSpace(playerId))
+            return BadRequest(new { error = $"League {leagueId}, Team {teamId}, or Player {playerId} must have valid values." });
 
-            if (result is not true)
-                return NotFound($"Either no contract was found for Contract {contract.ContractId}, or the update failed.");
+        var created = await contractOrchestrator.CreateContract(
+            leagueId,
+            teamId,
+            playerId,
+            contract,
+            cancellationToken);
 
-            return Ok(result);
-        }
-        catch (OperationCanceledException)
-        {
-            return StatusCode(StatusCodes.Status408RequestTimeout, "Request was cancelled.");
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while extending the contract {contract.ContractId}.");
-        }
+        if (created is null)
+            return BadRequest(new { error = $"Failed to enact a contract for Player {playerId} for Team {teamId}." });
+
+        return Ok(created);
+    }
+
+    [HttpPut("Update")]
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<bool>> Update(
+        [FromBody] Contract contract,
+        CancellationToken cancellationToken)
+    {
+        var updated = await contractOrchestrator.UpdateContract(contract, cancellationToken);
+        if (!updated)
+            return NotFound($"Either no contract was found for Contract {contract.ContractId}, or the update failed.");
+
+        return Ok(updated);
     }
 
     [HttpDelete("Drop")]
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<bool>> Drop(
-        [FromBody] Data.Models.Contract contract,
+        [FromBody] Contract contract,
         CancellationToken cancellationToken)
     {
-        if (contract.EndWeek > WeekHelper.CurrentWeek || contract.ContractId == default)
-            return BadRequest($"Contract {contract.ContractId} unable to be dropped.");
+        if (contract.EndWeek > WeekHelper.CurrentWeek || contract.ContractId <= 0)
+            return BadRequest(new { error = $"Contract {contract.ContractId} unable to be dropped." });
 
-        try
-        {
-            var result = await contractOrchestrator.DropContract(contract, cancellationToken);
+        var dropped = await contractOrchestrator.DropContract(contract, cancellationToken);
+        if (!dropped)
+            return NotFound($"Contract {contract.ContractId} was unsuccessfully eradicated.");
 
-            if (result is not true)
-                NotFound($"Contract {contract.ContractId} was unsuccessfully eradicated.");
-
-            return Ok(result);
-        }
-        catch (OperationCanceledException)
-        {
-            return StatusCode(StatusCodes.Status408RequestTimeout, "Request was cancelled.");
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred when attempting to drop Contract {contract.ContractId}.");
-        }
+        return Ok(dropped);
     }
+
+    private static bool IsInvalidTeamRoute(int leagueId, int teamId) => leagueId <= 0 || teamId <= 0;
 }
