@@ -1,4 +1,3 @@
-﻿R
 
 player_stats <- load_player_stats(2026)
 

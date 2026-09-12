@@ -1,4 +1,3 @@
-﻿R
 
 playerSeason <- playerGame %>%
 group_by(Season, PlayerId) %>%

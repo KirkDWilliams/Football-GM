@@ -1,3 +1,5 @@
+using RDotNet;
+
 namespace FootballGm.Api.Services.BackgroundServices;
 
 public class MasterBackgroundService : BackgroundService
@@ -26,14 +28,6 @@ public class MasterBackgroundService : BackgroundService
 
                 switch (currentDay.DayOfWeek)
                 {
-                    case DayOfWeek.Sunday:
-                    case DayOfWeek.Monday:
-                        await MinutesUntil(desiredHour: 1, desiredMinute: 0,
-                            async game => await UpdateGameStats(), stoppingToken);
-
-                        await FinishDay(stoppingToken);
-                        break;
-
                     case DayOfWeek.Tuesday:
                         await MinutesUntil(desiredHour: 1, desiredMinute: 0,
                             async game => await UpdateGameStats(), stoppingToken);
@@ -45,29 +39,33 @@ public class MasterBackgroundService : BackgroundService
                             async agency =>
                             {
                                 await OpenAuctionedFreeAgency();
-                                await OpenTrading(); }, stoppingToken);
-                        // Open Trading
+                                await OpenTrading();
+                            }, stoppingToken);
 
                         await FinishDay(stoppingToken);
                         break;
 
                     case DayOfWeek.Wednesday:
-                        await MinutesUntil(desiredHour: 1, desiredMinute: 0, async game => await UpdateGameStats(), stoppingToken);
+                        await MinutesUntil(desiredHour: 1, desiredMinute: 0,
+                            async game => await UpdateGameStats(), stoppingToken);
+
                         if (nflWeek == 12)
                         {
                             /* thanksgiving slide */
-                            await MinutesUntil(desiredHour: 10, desiredMinute: 0, async k =>
-                            {
-                                CloseAuctions();
-                                CloseUnrestrictedFreeAgency();
-                                CloseTrading();
-                            }, stoppingToken);
+                            await MinutesUntil(desiredHour: 10, desiredMinute: 0,
+                                async k =>
+                                {
+                                    CloseAuctions();
+                                    CloseUnrestrictedFreeAgency();
+                                    CloseTrading();
+                                }, stoppingToken);
                             
                             await FinishDay(stoppingToken);
                         }
 
                         await MinutesUntil(desiredHour: 12, desiredMinute: 0,
                             async k => CloseAuctions(), stoppingToken);
+
                         await MinutesUntil(desiredHour: 1, desiredMinute: 0,
                             async k => OpenUnrestrictedFreeAgency(), stoppingToken);
 
@@ -81,20 +79,24 @@ public class MasterBackgroundService : BackgroundService
                         if (nflWeek == 12)
                             await FinishDay(stoppingToken);
 
-                        await MinutesUntil(desiredHour: 19, desiredMinute: 0, async k =>
-                        {
-                            CloseAuctions();
-                            CloseUnrestrictedFreeAgency();
-                            CloseTrading();
-                        }, stoppingToken);
+                        await MinutesUntil(desiredHour: 19, desiredMinute: 0,
+                            async k =>
+                            {
+                                CloseAuctions();
+                                CloseUnrestrictedFreeAgency();
+                                CloseTrading();
+                            }, stoppingToken);
 
                         await FinishDay(stoppingToken);
                         break;
 
                     case DayOfWeek.Friday:
                     case DayOfWeek.Saturday:
-                        await MinutesUntil(desiredHour: 1, desiredMinute: 0, async game => await UpdateGameStats(), stoppingToken);
-                        // pull game stats
+                    case DayOfWeek.Sunday:
+                    case DayOfWeek.Monday:
+                        await MinutesUntil(desiredHour: 1, desiredMinute: 0,
+                            async game => await UpdateGameStats(), stoppingToken);
+
                         await FinishDay(stoppingToken);
                         break;
                 }
@@ -104,7 +106,6 @@ public class MasterBackgroundService : BackgroundService
                 _logger.LogError(ex, "Error while closing expired auctions");
             }
 
-            // Wait before the next check
             await Task.Delay(_checkInterval, stoppingToken);
         }
 
@@ -148,7 +149,7 @@ public class MasterBackgroundService : BackgroundService
 
     private async Task UpdateGameStats()
     {
-        throw new NotImplementedException();
+        ;
     }
 
     private async static Task MinutesUntil(int desiredHour, int desiredMinute, Func<CancellationToken, Task>? onComplete = null, CancellationToken stoppingToken = default)

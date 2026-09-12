@@ -1,4 +1,3 @@
-﻿R
 
 all_injuries <- load_injuries(2026)
 

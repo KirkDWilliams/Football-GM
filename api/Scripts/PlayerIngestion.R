@@ -1,4 +1,3 @@
-﻿R
 
 install.packages(c("DBI", "RSQLite", "nflreadr"))
 

@@ -1,4 +1,3 @@
-﻿R
 
 all_games <-load_schedules(2026)
 

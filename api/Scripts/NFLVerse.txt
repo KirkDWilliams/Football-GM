@@ -1,7 +1,0 @@
-R
-
-install.packages(c("DBI", "RSQLite", "nflreadr"))
-
-library(DBI)
-library(RSQLite)
-library(nflreadr)
