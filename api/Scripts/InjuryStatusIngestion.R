@@ -1,9 +1,18 @@
+dbPath <- "C:/Code/Football-GM/api/footballgm.dev.db"
+   con <- dbConnect(SQLite(),dbPath)
+
+if (!requireNamespace("DBI", quietly = TRUE)) install.packages("DBI")
+if (!requireNamespace("RSQLite", quietly = TRUE)) install.packages("RSQLite")
+if (!requireNamespace("nflreadr", quietly = TRUE)) install.packages("nflreadr")
+
+library(DBI)
+library(RSQLite)
+library(nflreadr)
+library(dplyr)
 
 all_injuries <- load_injuries(2026)
 
-off_injuries <- all_injuries[
-    all_injuries$position %in% c("QB", "RB", "WR", "TE", "K", "P"),
-]
+off_injuries <- all_injuries[all_injuries$position %in% c("QB", "RB", "WR", "TE", "K", "P"),]
 
 injuries <- data.frame(
 	GameId = off_injuries$season,
@@ -13,3 +22,7 @@ injuries <- data.frame(
 	PracticePrimaryStatus = off_injuries$practice_primary_injury,
 	PracticeStatus = off_injuries$practice_status
 )
+		
+dbWriteTable(con, "InjuryStatus", injuries, overwrite = TRUE)
+
+dbDisconnect(con)

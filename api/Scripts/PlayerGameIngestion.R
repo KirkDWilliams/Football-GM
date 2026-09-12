@@ -1,9 +1,18 @@
+dbPath <- "C:/Code/Football-GM/api/footballgm.dev.db"
+   con <- dbConnect(SQLite(),dbPath)
+
+if (!requireNamespace("DBI", quietly = TRUE)) install.packages("DBI")
+if (!requireNamespace("RSQLite", quietly = TRUE)) install.packages("RSQLite")
+if (!requireNamespace("nflreadr", quietly = TRUE)) install.packages("nflreadr")
+
+library(DBI)
+library(RSQLite)
+library(nflreadr)
+library(dplyr)
 
 player_stats <- load_player_stats(2026)
 
-off_player_stats <- player_stats[
-    player_stats$position %in% c("QB", "RB", "WR", "TE", "K", "P"),
-]
+off_player_stats <- player_stats[player_stats$position %in% c("QB", "RB", "WR", "TE", "K", "P"),]
 
 playerGame <- data.frame(
     PlayerId = off_player_stats$player_id,
@@ -31,4 +40,8 @@ playerGame <- data.frame(
     RushingTwoPointConversions = off_player_stats$rushing_2pt_conversions,
     ReceivingTwoPointConversions = off_player_stats$receiving_2pt_conversions,
     ReturnedTouchdowns = off_player_stats$special_teams_tds
-)
+)	
+
+dbWriteTable(con, "PlayerGame", playerGame, overwrite = TRUE)
+
+dbDisconnect(con)
