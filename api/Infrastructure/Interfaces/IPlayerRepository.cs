@@ -1,6 +1,6 @@
 using FootballGm.Api.Data.Entity.Ingested;
 
-namespace FootballGm.Api.Infrastructure;
+namespace FootballGm.Api.Infrastructure.Interfaces;
 
 public interface IPlayerRepository
 {

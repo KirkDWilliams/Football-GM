@@ -1,6 +1,7 @@
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Associations;
 using FootballGm.Api.Data.Entity.Contrived;
+using FootballGm.Api.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace FootballGm.Api.Infrastructure;

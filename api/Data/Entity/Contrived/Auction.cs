@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 namespace FootballGm.Api.Data.Entity.Contrived;
 
 [Index(nameof(LeagueId), nameof(PlayerId), IsUnique = true)]
-
 public class Auction
 {
     [Key]

@@ -1,4 +1,5 @@
 using FootballGm.Api.Infrastructure;
+using FootballGm.Api.Infrastructure.Interfaces;
 
 namespace FootballGm.Api.Domain;
 

@@ -1,4 +1,4 @@
-using FootballGm.Api.Data.Entity.Ingested;
+﻿using FootballGm.Api.Data.Entity.Ingested;
 using FootballGm.Api.Data.Models;
 using Rule = FootballGm.Api.Data.Entity.Contrived.Rule;
 using ScoringWeightRule = FootballGm.Api.Data.Entity.Contrived.ScoringWeightRule;

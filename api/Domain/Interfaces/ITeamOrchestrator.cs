@@ -1,7 +1,7 @@
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Data.Models;
 
-namespace FootballGm.Api.Domain;
+namespace FootballGm.Api.Domain.Interfaces;
 
 public interface ITeamOrchestrator
 {
