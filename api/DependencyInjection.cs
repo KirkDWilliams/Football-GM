@@ -171,6 +171,7 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenMaintenance, RefreshTokenMaintenance>();
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IDraftRepository, DraftRepository>();
 
         services.AddScoped<IPlayerRepository, PlayerRepository>();
         services.AddScoped<IScoreCalculator, ScoreCalculator>();
@@ -185,6 +186,8 @@ public static class DependencyInjection
         services.AddScoped<IContractRepository, ContractRepository>();
         services.AddScoped<ITeamOrchestrator, TeamOrchestrator>();
         services.AddScoped<IContractOrchestrator, ContractOrchestrator>();
+
+        services.AddScoped<IDraftService, DraftService>();
 
         services.AddHostedService<RefreshTokenCleanupHostedService>();
         services.AddHostedService<MasterBackgroundService>();

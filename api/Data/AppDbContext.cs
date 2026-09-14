@@ -35,6 +35,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     /// <summary>
     /// Misc
     /// </summary>
+    public DbSet<Draft> Drafts { get; set; }
     public DbSet<TeamPlayers> TeamPlayers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

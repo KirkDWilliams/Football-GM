@@ -88,6 +88,18 @@ public class LeagueRepository(AppDbContext context) : ILeagueRepository
         return new LeagueMembership(league, member.Role);
     }
 
+    public async Task<IReadOnlyList<LeagueMember>> ListMembersAsync(
+        int leagueId,
+        CancellationToken cancellationToken = default)
+    {
+        return await context.LeagueMembers
+            .AsNoTracking()
+            .Include(member => member.User)
+            .Where(member => member.LeagueId == leagueId)
+            .OrderBy(member => member.JoinedAtUtc)
+            .ToListAsync(cancellationToken);
+    }
+
     private IQueryable<League> LeaguesWithSettings()
     {
         return context.Leagues

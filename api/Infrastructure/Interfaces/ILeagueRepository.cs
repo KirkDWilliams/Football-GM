@@ -20,4 +20,8 @@ public interface ILeagueRepository
         int leagueId,
         string userId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<LeagueMember>> ListMembersAsync(
+        int leagueId,
+        CancellationToken cancellationToken = default);
 }
