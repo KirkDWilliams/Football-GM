@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace FootballGm.Api.Auth;
+namespace FootballGm.Api.Utility;
 
 /// <summary>
 /// Creates opaque refresh tokens and one-way hashes for server-side storage.

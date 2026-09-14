@@ -4,6 +4,7 @@ using FootballGm.Api.Auth;
 using FootballGm.Api.Data.Entity;
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Infrastructure.Interfaces;
+using FootballGm.Api.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 

@@ -6,20 +6,21 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace FootballGm.Api.Auth;
 
-public class TokenService : ITokenService
+public interface ITokenService
 {
-    private readonly JwtOptions _options;
+    /// <summary>
+    /// Creates a signed JWT for the given subject. Does not look up or create user accounts.
+    /// </summary>
+    TokenResponse CreateToken(string subject, string? displayName = null);
+}
 
-    public TokenService(IOptions<JwtOptions> options)
-    {
-        _options = options.Value;
-    }
-
+public class TokenService(IOptions<JwtOptions> options) : ITokenService
+{
     public TokenResponse CreateToken(string subject, string? displayName = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subject);
 
-        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(_options.ExpirationMinutes);
+        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(options.Value.ExpirationMinutes);
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, subject),
@@ -33,12 +34,12 @@ public class TokenService : ITokenService
             claims.Add(new Claim(ClaimTypes.Name, displayName));
         }
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Value.SigningKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            _options.Issuer,
-            _options.Audience,
+            options.Value.Issuer,
+            options.Value.Audience,
             claims,
             DateTime.UtcNow,
             expiresAt.UtcDateTime,
@@ -48,3 +49,5 @@ public class TokenService : ITokenService
         return new TokenResponse(accessToken, "Bearer", expiresAt);
     }
 }
+
+public record TokenResponse(string AccessToken, string TokenType, DateTimeOffset ExpiresAt);

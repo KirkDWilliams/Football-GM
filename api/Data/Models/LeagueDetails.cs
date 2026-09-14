@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using FootballGm.Api.Data.Enums;
-using FootballGm.Api.Serialization;
+using FootballGm.Api.Utility;
 using Entities = FootballGm.Api.Data.Entity.Contrived;
 
 namespace FootballGm.Api.Data.Models;
