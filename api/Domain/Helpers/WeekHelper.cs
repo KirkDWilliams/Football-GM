@@ -1,4 +1,4 @@
-namespace FootballGm.Api.Services.Helpers;
+namespace FootballGm.Api.Domain.Helpers;
 
 public static class WeekHelper
 {

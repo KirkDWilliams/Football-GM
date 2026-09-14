@@ -7,15 +7,8 @@ namespace FootballGm.Api.Controllers;
 [ApiController]
 [AllowAnonymous]
 [Route("api/[controller]")]
-public class HealthController : ControllerBase
+public class HealthController(AppDbContext db) : ControllerBase
 {
-    private readonly AppDbContext _db;
-
-    public HealthController(AppDbContext db)
-    {
-        _db = db;
-    }
-
     /// <summary>
     /// Health check for connectivity from the Flutter client and local tooling.
     /// Reports whether the SQLite database is reachable.
@@ -25,7 +18,7 @@ public class HealthController : ControllerBase
     [ProducesResponseType(typeof(HealthResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<HealthResponse>> Get(CancellationToken cancellationToken)
     {
-        var databaseConnected = await _db.Database.CanConnectAsync(cancellationToken);
+        var databaseConnected = await db.Database.CanConnectAsync(cancellationToken);
         var response = new HealthResponse(
             databaseConnected ? "healthy" : "degraded",
             DateTimeOffset.UtcNow,

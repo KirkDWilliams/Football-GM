@@ -1,4 +1,3 @@
-using FootballGm.Api.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,13 +8,11 @@ namespace FootballGm.Api.Controllers;
 [Route("api/[controller]")]
 public class MatchController : ControllerBase
 {
-    public MatchController(){}
-
     // User Requests
     // Get the matchup between 'X' and 'Y'! ('Y' defaulting to the main user)
     // Get week 'Z' Matchups!
     // Get week combined Matchups!
-    // 
+    //
 
     // Service Actions
     // 1.0.   Alter the Matchup between 'X' and 'Y' ('Y' defaulting to the main user)
@@ -27,7 +24,7 @@ public class MatchController : ControllerBase
     // 6.5.   Reveal results only to Teams in Matchup
     //          -and/or reveal the PlayOff Schedule only at a certain point.
     //          -
-    // 6.6.   
+    // 6.6.
     // 7.0.   Determine results in relation to the league average (above average, +1) (outliers rewarded-hindered)
     //          -or determine results in relation to player head- to- head matchups between players. (Ryder cup style)
     //          -or determine who had the best budget value for performance outcome (+1)
@@ -35,5 +32,5 @@ public class MatchController : ControllerBase
     //
 
 
-    
+
 }

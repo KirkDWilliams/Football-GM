@@ -1,4 +1,4 @@
-namespace FootballGm.Api.Services.BackgroundServices;
+namespace FootballGm.Api.BackgroundServices;
 /// <summary>
 /// Free agency period will need to conclude at midnight of Tuesdays. Normal Contracts can thereafter be made at whim.
 /// </summary>

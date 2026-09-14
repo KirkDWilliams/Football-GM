@@ -1,15 +1,12 @@
 using System.Security.Claims;
 using System.Text;
 using FootballGm.Api.Auth;
+using FootballGm.Api.BackgroundServices;
 using FootballGm.Api.Data;
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Domain;
-using FootballGm.Api.Domain.Interfaces;
+using FootballGm.Api.Domain.GameAnalysis;
 using FootballGm.Api.Infrastructure;
-using FootballGm.Api.Infrastructure.Interfaces;
-using FootballGm.Api.Services;
-using FootballGm.Api.Services.BackgroundServices;
-using FootballGm.Api.Services.GameAnalysis;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

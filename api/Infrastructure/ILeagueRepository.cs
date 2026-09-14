@@ -1,7 +1,7 @@
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Data.Enums;
 
-namespace FootballGm.Api.Infrastructure.Interfaces;
+namespace FootballGm.Api.Infrastructure;
 
 public sealed record LeagueMembership(League League, LeagueMemberRole Role);
 

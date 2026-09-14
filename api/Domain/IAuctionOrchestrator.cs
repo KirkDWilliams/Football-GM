@@ -1,6 +1,6 @@
-﻿using FootballGm.Api.Data.Models;
+using FootballGm.Api.Data.Models;
 
-namespace FootballGm.Api.Domain.Interfaces;
+namespace FootballGm.Api.Domain;
 
 public interface IAuctionOrchestrator
 {

@@ -1,13 +1,12 @@
 using FootballGm.Api.Data.Enums;
 using FootballGm.Api.Data.Models;
-using FootballGm.Api.Domain.Interfaces;
-using FootballGm.Api.Infrastructure.Interfaces;
-using FootballGm.Api.Services.GameAnalysis;
+using FootballGm.Api.Domain.GameAnalysis;
+using FootballGm.Api.Infrastructure;
 using PlayerGame = FootballGm.Api.Data.Entity.Ingested.PlayerGame;
 using PlayerSeason = FootballGm.Api.Data.Entity.Ingested.PlayerSeason;
 using Player = FootballGm.Api.Data.Models.Player;
 using Rule = FootballGm.Api.Data.Entity.Contrived.Rule;
-using FootballGm.Api.Services.Helpers;
+using FootballGm.Api.Domain.Helpers;
 
 namespace FootballGm.Api.Domain;
 

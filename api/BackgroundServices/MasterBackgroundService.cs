@@ -1,22 +1,17 @@
+using FootballGm.Api.Domain.Helpers;
 using RDotNet;
 
-namespace FootballGm.Api.Services.BackgroundServices;
+namespace FootballGm.Api.BackgroundServices;
 
-public class MasterBackgroundService : BackgroundService
+public class MasterBackgroundService(
+    IServiceScopeFactory scopeFactory,
+    ILogger<MasterBackgroundService> logger) : BackgroundService
 {
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<MasterBackgroundService> _logger;
     private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(10);
-
-    public MasterBackgroundService(IServiceScopeFactory scopeFactory, ILogger<MasterBackgroundService> logger)
-    {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Background services running.");
+        logger.LogInformation("Background services running.");
 
         REngine.SetEnvironmentVariables(
             @"C:\Program Files\R\R-4.6.1\bin\x64",
@@ -30,7 +25,7 @@ public class MasterBackgroundService : BackgroundService
             {
                 var currentDay = DateTime.Now;
 
-                var nflWeek = Helpers.WeekHelper.CurrentWeek;
+                var nflWeek = WeekHelper.CurrentWeek;
                 if (nflWeek == 0 || nflWeek > 18)
                 {
                     IngestNFLGames(engine);
@@ -142,13 +137,13 @@ public class MasterBackgroundService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while closing expired auctions");
+                logger.LogError(ex, "Error while closing expired auctions");
             }
 
             await Task.Delay(_checkInterval, stoppingToken);
         }
 
-        _logger.LogInformation("Master Background Service has stopped");
+        logger.LogInformation("Master Background Service has stopped");
     }
 
     private static void UpdatePlayerSeasonStats(REngine engine)

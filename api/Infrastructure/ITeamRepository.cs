@@ -1,7 +1,7 @@
 using FootballGm.Api.Data.Entity.Associations;
 using FootballGm.Api.Data.Entity.Contrived;
 
-namespace FootballGm.Api.Infrastructure.Interfaces;
+namespace FootballGm.Api.Infrastructure;
 
 public interface ITeamRepository
 {

@@ -1,4 +1,4 @@
-namespace FootballGm.Api.Services.BackgroundServices;
+namespace FootballGm.Api.BackgroundServices;
 /// <summary>
 /// Players will need updated stats on a nightly basis.
 /// </summary>

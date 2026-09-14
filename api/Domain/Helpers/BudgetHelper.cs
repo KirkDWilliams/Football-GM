@@ -1,6 +1,6 @@
 using FootballGm.Api.Data.Enums;
 
-namespace FootballGm.Api.Services.Helpers
+namespace FootballGm.Api.Domain.Helpers
 {
     public static class BudgetHelper
     {

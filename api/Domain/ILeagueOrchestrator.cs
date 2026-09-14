@@ -1,7 +1,6 @@
-﻿using FootballGm.Api.Data.Models;
-using FootballGm.Api.Domain;
+using FootballGm.Api.Data.Models;
 
-namespace FootballGm.Api.Domain.Interfaces;
+namespace FootballGm.Api.Domain;
 
 public interface ILeagueOrchestrator
 {

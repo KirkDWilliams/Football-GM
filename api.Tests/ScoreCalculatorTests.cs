@@ -1,7 +1,7 @@
 using FootballGm.Api.Data.Entity.Ingested;
 using FootballGm.Api.Data.Enums;
 using FootballGm.Api.Data.Models;
-using FootballGm.Api.Services.GameAnalysis;
+using FootballGm.Api.Domain.GameAnalysis;
 using BonusRule = FootballGm.Api.Data.Entity.Contrived.BonusRule;
 using Rule = FootballGm.Api.Data.Entity.Contrived.Rule;
 using ScoringWeightRule = FootballGm.Api.Data.Entity.Contrived.ScoringWeightRule;

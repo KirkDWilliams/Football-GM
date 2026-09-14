@@ -1,6 +1,6 @@
-using FootballGm.Api.Infrastructure.Interfaces;
+using FootballGm.Api.Infrastructure;
 
-namespace FootballGm.Api.Services;
+namespace FootballGm.Api.Domain;
 
 public interface ILeagueCodeService
 {

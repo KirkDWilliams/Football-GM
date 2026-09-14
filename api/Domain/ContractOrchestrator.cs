@@ -1,7 +1,6 @@
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Data.Models;
-using FootballGm.Api.Domain.Interfaces;
-using FootballGm.Api.Infrastructure.Interfaces;
+using FootballGm.Api.Infrastructure;
 using Entities = FootballGm.Api.Data.Entity.Contrived;
 
 namespace FootballGm.Api.Domain;

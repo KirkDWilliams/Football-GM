@@ -4,11 +4,15 @@ ASP.NET Core 10 + SQLite + JWT auth.
 
 ```
 api/
-├── Controllers/     HTTP endpoints
-├── Services/        Auth + refresh-token maintenance
-├── Auth/            JWT helpers, options
-├── Data/            EF Core + entities
-└── Program.cs       App setup
+├── Controllers/          HTTP endpoints
+├── Hubs/                 SignalR
+├── Domain/               Orchestrators, helpers, scoring
+├── Infrastructure/       Repositories + R ingestion scripts
+├── Data/                 EF Core, entities, enums
+├── Auth/                 JWT, identity, refresh-token maintenance
+├── BackgroundServices/   Hosted jobs
+├── Utility/              Shared helpers
+└── Program.cs            App setup
 ```
 
 ```powershell

@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using FootballGm.Api.Services;
+using FootballGm.Api.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

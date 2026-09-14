@@ -1,4 +1,4 @@
-using FootballGm.Api.Infrastructure.Interfaces;
+using FootballGm.Api.Infrastructure;
 
 namespace FootballGm.Api.Domain;
 
@@ -7,7 +7,4 @@ public class TradeOrchestrator(
     ITeamRepository teamRepository,
     IBudgetRepository budgetRepository)
 {
-    private readonly IContractRepository _contractRepository = contractRepository;
-    private readonly ITeamRepository _teamRepository = teamRepository;
-    private readonly IBudgetRepository _budgetRepository = budgetRepository;
 }

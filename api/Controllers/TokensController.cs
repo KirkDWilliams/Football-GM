@@ -11,17 +11,8 @@ namespace FootballGm.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class TokensController : ControllerBase
+public class TokensController(ITokenService tokenService, IHostEnvironment environment) : ControllerBase
 {
-    private readonly IHostEnvironment _environment;
-    private readonly ITokenService _tokenService;
-
-    public TokensController(ITokenService tokenService, IHostEnvironment environment)
-    {
-        _tokenService = tokenService;
-        _environment = environment;
-    }
-
     /// <summary>
     /// Development-only: issue a JWT for a given subject without authenticating a user store.
     /// Returns 404 outside Development so free minting is not exposed.
@@ -33,11 +24,11 @@ public class TokensController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<TokenResponse> Create([FromBody] CreateTokenRequest request)
     {
-        if (!_environment.IsDevelopment()) return NotFound();
+        if (!environment.IsDevelopment()) return NotFound();
 
         if (string.IsNullOrWhiteSpace(request.Subject)) return BadRequest(new { error = "subject is required" });
 
-        var token = _tokenService.CreateToken(request.Subject.Trim(), request.DisplayName);
+        var token = tokenService.CreateToken(request.Subject.Trim(), request.DisplayName);
         return Ok(token);
     }
 

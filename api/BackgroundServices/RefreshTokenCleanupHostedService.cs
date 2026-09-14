@@ -1,7 +1,7 @@
 using FootballGm.Api.Auth;
 using Microsoft.Extensions.Options;
 
-namespace FootballGm.Api.Services;
+namespace FootballGm.Api.BackgroundServices;
 
 /// <summary>
 /// Periodically deletes expired and aged-revoked refresh tokens so the table stays small.

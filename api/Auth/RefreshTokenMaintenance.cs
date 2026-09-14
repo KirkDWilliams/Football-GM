@@ -1,9 +1,8 @@
-using FootballGm.Api.Auth;
 using FootballGm.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace FootballGm.Api.Services;
+namespace FootballGm.Api.Auth;
 
 public interface IRefreshTokenMaintenance
 {

@@ -1,10 +1,10 @@
-﻿using FootballGm.Api.Data.Entity.Ingested;
+using FootballGm.Api.Data.Entity.Ingested;
 using FootballGm.Api.Data.Models;
 using Rule = FootballGm.Api.Data.Entity.Contrived.Rule;
 using ScoringWeightRule = FootballGm.Api.Data.Entity.Contrived.ScoringWeightRule;
 using BonusRule = FootballGm.Api.Data.Entity.Contrived.BonusRule;
 
-namespace FootballGm.Api.Services.GameAnalysis;
+namespace FootballGm.Api.Domain.GameAnalysis;
 
 public interface IScoreCalculator
 {
