@@ -29,11 +29,22 @@ public class DraftHub(IDraftService service) : Hub
 
     public async Task Join(int leagueId)
     {
-        var connectionId = Context.ConnectionId;
-        var groupName = "draft-" + leagueId;
+        var userId =
+            Context.UserIdentifier
+            ?? Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? Context.User?.FindFirstValue("sub");
 
-        await Groups.AddToGroupAsync(connectionId, groupName);
-        //await Clients.Caller.SendAsync("CounterChanged", Values.GetOrAdd(groupName, 0));
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new HubException("Unauthorized");
+
+        var result = await service.Join(leagueId, userId);
+        if (result.Status != JoinDraftStatus.Success)
+            throw new HubException(result.Status.ToString());
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"draft-{leagueId}");
+
+        if (result.Snapshot is not null)
+            await Clients.Caller.SendAsync("DraftUpdated", result.Snapshot);
     }
 
     public async Task Close(int leagueId)

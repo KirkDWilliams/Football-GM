@@ -82,10 +82,9 @@ public class LeagueRepository(AppDbContext context) : ILeagueRepository
             return null;
 
         var league = await GetByIdAsync(leagueId, cancellationToken);
-        if (league is null)
-            return null;
-
-        return new LeagueMembership(league, member.Role);
+        return league is null
+            ? null
+            : new LeagueMembership(league, member.Role);
     }
 
     public async Task<IReadOnlyList<LeagueMember>> ListMembersAsync(

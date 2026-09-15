@@ -8,8 +8,9 @@ namespace FootballGm.Api.Domain;
 public interface IDraftService
 {
     Task<OpenDraftResult> Open(int leagueId, string userId);
-    Task Join(int leagueId);
+    Task<JoinDraftResult> Join(int leagueId, string userId);
     Task Close(int leagueId);
+    Task<DraftSnapshot?> GetSnapshot(int leagueId);
 }
 
 public class DraftService(
@@ -37,14 +38,15 @@ public class DraftService(
         };
     }
 
-    public Task Join(int leagueId)
+    public async Task<JoinDraftResult> Join(int leagueId, string userId)
     {
-        // Validate - They are a member of that league
-        // Validate - There is an open draft to join
+        var userMember = await leagueRepository
+            .GetMembershipAsync(leagueId, userId);
 
-        // Add player to league members
+        if (userMember == null)
+            return new JoinDraftResult(JoinDraftStatus.UserNotInLeague);
 
-        throw new NotImplementedException();
+        return new JoinDraftResult(JoinDraftStatus.Success, await GetSnapshot(leagueId));
     }
 
     public Task Close(int leagueId)
@@ -52,16 +54,22 @@ public class DraftService(
         throw new NotImplementedException();
     }
 
+    public async Task<DraftSnapshot?> GetSnapshot(int leagueId)
+    {
+        var draft = await draftRepository.GetLatestAsync(leagueId);
+        return draft is null ? null : await BuildSnapshot(draft);
+    }
+
     private async Task<OpenDraftResult> AddDraft(int leagueId)
     {
-        var draft = await draftRepository
-            .AddAsync(Draft.ToEntity(leagueId, DraftStatus.Lobby));
-        var members = await leagueRepository
-            .ListMembersAsync(leagueId);
+        var draft = await draftRepository.AddAsync(Draft.ToEntity(leagueId, DraftStatus.Lobby));
+        return new OpenDraftResult(OpenDraftStatus.Success, await BuildSnapshot(draft));
+    }
 
-        return new OpenDraftResult(
-            OpenDraftStatus.Success,
-            DraftSnapshot.From(draft, members));
+    private async Task<DraftSnapshot> BuildSnapshot(Data.Entity.Contrived.Draft draft)
+    {
+        var members = await leagueRepository.ListMembersAsync(draft.LeagueId);
+        return DraftSnapshot.From(draft, members);
     }
 }
 
@@ -74,4 +82,12 @@ public enum OpenDraftStatus
     Success
 }
 
+public enum JoinDraftStatus
+{
+    UserNotInLeague,
+    Success
+}
+
 public sealed record OpenDraftResult(OpenDraftStatus Status, DraftSnapshot? Snapshot = null);
+
+public sealed record JoinDraftResult(JoinDraftStatus Status, DraftSnapshot? Snapshot = null);
