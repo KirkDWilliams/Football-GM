@@ -10,15 +10,7 @@ public class DraftHub(IDraftService service) : Hub
 {
     public async Task Open(int leagueId)
     {
-        var userId =
-            Context.UserIdentifier
-            ?? Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? Context.User?.FindFirstValue("sub");
-
-        if (string.IsNullOrWhiteSpace(userId))
-            throw new HubException("Unauthorized");
-
-        var result = await service.Open(leagueId, userId);
+        var result = await service.Open(leagueId, RequireUserId());
         if (result.Snapshot is null || result.Status != OpenDraftStatus.Success)
             throw new HubException(result.Status.ToString());
 
@@ -29,15 +21,7 @@ public class DraftHub(IDraftService service) : Hub
 
     public async Task Join(int leagueId)
     {
-        var userId =
-            Context.UserIdentifier
-            ?? Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? Context.User?.FindFirstValue("sub");
-
-        if (string.IsNullOrWhiteSpace(userId))
-            throw new HubException("Unauthorized");
-
-        var result = await service.Join(leagueId, userId);
+        var result = await service.Join(leagueId, RequireUserId());
         if (result.Status != JoinDraftStatus.Success)
             throw new HubException(result.Status.ToString());
 
@@ -49,6 +33,25 @@ public class DraftHub(IDraftService service) : Hub
 
     public async Task Close(int leagueId)
     {
-        var connectionId = Context.ConnectionId;
+        var result = await service.Close(leagueId, RequireUserId());
+        if (result.Snapshot is null || result.Status != CloseDraftStatus.Success)
+            throw new HubException(result.Status.ToString());
+
+        await Clients
+            .Group($"draft-{leagueId}")
+            .SendAsync("DraftUpdated", result.Snapshot);
+    }
+
+    private string RequireUserId()
+    {
+        var userId =
+            Context.UserIdentifier
+            ?? Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? Context.User?.FindFirstValue("sub");
+
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new HubException("Unauthorized");
+
+        return userId;
     }
 }
