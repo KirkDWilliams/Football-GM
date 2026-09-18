@@ -39,7 +39,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("TeamPlayers");
+                    b.ToTable("TeamPlayers", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.Budget", b =>
@@ -56,7 +56,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("LeagueId", "TeamId");
 
-                    b.ToTable("Budgets");
+                    b.ToTable("Budgets", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.Contract", b =>
@@ -82,7 +82,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("ContractId");
 
-                    b.ToTable("Contracts");
+                    b.ToTable("Contracts", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.League", b =>
@@ -106,7 +106,7 @@ namespace FootballGm.Api.Migrations
                     b.HasIndex("JoinCode")
                         .IsUnique();
 
-                    b.ToTable("Leagues");
+                    b.ToTable("Leagues", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.LeagueMember", b =>
@@ -128,7 +128,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("LeagueMembers");
+                    b.ToTable("LeagueMembers", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.Rule", b =>
@@ -151,7 +151,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasIndex("SettingsId");
 
-                    b.ToTable("Rules");
+                    b.ToTable("Rules", (string)null);
 
                     b.HasDiscriminator<short>("RuleType");
 
@@ -179,7 +179,7 @@ namespace FootballGm.Api.Migrations
                     b.HasIndex("LeagueId")
                         .IsUnique();
 
-                    b.ToTable("Settings");
+                    b.ToTable("Settings", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.Team", b =>
@@ -207,7 +207,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.User", b =>
@@ -238,7 +238,7 @@ namespace FootballGm.Api.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Ingested.Game", b =>
@@ -279,7 +279,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("GameId");
 
-                    b.ToTable("Games");
+                    b.ToTable("Games", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Ingested.InjuryStatus", b =>
@@ -311,7 +311,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("Season", "Week", "PlayerId");
 
-                    b.ToTable("InjuryStatus");
+                    b.ToTable("InjuryStatus", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Ingested.Player", b =>
@@ -343,7 +343,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("PlayerId");
 
-                    b.ToTable("Players");
+                    b.ToTable("Players", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Ingested.PlayerGame", b =>
@@ -424,7 +424,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("PlayerId", "GameId");
 
-                    b.ToTable("PlayerGame");
+                    b.ToTable("PlayerGame", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Ingested.PlayerSeason", b =>
@@ -508,7 +508,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("PlayerId", "Season");
 
-                    b.ToTable("PlayerSeason");
+                    b.ToTable("PlayerSeason", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.RefreshToken", b =>
@@ -548,7 +548,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.BonusRule", b =>

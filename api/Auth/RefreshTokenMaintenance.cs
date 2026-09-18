@@ -82,21 +82,14 @@ public class RefreshTokenMaintenance(
         var retentionDays = Math.Max(0, _options.RefreshTokenCleanupRetentionDays);
         var revokeCutoff = now.AddDays(-retentionDays);
 
-        // SQLite + nullable DateTimeOffset OR predicates often fail translation; evaluate in memory.
-        // Table stays small thanks to caps + periodic cleanup.
-        var all = await db.RefreshTokens.AsNoTracking().ToListAsync(cancellationToken);
-        var deadIds = all
-            .Where(t =>
-                t.ExpiresAtUtc <= now
-                || (t.RevokedAtUtc is not null && t.RevokedAtUtc <= revokeCutoff))
-            .Select(t => t.Id)
+        var all = await db.RefreshTokens.ToListAsync(cancellationToken);
+        var dead = all
+            .Where(token =>
+                token.ExpiresAtUtc <= now
+                || (token.RevokedAtUtc is not null && token.RevokedAtUtc <= revokeCutoff))
             .ToList();
 
-        if (deadIds.Count == 0) return 0;
-
-        var dead = await db.RefreshTokens
-            .Where(t => deadIds.Contains(t.Id))
-            .ToListAsync(cancellationToken);
+        if (dead.Count == 0) return 0;
 
         db.RefreshTokens.RemoveRange(dead);
         await db.SaveChangesAsync(cancellationToken);
