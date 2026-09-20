@@ -1,4 +1,4 @@
-﻿using FootballGm.Api.Data.Entity.Ingested;
+using FootballGm.Api.Data.Entity.Ingested;
 using FootballGm.Api.Data.Models;
 using Rule = FootballGm.Api.Data.Entity.Contrived.Rule;
 using ScoringWeightRule = FootballGm.Api.Data.Entity.Contrived.ScoringWeightRule;
@@ -28,10 +28,21 @@ public class ScoreCalculator : IScoreCalculator
             switch (rule)
             {
                 case ScoringWeightRule swr when stats[statType] > 0:
-                    scores.Add(new StatScore { StatType = statType, Value = swr.Weight * stats[statType] });
+                    scores.Add(new StatScore
+                    {
+                        StatType = statType,
+                        Value = swr.Weight * stats[statType]
+                    });
+
                     continue;
+
                 case BonusRule br when stats[statType] > br.Threshold:
-                    scores.Add(new StatScore { StatType = statType, Value = br.Points });
+                    scores.Add(new StatScore
+                    {
+                        StatType = statType,
+                        Value = br.Points
+                    });
+
                     continue;
             }
         }

@@ -14,7 +14,7 @@ public class PlayerController(IPlayerOrchestrator orchestrator) : ControllerBase
 {
     /// <summary>
     /// Get a player. Omit <c>stats</c> for identity only; pass one or more stat sets
-    /// (<c>PreviousWeek</c>, <c>Season</c>, <c>RecentThreeGames</c>) to include scores.
+    /// (<c>PreviousSeason</c>, <c>PreviousWeek</c>, <c>Season</c>, <c>RecentThreeGames</c>) to include scores.
     /// LeagueId is required when requesting stats. GameId is required for PreviousWeek.
     /// </summary>
     [HttpGet("{playerId}")]
@@ -31,7 +31,7 @@ public class PlayerController(IPlayerOrchestrator orchestrator) : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(playerId))
             return BadRequest(new { error = "PlayerId is required." });
-
+        
         var requested = stats ?? [];
 
         if (requested.Length > 0 && leagueId is null or <= 0)
@@ -42,12 +42,8 @@ public class PlayerController(IPlayerOrchestrator orchestrator) : ControllerBase
 
         try
         {
-            var player = await orchestrator.GetPlayer(
-                playerId,
-                requested,
-                leagueId,
-                gameId,
-                cancellationToken);
+            var player = await orchestrator.GetPlayer(playerId, requested, leagueId, gameId, cancellationToken);
+
             return Ok(player);
         }
         catch (ArgumentNullException)

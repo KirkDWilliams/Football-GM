@@ -1,7 +1,6 @@
 using FootballGm.Api.Data.Enums;
 using FootballGm.Api.Data.Models;
 using FootballGm.Api.Domain.GameAnalysis;
-using FootballGm.Api.Infrastructure;
 using PlayerGame = FootballGm.Api.Data.Entity.Ingested.PlayerGame;
 using PlayerSeason = FootballGm.Api.Data.Entity.Ingested.PlayerSeason;
 using Player = FootballGm.Api.Data.Models.Player;
@@ -43,6 +42,13 @@ public class PlayerOrchestrator(
         PlayerGame? game = null;
         PlayerSeason? season = null;
         List<PlayerGame> recentGames = [];
+
+        if (requested.Contains(StatSetKind.PreviousSeason))
+            season = await playerRepository.GetPlayerSeasonStatsAsync(
+                playerId,
+                (short)(WeekHelper.CurrentSeason - 1),
+                cancellationToken);
+
         if (requested.Contains(StatSetKind.PreviousWeek))
             game = await playerRepository.GetPlayerGameStatsAsync(playerId, gameId!, cancellationToken);
 
@@ -62,9 +68,10 @@ public class PlayerOrchestrator(
         var stats = requested
             .Select(kind => kind switch
             {
-                StatSetKind.PreviousWeek => ScorePreviousWeek(game, rules),
-                StatSetKind.Season => ScoreSeason(season, rules),
+                StatSetKind.PreviousSeason   => ScoreSeason(season, rules),
+                StatSetKind.PreviousWeek     => ScorePreviousWeek(game, rules),
                 StatSetKind.RecentThreeGames => ScoreRecentThreeGames(recentGames, rules),
+                StatSetKind.Season           => ScoreSeason(season, rules),
                 _ => throw new ArgumentOutOfRangeException(nameof(statSets), kind, "Unknown stat set.")
             })
             .OfType<StatSet>()
@@ -87,10 +94,10 @@ public class PlayerOrchestrator(
         return StatSet.From(StatSetKind.PreviousWeek, calculator.Calculate(StatLine.From(game), rules));
     }
 
-    private StatSet ScoreSeason(PlayerSeason? season, List<Rule> rules) =>
-        StatSet.From(
-            StatSetKind.Season,
-            season is null ? [] : calculator.CalculateSeason(season, rules));
+    private StatSet ScoreSeason(PlayerSeason? season, List<Rule> rules)
+    {
+        return StatSet.From(StatSetKind.Season, season is null ? [] : calculator.CalculateSeason(season, rules));
+    }
 
     private StatSet? ScoreRecentThreeGames(IReadOnlyList<PlayerGame> games, List<Rule> rules)
     {

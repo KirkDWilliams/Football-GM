@@ -15,7 +15,7 @@ public static class WeekHelper
         new(2026, 11, 02), // 9
         new(2026, 11, 09), // 10
         new(2026, 11, 16), // 11
-        new(2026, 11, 23), // 12 (this week begins on Wednesday, so everything needs to be slid backwards.)
+        new(2026, 11, 23), // 12 (this week's matchups begin on Wednesday, so everything needs to be slid backwards.)
         new(2026, 11, 30), // 13
         new(2026, 12, 07), // 14
         new(2026, 12, 14), // 15

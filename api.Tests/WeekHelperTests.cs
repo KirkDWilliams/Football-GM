@@ -8,14 +8,15 @@ public class WeekHelperTests : IDisposable
     private readonly Func<DateTime> _original = WeekHelper.NowProvider;
 
     [Theory]
-    [InlineData(9, 08, 0)]
-    [InlineData(9, 09, 1)]
-    [InlineData(9, 13, 1)]
-    [InlineData(9, 14, 2)]
-    public void GivenValidDate_ShouldReturnExpectedWeek(int month, int day, int expectedWeek) 
+    [InlineData(2026, 9, 08, 0)]
+    [InlineData(2026, 9, 09, 1)]
+    [InlineData(2026, 9, 13, 1)]
+    [InlineData(2026, 9, 14, 2)]
+    [InlineData(2026, 11, 25, 12)]
+    public void GivenValidDate_ShouldReturnExpectedWeek(int year, int month, int day, int expectedWeek) 
     {
         // Arrange
-        WeekHelper.NowProvider = () => new DateTime(2026, month, day);
+        WeekHelper.NowProvider = () => new DateTime(year, month, day);
 
         // Act
         var week = WeekHelper.CurrentWeek;

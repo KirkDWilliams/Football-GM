@@ -1,4 +1,4 @@
-﻿using FootballGm.Api.Data.Enums;
+using FootballGm.Api.Data.Enums;
 
 namespace FootballGm.Api.Data.Models;
 

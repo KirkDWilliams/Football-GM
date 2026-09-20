@@ -47,7 +47,9 @@ public class PlayerRepository(AppDbContext context) : IPlayerRepository
     {
         return context.PlayerSeason
             .AsNoTracking()
-            .FirstOrDefaultAsync(ps => ps.PlayerId == playerId && ps.Season == season, cancellationToken);
+            .FirstOrDefaultAsync(ps =>
+                ps.PlayerId == playerId &&
+                ps.Season == season, cancellationToken);
     }
 
     public Task<List<Player>> GetPlayersByTeamIdAsync(int teamId, CancellationToken cancellationToken = default)
