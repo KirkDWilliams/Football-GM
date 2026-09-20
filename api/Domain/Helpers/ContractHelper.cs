@@ -2,11 +2,11 @@ using FootballGm.Api.Data.Enums;
 
 namespace FootballGm.Api.Domain.Helpers
 {
-    public static class BudgetHelper
+    public static class ContractHelper
     {
-        public static float[] CreatePaymentSchedule(List<Data.Models.Contract> contracts, ContractType type)
+        public static float[] CreatePaymentSchedule(List<Data.Models.Contract> contracts, ContractStatus type)
         {
-            var weekObligations = new float[WeekHelper.NumberOfWeeksInSeason+1];
+            var weekObligations = new float[WeekHelper.NumberOfWeeksInSeason + 1];
             var startingWeek = WeekHelper.CurrentWeek;
 
             if (startingWeek == 0)
@@ -29,19 +29,16 @@ namespace FootballGm.Api.Domain.Helpers
 
                     switch (type)
                     {
-                        case ContractType.Standard:
-                            weeklyPayment += contracts[contract].Salary;
-                            // Signing bonus hits the cap in the start week; salary is spread across the contract.
-                            if (week == contracts[contract].StartWeek)
-                                obligation += contracts[contract].SigningBonus;
+                        case ContractStatus.Standard:
+                            weeklyPayment += contracts[contract].Salary + contracts[contract].SigningBonus;
                             break;
 
-                        case ContractType.Received:
+                        case ContractStatus.Received:
                             weeklyPayment += contracts[contract].Salary;
                             break;
 
-                        case ContractType.Traded:
-                        case ContractType.Dropped:
+                        case ContractStatus.Traded:
+                        case ContractStatus.Dropped:
                             weeklyPayment += contracts[contract].SigningBonus;
                             break;
 
@@ -82,8 +79,7 @@ namespace FootballGm.Api.Domain.Helpers
 
                     if (week == contracts[contract].StartWeek)
                     {
-                        salaryObligation -= contracts[contract].GiftedCapSpace / 2;
-                        bonusObligation -= contracts[contract].GiftedCapSpace / 2; // TODO: NOT SURE WHICH TO GIVE CREDIT TO
+                        salaryObligation -= contracts[contract].GiftedCapSpace;
                     }
 
                     var salaryPayment = contracts[contract].Salary;
@@ -116,8 +112,8 @@ namespace FootballGm.Api.Domain.Helpers
             (var salaryObligationToA, _) = CreatePaymentSchedule(tradesFromTeamB);
 
             // X budget: X current - X salary going away + Y salary coming in
-            var newABudget = PaymentScheduleOperation(budgetA.PaymentSchedule, salaryObligationToB, salaryObligationToA, (a, b, c) => a - b + c);
-            var newBBudget = PaymentScheduleOperation(budgetB.PaymentSchedule, salaryObligationToB, salaryObligationToA, (a, b, c) => a - b + c);
+            var newABudget = PaymentScheduleOperation(budgetA.PaymentSchedule, salaryObligationToB, salaryObligationToA, (x, y, z) => x - y + z);
+            var newBBudget = PaymentScheduleOperation(budgetB.PaymentSchedule, salaryObligationToA, salaryObligationToB, (x, y, z) => x - y + z);
 
             for (var week = WeekHelper.CurrentWeek; week <= WeekHelper.NumberOfWeeksInSeason; week++)
             {
@@ -125,7 +121,7 @@ namespace FootballGm.Api.Domain.Helpers
                     teamAValid = false;
 
                 if (newBBudget[week] > capCeiling)
-                    teamAValid = false;
+                    teamBValid = false;
             }
 
             return (teamAValid, teamBValid);
@@ -136,11 +132,11 @@ namespace FootballGm.Api.Domain.Helpers
             if (contract.StartWeek - 1 != WeekHelper.CurrentWeek)
                 throw new InvalidOperationException("Contracts must be made one week prior to starting.");
 
-            var paymentSchedule = CreatePaymentSchedule([contract], ContractType.Standard);
+            var paymentSchedule = CreatePaymentSchedule([contract], ContractStatus.Standard);
 
             var rating = 0f;
             var week = contract.StartWeek;
-            var discount = 0.0625D;
+            var discount = 0.1865;
 
             do
             {

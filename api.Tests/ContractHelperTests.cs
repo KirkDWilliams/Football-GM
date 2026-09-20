@@ -4,7 +4,7 @@ using FootballGm.Api.Domain.Helpers;
 namespace FootballGm.Api.Tests;
 
 [Collection("WeekClock")]
-public class BudgetHelperTests()
+public class ContractHelperTests()
 {
     private readonly float roundingTolerance = .01f;
 
@@ -20,7 +20,7 @@ public class BudgetHelperTests()
             WeekHelper.NowProvider = () => new DateTime(2026, 09, 09);
 
             // Act
-            var obligation = BudgetHelper.CreatePaymentSchedule([], Data.Enums.ContractType.Standard);
+            var obligation = ContractHelper.CreatePaymentSchedule([], Data.Enums.ContractStatus.Standard);
 
             // Assert
             Assert.Equal(WeekHelper.NumberOfWeeksInSeason+1, obligation.Length);
@@ -53,7 +53,7 @@ public class BudgetHelperTests()
             ];
 
             // Act
-            var obligation = BudgetHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractType.Standard);
+            var obligation = ContractHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractStatus.Standard);
 
             // Assert
             Assert.Equal(0, obligation[0]);
@@ -86,7 +86,7 @@ public class BudgetHelperTests()
             ];
 
             // Act
-            var obligation = BudgetHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractType.Standard);
+            var obligation = ContractHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractStatus.Standard);
 
             // Assert
             Assert.Equal(0, obligation[0]);
@@ -136,7 +136,7 @@ public class BudgetHelperTests()
             ];
 
             // Act
-            var obligation = BudgetHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractType.Standard);
+            var obligation = ContractHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractStatus.Standard);
 
             // Assert
             Assert.Equal(0, obligation[0]);
@@ -184,7 +184,7 @@ public class BudgetHelperTests()
             ];
 
             // Act
-            var obligation = BudgetHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractType.Standard);
+            var obligation = ContractHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractStatus.Standard);
 
             // Assert
             Assert.Equal(0, obligation[0]);
@@ -231,7 +231,7 @@ public class BudgetHelperTests()
             ];
 
             // Act
-            var obligation = BudgetHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractType.Standard);
+            var obligation = ContractHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractStatus.Standard);
 
             // Assert
             Assert.Equal(0, obligation[7]);
@@ -284,9 +284,9 @@ public class BudgetHelperTests()
             };
 
             // Act
-            var sixWeekRating = BudgetHelper.GetContractRating(sixWeekContract);
-            var fiveWeekRating = BudgetHelper.GetContractRating(fiveWeekContract);
-            var fourWeekRating = BudgetHelper.GetContractRating(fourWeekContract);
+            var sixWeekRating = ContractHelper.GetContractRating(sixWeekContract);
+            var fiveWeekRating = ContractHelper.GetContractRating(fiveWeekContract);
+            var fourWeekRating = ContractHelper.GetContractRating(fourWeekContract);
 
             // Assert
             Assert.True(fiveWeekRating > sixWeekRating);
@@ -332,9 +332,9 @@ public class BudgetHelperTests()
             };
 
             // Act
-            var highestRating = BudgetHelper.GetContractRating(highestSalary);
-            var middleRating = BudgetHelper.GetContractRating(middleSalary);
-            var lowestRating = BudgetHelper.GetContractRating(lowestSalary);
+            var highestRating = ContractHelper.GetContractRating(highestSalary);
+            var middleRating = ContractHelper.GetContractRating(middleSalary);
+            var lowestRating = ContractHelper.GetContractRating(lowestSalary);
 
             // Assert
             Assert.True(middleRating < highestRating);
@@ -380,9 +380,9 @@ public class BudgetHelperTests()
             };
 
             // Act
-            var highestRating = BudgetHelper.GetContractRating(highestBonus);
-            var middleRating = BudgetHelper.GetContractRating(middleBonus);
-            var lowestRating = BudgetHelper.GetContractRating(lowestBonus);
+            var highestRating = ContractHelper.GetContractRating(highestBonus);
+            var middleRating = ContractHelper.GetContractRating(middleBonus);
+            var lowestRating = ContractHelper.GetContractRating(lowestBonus);
 
             // Assert
             Assert.True(middleRating < highestRating);
@@ -419,28 +419,28 @@ public class BudgetHelperTests()
             var teamBudgetA = new Data.Models.Budget
             {
                 TeamId = 1,
-                PaymentSchedule = BudgetHelper.CreatePaymentSchedule(
+                PaymentSchedule = ContractHelper.CreatePaymentSchedule(
                 [
                     new() { ContractId = 100, StartWeek = 9, EndWeek = 15, Salary = 45, SigningBonus = 10 },
                     new() { ContractId = 101, StartWeek = 8, EndWeek = 15, Salary = 45, SigningBonus = 10 },
                     new() { ContractId = 102, StartWeek = 5, EndWeek = 12, Salary = 65, SigningBonus = 12 }
-                ], Data.Enums.ContractType.Standard)
+                ], Data.Enums.ContractStatus.Standard)
             };
 
             var teamBudgetB = new Data.Models.Budget
             {
                 TeamId = 2,
-                PaymentSchedule = BudgetHelper.CreatePaymentSchedule(
+                PaymentSchedule = ContractHelper.CreatePaymentSchedule(
                 [
                     new() { ContractId = 200, StartWeek = 7,  EndWeek = 14, Salary = 60, SigningBonus = 4 },
                     new() { ContractId = 200, StartWeek = 8,  EndWeek = 15, Salary = 60, SigningBonus = 14 },
                     new() { ContractId = 200, StartWeek = 9,  EndWeek = 16, Salary = 60, SigningBonus = 24 },
                     new() { ContractId = 201, StartWeek = 10, GiftedCapSpace = 15 }
-                ], Data.Enums.ContractType.Standard)
+                ], Data.Enums.ContractStatus.Standard)
             };
 
             // Act
-            var (teamABudgetValidity, teamBBudgetValidity) = BudgetHelper.ValidateProposedBudgets(proposedTradesFromTeamA, proposedTradesFromTeamB, teamBudgetA, teamBudgetB, 50);
+            var (teamABudgetValidity, teamBBudgetValidity) = ContractHelper.ValidateProposedBudgets(proposedTradesFromTeamA, proposedTradesFromTeamB, teamBudgetA, teamBudgetB, 50);
 
             // Assert
             Assert.True(teamABudgetValidity);
@@ -473,28 +473,28 @@ public class BudgetHelperTests()
             var teamBudgetA = new Data.Models.Budget
             {
                 TeamId = 1,
-                PaymentSchedule = BudgetHelper.CreatePaymentSchedule(
+                PaymentSchedule = ContractHelper.CreatePaymentSchedule(
                 [
                     new() { ContractId = 100, StartWeek = 9, EndWeek = 15, Salary = 45, SigningBonus = 10 },
                     new() { ContractId = 101, StartWeek = 8, EndWeek = 15, Salary = 45, SigningBonus = 10 },
                     new() { ContractId = 102, StartWeek = 5, EndWeek = 12, Salary = 65, SigningBonus = 12 },
-                ], Data.Enums.ContractType.Standard)
+                ], Data.Enums.ContractStatus.Standard)
             };
 
             var teamBudgetB = new Data.Models.Budget
             {
                 TeamId = 2,
-                PaymentSchedule = BudgetHelper.CreatePaymentSchedule(
+                PaymentSchedule = ContractHelper.CreatePaymentSchedule(
                 [
                     new() { ContractId = 200, StartWeek = 7,  EndWeek = 14, Salary = 60, SigningBonus = 4 },
                     new() { ContractId = 200, StartWeek = 8,  EndWeek = 15, Salary = 60, SigningBonus = 14 },
                     new() { ContractId = 200, StartWeek = 9,  EndWeek = 16, Salary = 60, SigningBonus = 24 },
                     new() { ContractId = 201, StartWeek = 10, GiftedCapSpace = 15 }
-                ], Data.Enums.ContractType.Standard)
+                ], Data.Enums.ContractStatus.Standard)
             };
 
             // Act
-            var (teamABudgetValidity, teamBBudgetValidity) = BudgetHelper.ValidateProposedBudgets(proposedTradesFromTeamA, proposedTradesFromTeamB, teamBudgetA, teamBudgetB, 15);
+            var (teamABudgetValidity, teamBBudgetValidity) = ContractHelper.ValidateProposedBudgets(proposedTradesFromTeamA, proposedTradesFromTeamB, teamBudgetA, teamBudgetB, 15);
 
             // Assert
             Assert.False(teamABudgetValidity);

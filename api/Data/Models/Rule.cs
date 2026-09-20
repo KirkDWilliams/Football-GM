@@ -36,7 +36,7 @@ public class Rule
         new ScoringWeightRule { Stat = StatType.RushingYards, Weight = 0.1f },
         new ScoringWeightRule { Stat = StatType.RushingFirstDowns, Weight = 0f },
         new ScoringWeightRule { Stat = StatType.RushingTouchdowns, Weight = 6f },
-        new ScoringWeightRule { Stat = StatType.Receptions, Weight = 0f },
+        new ScoringWeightRule { Stat = StatType.Receptions, Weight = 1f },
         new ScoringWeightRule { Stat = StatType.ReceivingYards, Weight = 0.1f },
         new ScoringWeightRule { Stat = StatType.ReceivingTouchdowns, Weight = 6f },
         new ScoringWeightRule { Stat = StatType.Interceptions, Weight = -2f },

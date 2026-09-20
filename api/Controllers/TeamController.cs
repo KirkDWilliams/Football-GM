@@ -86,7 +86,7 @@ public class TeamController(
         {
             var team = await teamOrchestrator.CreateTeamInLeague(leagueId, draftOutcome, cancellationToken);
             var contracts = await contractOrchestrator.CreateContractsForTeam(leagueId, team, draftOutcome, cancellationToken);
-            var paymentSchedule = BudgetHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractType.Standard);
+            var paymentSchedule = ContractHelper.CreatePaymentSchedule(contracts, Data.Enums.ContractStatus.Standard);
             var savedBudget = await teamOrchestrator.UpdateBudget(new Budget { TeamId = team.TeamId,  PaymentSchedule = paymentSchedule }, cancellationToken);
             // Add the TeamPlayerAssociations
                // return NotFound($"Error occured while creating the teams for League: {leagueId}");

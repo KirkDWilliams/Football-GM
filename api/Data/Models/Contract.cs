@@ -1,3 +1,5 @@
+using FootballGm.Api.Data.Enums;
+
 namespace FootballGm.Api.Data.Models;
 
 public record Contract
@@ -10,6 +12,7 @@ public record Contract
         SigningBonus = contract.SigningBonus;
         Salary = contract.Salary;
         GiftedCapSpace = contract.GiftedCapSpace;
+        Status = (ContractStatus)contract.Status;
     }
 
     public Contract() { }
@@ -20,6 +23,7 @@ public record Contract
     public float SigningBonus { get; set; } = 0f;
     public float Salary { get; set; } = 0f;
     public float GiftedCapSpace { get; set; } = 0f;
+    public ContractStatus Status { get; set; }
 
     public static Contract FromEntity(Entity.Contrived.Contract contract) => new(contract);
 }

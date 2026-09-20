@@ -10,6 +10,7 @@ public class Contract
     public float SigningBonus { get; set; } = 0f;
     public float Salary { get; set; } = 0f;
     public float GiftedCapSpace { get; set;  } = 0f;
+    public int Status { get; set; }
 
     // Navigation Properities
     public ICollection<TeamPlayers> TeamPlayers { get; set; } = [];

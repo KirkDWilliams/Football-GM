@@ -1,6 +1,6 @@
 namespace FootballGm.Api.Data.Enums;
 
-public enum ContractType : short
+public enum ContractStatus : short
 {
     Standard = 0,
     Received = 1,
