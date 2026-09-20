@@ -64,6 +64,7 @@ public class League
             },
             _ => throw new ArgumentOutOfRangeException(
                 nameof(rules),
+
                 rule.RuleType,
                 "Unknown rule type.")
         })
@@ -71,7 +72,9 @@ public class League
 
     private static List<Entities.Rule> ToEntityRules(IReadOnlyCollection<Rule> rules)
     {
-        var source = rules.Count > 0 ? rules : Rule.CreateDefaultScoringWeights();
+        var source = rules.Count > 0
+            ? rules
+            : Rule.CreateDefaultScoringWeights();
 
         return
         [

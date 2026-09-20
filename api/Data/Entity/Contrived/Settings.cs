@@ -11,4 +11,6 @@ public class Settings
     public float WeeklyCapSpace { get; init; } = 100f;
     public required List<Position> EligiblePositions { get; init; }
     public required List<Rule> Rules { get; init; }
+    public bool IsDefault { get; init; } = true;
+    public bool IsImmutable { get; init; } = false;
 }

@@ -13,7 +13,9 @@ public class TeamOrchestrator(
     public async Task<Data.Models.Budget?> GetBudget(int teamId, CancellationToken cancellationToken)
     {
         var budget = await budgetRepository.GetByTeamIdAsync(teamId, cancellationToken);
-        return budget is null ? null : Data.Models.Budget.FromEntity(budget);
+        return budget is null
+            ? null
+            : Data.Models.Budget.FromEntity(budget);
     }
 
     public Task<bool> UpdateBudget(Data.Models.Budget budget, CancellationToken cancellationToken)
