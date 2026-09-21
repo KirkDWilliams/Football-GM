@@ -1,5 +1,6 @@
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Data.Enums;
+using static FootballGm.Api.Infrastructure.LeagueQueryExtensions;
 
 namespace FootballGm.Api.Infrastructure.Interfaces;
 
@@ -13,6 +14,7 @@ public interface ILeagueRepository
 
     Task<League?> GetByIdAsync(
         int leagueId,
+        LeagueIncludes leagueIncludes,
         CancellationToken cancellationToken = default);
 
     Task<League?> GetByCodeAsync(

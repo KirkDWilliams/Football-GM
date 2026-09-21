@@ -8,6 +8,7 @@ using Rule = FootballGm.Api.Data.Entity.Contrived.Rule;
 using FootballGm.Api.Domain.Helpers;
 using FootballGm.Api.Domain.Interfaces;
 using FootballGm.Api.Infrastructure.Interfaces;
+using static FootballGm.Api.Infrastructure.LeagueQueryExtensions;
 
 namespace FootballGm.Api.Domain;
 
@@ -36,7 +37,7 @@ public class PlayerOrchestrator(
         var playerEntity = await playerRepository.GetPlayerByIdAsync(playerId, cancellationToken);
         ArgumentNullException.ThrowIfNull(playerEntity);
 
-        var league = await leagueRepository.GetByIdAsync(leagueId.Value, cancellationToken);
+        var league = await leagueRepository.GetByIdAsync(leagueId.Value, LeagueIncludes.Settings, cancellationToken);
         ArgumentNullException.ThrowIfNull(league);
 
         PlayerGame? game = null;

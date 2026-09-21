@@ -3,6 +3,7 @@ using FootballGm.Api.Domain.Interfaces;
 using FootballGm.Api.Infrastructure;
 using FootballGm.Api.Infrastructure.Interfaces;
 using static FootballGm.Api.Data.Models.Auction;
+using static FootballGm.Api.Infrastructure.LeagueQueryExtensions;
 
 namespace FootballGm.Api.Domain;
 
@@ -14,7 +15,7 @@ public class AuctionOrchestrator(
     public async Task<AuctionState> StartAuctionAsync(
         int leagueId, string playerId, CancellationToken cancellationToken = default)
     {
-        var league = await leagueRepository.GetByIdAsync(leagueId, cancellationToken)
+        var league = await leagueRepository.GetByIdAsync(leagueId, LeagueIncludes.Teams, cancellationToken)
             ?? throw new Exception("League does not exist.");
 
         var memberIds = league.Members.Select(m => m.UserId).ToList();
@@ -50,7 +51,7 @@ public class AuctionOrchestrator(
 
     public async Task<AuctionState> GetAuctionStateAsync(int leagueId, string playerId, CancellationToken cancellationToken = default)
     {
-        var league = await leagueRepository.GetByIdAsync(leagueId, cancellationToken)
+        var league = await leagueRepository.GetByIdAsync(leagueId, LeagueIncludes.Teams, cancellationToken)
             ?? throw new InvalidOperationException("League not found");
 
         var auction = await auctionRepository.GetAuctionAsync(leagueId, playerId, cancellationToken)

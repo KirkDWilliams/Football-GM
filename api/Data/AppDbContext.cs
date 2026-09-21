@@ -31,6 +31,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Team> Teams { get; set; }
     public DbSet<Contract> Contracts { get; set; }
     public DbSet<Budget> Budgets { get; set; }
+    public DbSet<Matchup> Matchups { get; set; }
 
     /// <summary>
     /// Misc

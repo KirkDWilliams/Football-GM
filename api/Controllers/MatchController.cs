@@ -3,6 +3,7 @@ using FootballGm.Api.Domain.Helpers;
 using FootballGm.Api.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FootballGm.Api.Controllers;
 
@@ -28,10 +29,10 @@ public class MatchController(IMatchupOrchestrator orchestrator) : ControllerBase
         if (IsInvalidMatchupQuery(leagueId, week))
             return BadRequest(new { error = $"Either League {leagueId} or Week {week} are incorrect values."});
 
-        var result = _orchestrator.GetMatchups(leagueId, week);
+        var result = _orchestrator.GetMatchups(leagueId, week, cancellationToken);
 
         return result == null
-            ? NotFound(new { error = $"No information returned for the given League {leagueId} or Week {week}.")
+            ? NotFound(new { error = $"No information returned for the given League {leagueId} or Week {week}." })
             : Ok(result);
     }
 

@@ -1,6 +1,7 @@
 using FootballGm.Api.Data.Enums;
 using FootballGm.Api.Domain.Interfaces;
 using FootballGm.Api.Infrastructure.Interfaces;
+using static FootballGm.Api.Infrastructure.LeagueQueryExtensions;
 
 namespace FootballGm.Api.Domain;
 
@@ -36,7 +37,7 @@ public class LeagueSetupService(
         try
         {
             // determine the cap space off of the positions and the scoring rules
-            var league = await repository.GetByIdAsync(leagueId, cancellationToken);
+            var league = await repository.GetByIdAsync(leagueId, LeagueIncludes.Settings, cancellationToken);
             if (league == null)
                 return false; //TODO: error handling
 

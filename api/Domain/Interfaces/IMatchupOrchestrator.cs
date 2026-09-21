@@ -4,6 +4,6 @@ namespace FootballGm.Api.Domain.Interfaces
 {
     public interface IMatchupOrchestrator
     {
-        List<Matchup> GetMatchups(int league, int week);
+        Task<List<Matchup>?> GetMatchups(int league, int week, CancellationToken cancellationToken);
     }
 }
