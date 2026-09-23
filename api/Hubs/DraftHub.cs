@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+using System.Dynamic;
+using System.Security.Claims;
 using FootballGm.Api.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace FootballGm.Api.Hubs;
 
 [Authorize]
-public class DraftHub(IDraftService service) : Hub
+public class DraftHub(IDraftService service, ILeagueSetupService setupService) : Hub
 {
     public async Task Open(int leagueId)
     {
@@ -14,6 +15,7 @@ public class DraftHub(IDraftService service) : Hub
         if (result.Snapshot is null || result.Status != OpenDraftStatus.Success)
             throw new HubException(result.Status.ToString());
 
+        await setupService.FixLeagueSettings(leagueId, new CancellationToken());
         await Clients
             .Group($"draft-{leagueId}")
             .SendAsync("DraftUpdated", result.Snapshot);

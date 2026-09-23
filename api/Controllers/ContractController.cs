@@ -1,5 +1,4 @@
 using FootballGm.Api.Data.Models;
-using FootballGm.Api.Domain;
 using FootballGm.Api.Domain.Helpers;
 using FootballGm.Api.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;

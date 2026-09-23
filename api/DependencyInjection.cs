@@ -178,7 +178,7 @@ public static class DependencyInjection
         services.AddScoped<IPlayerOrchestrator, PlayerOrchestrator>();
 
         services.AddScoped<ILeagueRepository, LeagueRepository>();
-        services.AddScoped<ILeagueCodeService, LeagueSetupService>();
+        services.AddScoped<ILeagueSetupService, LeagueSetupService>();
         services.AddScoped<ILeagueOrchestrator, LeagueOrchestrator>();
 
         services.AddScoped<ITeamRepository, TeamRepository>();

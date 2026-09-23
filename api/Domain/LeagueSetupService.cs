@@ -5,18 +5,15 @@ using static FootballGm.Api.Infrastructure.LeagueQueryExtensions;
 
 namespace FootballGm.Api.Domain;
 
-public interface ILeagueCodeService
+public interface ILeagueSetupService
 {
     Task<string> GenerateUniqueJoinCodeAsync(CancellationToken cancellationToken);
 
     Task<bool> FixLeagueSettings(int leagueId, CancellationToken cancellationToken);
 }
 
-public class LeagueSetupService(
-    ILeagueRepository repository,
-    ILeagueOrchestrator leagueOrchestrator) : ILeagueCodeService
+public class LeagueSetupService(ILeagueRepository repository) : ILeagueSetupService
 {
-
     public async Task<string> GenerateUniqueJoinCodeAsync(CancellationToken cancellationToken)
     {
         while (true)
@@ -29,11 +26,8 @@ public class LeagueSetupService(
         }
     }
 
-    // this needs to be called before the draft starts, after it is opened
-
     public async Task<bool> FixLeagueSettings(int leagueId, CancellationToken cancellationToken)
     {
-
         try
         {
             // determine the cap space off of the positions and the scoring rules
@@ -68,7 +62,7 @@ public class LeagueSetupService(
     private static float CalculateLeagueCapSpace(List<Position> positions, List<Data.Entity.Contrived.Rule> rules)
     {
         float value = 100f;
-        // call the R script with the league specifics and run the averages of last year under that set of rules to determine the value per role and multiply it per positions on roster
+        //TODO: call the R script with the league specifics and run the averages of last year under that set of rules to determine the value per role and multiply it per positions on roster
         // the function will need to take in the positions value and quantity and the weightings per statline.
 
         return value;

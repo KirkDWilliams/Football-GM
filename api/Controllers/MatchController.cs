@@ -36,10 +36,10 @@ public class MatchController(IMatchupOrchestrator orchestrator) : ControllerBase
             : Ok(result);
     }
 
+    // Get Team Historical Matchups! Scores then details
+
+
     private static bool IsInvalidMatchupQuery(int leagueId, int week) => leagueId <= 0 || week <= 0 || week > WeekHelper.CurrentWeek;
-        // Get week 'Z' Matchups!
-        // Get week combined Matchups!
-        //
 
         // Service Actions
         // 1.0.   Alter the Matchup between 'X' and 'Y' ('Y' defaulting to the main user)

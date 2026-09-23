@@ -1,7 +1,6 @@
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Data.Models;
 using FootballGm.Api.Domain.Interfaces;
-using FootballGm.Api.Infrastructure;
 using FootballGm.Api.Infrastructure.Interfaces;
 
 namespace FootballGm.Api.Domain;
@@ -27,7 +26,7 @@ public class TeamOrchestrator(
 
     public Task<float> CalculateTeamScore()
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException(); //TODO: implement this code
     }
 
     public async Task<Data.Models.Budget?> GetBudget(int teamId, CancellationToken cancellationToken)

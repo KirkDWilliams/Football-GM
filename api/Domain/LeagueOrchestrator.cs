@@ -6,7 +6,7 @@ using Entities = FootballGm.Api.Data.Entity.Contrived;
 
 namespace FootballGm.Api.Domain;
 
-public class LeagueOrchestrator(ILeagueRepository repository, ILeagueCodeService codeService) : ILeagueOrchestrator
+public class LeagueOrchestrator(ILeagueRepository repository, ILeagueSetupService codeService) : ILeagueOrchestrator
 {
     public async Task<League> CreateLeague(
         string userId,
