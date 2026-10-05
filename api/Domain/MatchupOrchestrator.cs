@@ -21,26 +21,31 @@ namespace FootballGm.Api.Domain
 
             var matchups = await repository.GetWeeklyMatchupsByLeagueId(leagueId, week, cancellationToken);
 
-            // Calculate scores if current, else return stored off values
-            if (WeekHelper.CurrentWeek == week)
+            foreach (var team in league.Teams)
             {
-                foreach (var team in league.Teams)
-                {
-                    var teamScore = teamOrchestrator.CalculateTeamScore();
-                    var matchupForTeam = matchups.Find(mu => mu.HomeTeam.TeamId == team.TeamId ||
-                                                             mu.AwayTeam.TeamId == team.TeamId);
+                var teamScore = teamOrchestrator.CalculateTeamScore(week, team.TeamPlayers);
 
-                    ArgumentException.ThrowIfNullOrEmpty(matchupForTeam?.ToString(), nameof(matchupForTeam));
+                // gather players
+                // funnel them through rule-point matrix
+                // sum the amount of points 
 
-                    if (matchupForTeam.AwayTeam.TeamId == team.TeamId)
-                        matchupForTeam.AwayScore = teamScore.Result;
+                var matchupForTeam = matchups.Find(mu => mu.HomeTeam.TeamId == team.TeamId ||
+                                                            mu.AwayTeam.TeamId == team.TeamId);
 
-                    if (matchupForTeam.HomeTeam.TeamId == team.TeamId)
-                        matchupForTeam.HomeScore = teamScore.Result;
-                }
+                ArgumentException.ThrowIfNullOrEmpty(matchupForTeam?.ToString(), nameof(matchupForTeam));
+
+                if (matchupForTeam.AwayTeam.TeamId == team.TeamId)
+                    matchupForTeam.AwayScore = teamScore.Result;
+
+                if (matchupForTeam.HomeTeam.TeamId == team.TeamId)
+                    matchupForTeam.HomeScore = teamScore.Result;
             }
 
             return Matchup.FromEntities(matchups);
         }
+
+        // Question: How do we not duplicate the calculation of a team's player's score? It seems like we would be doing this very often under our given
+        // Question: the matchup screen showing all of the scores for the team's in the league would require a whole host of calculations.
+        // Solution: perhaps we save columns of weekly scores (wk1, wk2, wk3, ..., wk15) that we are modifying during the current week. 
     }
 }

@@ -12,5 +12,5 @@ public class Settings
     public required List<Position> EligiblePositions { get; init; }
     public required List<Rule> Rules { get; init; }
     public bool IsDefault { get; init; } = true;
-    public bool IsImmutable { get; init; } = false;
+    public bool IsFixed { get; init; } = false;
 }
