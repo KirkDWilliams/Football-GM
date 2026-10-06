@@ -82,6 +82,30 @@ public class DraftServiceTests
     }
 
     [Fact]
+    public async Task Open_rejects_when_the_insert_loses_to_an_existing_lobby()
+    {
+        var drafts = new FakeDraftRepository { LoseNextAddAs = DraftStatus.Lobby };
+
+        var result = await Sut(drafts).Open(LeagueId, CommissionerId);
+
+        Assert.Equal(OpenDraftStatus.ActiveDraft, result.Status);
+        Assert.Null(result.Snapshot);
+        Assert.Equal(DraftStatus.Lobby, drafts.All.Single().Status);
+    }
+
+    [Fact]
+    public async Task Open_rejects_when_the_insert_loses_to_a_completed_draft()
+    {
+        var drafts = new FakeDraftRepository { LoseNextAddAs = DraftStatus.Complete };
+
+        var result = await Sut(drafts).Open(LeagueId, CommissionerId);
+
+        Assert.Equal(OpenDraftStatus.LeagueDraftCompleted, result.Status);
+        Assert.Null(result.Snapshot);
+        Assert.Equal(DraftStatus.Complete, drafts.All.Single().Status);
+    }
+
+    [Fact]
     public async Task Join_rejects_user_not_in_league()
     {
         var result = await Sut().Join(LeagueId, StrangerId);
@@ -91,7 +115,7 @@ public class DraftServiceTests
     }
 
     [Fact]
-    public async Task Join_succeeds_with_null_snapshot_when_no_draft_exists()
+    public async Task Join_succeeds_without_a_snapshot_when_no_draft_exists()
     {
         var result = await Sut().Join(LeagueId, MemberId);
 
@@ -100,7 +124,7 @@ public class DraftServiceTests
     }
 
     [Fact]
-    public async Task Join_returns_latest_snapshot_including_closed()
+    public async Task Join_returns_a_closed_draft()
     {
         var drafts = new FakeDraftRepository();
         await drafts.AddAsync(new DraftEntity { LeagueId = LeagueId, Status = DraftStatus.Closed });
@@ -109,6 +133,107 @@ public class DraftServiceTests
 
         Assert.Equal(JoinDraftStatus.Success, result.Status);
         Assert.Equal(DraftStatus.Closed, result.Snapshot!.Status);
+    }
+
+    [Fact]
+    public async Task Join_returns_the_latest_draft()
+    {
+        var drafts = new FakeDraftRepository();
+        await drafts.AddAsync(new DraftEntity { LeagueId = LeagueId, Status = DraftStatus.Closed });
+        await drafts.AddAsync(new DraftEntity { LeagueId = LeagueId, Status = DraftStatus.Lobby });
+
+        var result = await Sut(drafts).Join(LeagueId, MemberId);
+
+        Assert.Equal(JoinDraftStatus.Success, result.Status);
+        Assert.Equal(DraftStatus.Lobby, result.Snapshot!.Status);
+    }
+
+    [Fact]
+    public async Task Join_returns_the_stored_nominator_for_a_live_draft()
+    {
+        var drafts = new FakeDraftRepository();
+        await drafts.AddAsync(new DraftEntity
+        {
+            LeagueId = LeagueId,
+            Status = DraftStatus.Live,
+            CurrentNominatorUserId = MemberId,
+            NominationOrder = [MemberId, CommissionerId]
+        });
+
+        var result = await Sut(drafts).Join(LeagueId, CommissionerId);
+
+        Assert.Equal(JoinDraftStatus.Success, result.Status);
+        Assert.Equal(DraftStatus.Live, result.Snapshot!.Status);
+        Assert.Equal(MemberId, result.Snapshot.CurrentNominatorUserId);
+        Assert.Equal([MemberId, CommissionerId], result.Snapshot.NominationOrder);
+    }
+
+    [Fact]
+    public async Task Join_returns_snapshot_when_lobby_is_open()
+    {
+        var drafts = new FakeDraftRepository();
+        await drafts.AddAsync(new DraftEntity { LeagueId = LeagueId, Status = DraftStatus.Lobby });
+
+        var result = await Sut(drafts).Join(LeagueId, MemberId);
+
+        Assert.Equal(JoinDraftStatus.Success, result.Status);
+        Assert.Equal(DraftStatus.Lobby, result.Snapshot!.Status);
+    }
+
+    [Fact]
+    public async Task Start_rejects_when_lobby_has_not_started()
+    {
+        var result = await Sut().Start(LeagueId, CommissionerId);
+
+        Assert.Equal(StartDraftStatus.LobbyNotStarted, result.Status);
+        Assert.Null(result.Snapshot);
+    }
+
+    [Fact]
+    public async Task Start_rejects_when_draft_is_not_in_lobby()
+    {
+        var drafts = new FakeDraftRepository();
+        await drafts.AddAsync(new DraftEntity { LeagueId = LeagueId, Status = DraftStatus.Live });
+
+        var result = await Sut(drafts).Start(LeagueId, CommissionerId);
+
+        Assert.Equal(StartDraftStatus.NotInLobby, result.Status);
+        Assert.Null(result.Snapshot);
+        Assert.Equal(DraftStatus.Live, drafts.All.Single().Status);
+    }
+
+    [Fact]
+    public async Task Start_rejects_a_completed_draft()
+    {
+        var drafts = new FakeDraftRepository();
+        await drafts.AddAsync(new DraftEntity { LeagueId = LeagueId, Status = DraftStatus.Complete });
+
+        var result = await Sut(drafts).Start(LeagueId, CommissionerId);
+
+        Assert.Equal(StartDraftStatus.NotInLobby, result.Status);
+        Assert.Null(result.Snapshot);
+        Assert.Equal(DraftStatus.Complete, drafts.All.Single().Status);
+    }
+
+    [Fact]
+    public async Task Start_sets_the_lobby_live_and_names_the_earliest_member()
+    {
+        var drafts = new FakeDraftRepository();
+        await drafts.AddAsync(new DraftEntity { LeagueId = LeagueId, Status = DraftStatus.Lobby });
+
+        var result = await Sut(drafts).Start(LeagueId, CommissionerId);
+
+        Assert.Equal(StartDraftStatus.Success, result.Status);
+        Assert.Equal(DraftStatus.Live, result.Snapshot!.Status);
+        Assert.Equal(MemberId, result.Snapshot.CurrentNominatorUserId);
+        Assert.Equal([MemberId, CommissionerId], result.Snapshot.NominationOrder);
+        Assert.Equal(DraftStatus.Live, drafts.All.Single().Status);
+        Assert.Equal(MemberId, drafts.All.Single().CurrentNominatorUserId);
+
+        var rejoined = await Sut(drafts).Join(LeagueId, CommissionerId);
+
+        Assert.Equal(DraftStatus.Live, rejoined.Snapshot!.Status);
+        Assert.Equal(MemberId, rejoined.Snapshot.CurrentNominatorUserId);
     }
 
     [Fact]
@@ -179,8 +304,18 @@ public class DraftServiceTests
     private static DraftService Sut(FakeDraftRepository? drafts = null)
     {
         var leagues = new FakeLeagueRepository();
-        leagues.AddMember(LeagueId, CommissionerId, "Commish", LeagueMemberRole.Commissioner);
-        leagues.AddMember(LeagueId, MemberId, "Member", LeagueMemberRole.Member);
+        leagues.AddMember(
+            LeagueId,
+            MemberId,
+            "Member",
+            LeagueMemberRole.Member,
+            new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        leagues.AddMember(
+            LeagueId,
+            CommissionerId,
+            "Commish",
+            LeagueMemberRole.Commissioner,
+            new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero));
         return new DraftService(drafts ?? new FakeDraftRepository(), leagues);
     }
 
@@ -189,8 +324,25 @@ public class DraftServiceTests
         private int _nextId = 1;
         public List<DraftEntity> All { get; } = [];
 
+        /// <summary>
+        /// The next add reports that another in-play draft won, and leaves that draft stored.
+        /// </summary>
+        public DraftStatus? LoseNextAddAs { get; set; }
+
         public Task<DraftEntity> AddAsync(DraftEntity draft, CancellationToken cancellationToken = default)
         {
+            if (LoseNextAddAs is DraftStatus status)
+            {
+                LoseNextAddAs = null;
+                All.Add(new DraftEntity
+                {
+                    Id = _nextId++,
+                    LeagueId = draft.LeagueId,
+                    Status = status
+                });
+                throw new DraftAlreadyInPlayException();
+            }
+
             draft.Id = _nextId++;
             All.Add(draft);
             return Task.FromResult(draft);
@@ -200,8 +352,10 @@ public class DraftServiceTests
             Task.FromResult(draft);
 
         public Task<DraftEntity?> GetAsync(int leagueId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(All.FirstOrDefault(draft =>
-                draft.LeagueId == leagueId && draft.Status != DraftStatus.Closed));
+            Task.FromResult(All
+                .Where(draft => draft.LeagueId == leagueId && draft.Status != DraftStatus.Closed)
+                .OrderByDescending(draft => draft.Id)
+                .FirstOrDefault());
 
         public Task<DraftEntity?> GetLatestAsync(int leagueId, CancellationToken cancellationToken = default) =>
             Task.FromResult(All
@@ -215,7 +369,12 @@ public class DraftServiceTests
         private readonly Dictionary<(int LeagueId, string UserId), LeagueMembership> _memberships = [];
         private readonly List<LeagueMember> _members = [];
 
-        public void AddMember(int leagueId, string userId, string displayName, LeagueMemberRole role)
+        public void AddMember(
+            int leagueId,
+            string userId,
+            string displayName,
+            LeagueMemberRole role,
+            DateTimeOffset joinedAtUtc)
         {
             _memberships[(leagueId, userId)] = new LeagueMembership(
                 new League
@@ -231,7 +390,7 @@ public class DraftServiceTests
                 LeagueId = leagueId,
                 UserId = userId,
                 Role = role,
-                JoinedAtUtc = DateTimeOffset.UtcNow,
+                JoinedAtUtc = joinedAtUtc,
                 User = new User { Id = userId, DisplayName = displayName }
             });
         }
@@ -251,7 +410,10 @@ public class DraftServiceTests
         public Task<League> AddAsync(League league, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<League?> GetByIdAsync(int leagueId, CancellationToken cancellationToken = default) =>
+        public Task<League?> GetByIdAsync(
+            int leagueId,
+            LeagueQueryExtensions.LeagueIncludes leagueIncludes,
+            CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
         public Task<League?> GetByCodeAsync(string leagueCode, CancellationToken cancellationToken = default) =>

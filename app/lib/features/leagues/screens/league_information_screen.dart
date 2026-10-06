@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:football_gm_app/auth/token_store.dart'; // PLAYGROUND
-import 'package:football_gm_app/config/api_config.dart'; // PLAYGROUND
-import 'package:football_gm_app/features/draft/draft_api.dart';
-import 'package:football_gm_app/features/draft/draft_hub_client.dart'; // PLAYGROUND
-import 'package:football_gm_app/features/draft/screens/draft_players_available.dart';
-import 'package:football_gm_app/features/draft/screens/draft_playground_screen.dart'; // PLAYGROUND
+import 'package:football_gm_app/auth/token_store.dart';
+import 'package:football_gm_app/config/api_config.dart';
+import 'package:football_gm_app/features/draft/draft_hub_client.dart';
+import 'package:football_gm_app/features/draft/screens/draft_room_screen.dart';
 import 'package:football_gm_app/features/leagues/league_api.dart';
 import 'package:football_gm_app/features/leagues/models/league_details.dart';
+import 'package:football_gm_app/features/leagues/models/league_summary.dart';
 import 'package:football_gm_app/ui/ui.dart';
 import 'package:provider/provider.dart';
 
@@ -85,12 +84,7 @@ class _LeagueInformationScreenState extends State<LeagueInformationScreen> {
 }
 
 class _LeagueBody extends StatelessWidget {
-  const _LeagueBody(
-    {
-      required this.league,
-      required this.onCopyJoinCode
-    }
-  );
+  const _LeagueBody({required this.league, required this.onCopyJoinCode});
 
   final LeagueDetails league;
   final VoidCallback onCopyJoinCode;
@@ -166,7 +160,6 @@ class _LeagueBody extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 24),
-        // PLAYGROUND: remove this button.
         SizedBox(
           width: double.infinity,
           child: FilledButton.tonal(
@@ -174,7 +167,9 @@ class _LeagueBody extends StatelessWidget {
               final tokens = context.read<TokenStore>();
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => DraftPlaygroundScreen(
+                  builder: (_) => DraftRoomScreen(
+                    leagueId: league.leagueId,
+                    isCommissioner: league.role == LeagueRole.commissioner,
                     client: SignalRDraftHubClient(
                       hubUrl: '${ApiConfig.baseUrl}/hubs/draft',
                       accessToken: () async => tokens.accessToken,
@@ -183,26 +178,7 @@ class _LeagueBody extends StatelessWidget {
                 ),
               );
             },
-            child: const Text('SignalR playground'),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.tonal(
-            onPressed: () {
-              final draftApi = context.read<DraftApi>();
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => PlayersAvailableScreen(
-                    leagueId: league.leagueId,
-                    draftApi: draftApi,
-                    leagueName: league.name,
-                  ),
-                ),
-              );
-            },
-            child: const Text('Start Auction / View Players'),
+            child: const Text('Draft'),
           ),
         ),
       ],

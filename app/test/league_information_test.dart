@@ -54,6 +54,11 @@ void main() {
     expect(find.text('Scoring weights'), findsOneWidget);
     expect(find.text('Save'), findsNothing);
     expect(find.text('Edit'), findsNothing);
+    expect(find.text('Draft', skipOffstage: false), findsOneWidget);
+    expect(
+      find.text('Start Auction / View Players', skipOffstage: false),
+      findsNothing,
+    );
   });
 
   testWidgets('Join code on the league screen is copyable for a Member', (

@@ -13,11 +13,9 @@ public class MasterBackgroundService(
     {
         logger.LogInformation("Background services running.");
 
-        REngine.SetEnvironmentVariables(
-            @"C:\Program Files\R\R-4.6.1\bin\x64",
-            @"C:\Program Files\R\R-4.6.1");
-
-        using var engine = REngine.GetInstance();
+        using var engine = StartR();
+        if (engine is null)
+            return;
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -144,6 +142,29 @@ public class MasterBackgroundService(
         }
 
         logger.LogInformation("Master Background Service has stopped");
+    }
+
+    private REngine? StartR()
+    {
+        const string rHome = @"C:\Program Files\R\R-4.6.1";
+        var rBin = Path.Combine(rHome, "bin", "x64");
+
+        try
+        {
+            if (!Directory.Exists(rBin))
+                throw new DirectoryNotFoundException($"Specified directory not found: '{rBin}'");
+
+            REngine.SetEnvironmentVariables(rBin, rHome);
+            return REngine.GetInstance();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "R failed to start from {RBin}. Master background service is stopping so the API can keep running.",
+                rBin);
+            return null;
+        }
     }
 
     private static void UpdatePlayerSeasonStats(REngine engine)

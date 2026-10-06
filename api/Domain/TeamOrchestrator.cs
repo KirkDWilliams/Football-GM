@@ -1,3 +1,4 @@
+using FootballGm.Api.Data.Entity.Associations;
 using FootballGm.Api.Data.Entity.Contrived;
 using FootballGm.Api.Data.Models;
 using FootballGm.Api.Domain.Interfaces;
@@ -24,7 +25,7 @@ public class TeamOrchestrator(
         return teamRepository.AddAsync(team, cancellationToken);
     }
 
-    public Task<float> CalculateTeamScore()
+    public Task<float> CalculateTeamScore(int week, ICollection<TeamPlayers> teamPlayers)
     {
         throw new NotImplementedException(); //TODO: implement this code
     }

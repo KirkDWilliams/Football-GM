@@ -104,6 +104,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<Budget>()
             .HasKey(b => new { b.LeagueId, b.TeamId });
 
+        modelBuilder.Entity<Draft>(entity =>
+        {
+            entity.Property(d => d.CurrentNominatorUserId).HasMaxLength(32);
+            entity.HasIndex(d => d.LeagueId)
+                .IsUnique()
+                .HasDatabaseName("IX_Drafts_LeagueId_InPlay")
+                .HasFilter($"\"Status\" != {(byte)DraftStatus.Closed}");
+        });
+
         modelBuilder.Entity<LeagueMember>(entity =>
         {
             entity.HasKey(m => new { m.LeagueId, m.UserId });

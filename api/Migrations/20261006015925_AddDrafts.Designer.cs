@@ -3,6 +3,7 @@ using System;
 using FootballGm.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FootballGm.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261006015925_AddDrafts")]
+    partial class AddDrafts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
@@ -80,9 +83,6 @@ namespace FootballGm.Api.Migrations
                     b.Property<int>("StartWeek")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("ContractId");
 
                     b.ToTable("Contracts");
@@ -110,10 +110,7 @@ namespace FootballGm.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LeagueId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Drafts_LeagueId_InPlay")
-                        .HasFilter("\"Status\" != 3");
+                    b.HasIndex("LeagueId");
 
                     b.ToTable("Drafts");
                 });
@@ -164,39 +161,6 @@ namespace FootballGm.Api.Migrations
                     b.ToTable("LeagueMembers");
                 });
 
-            modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.Matchup", b =>
-                {
-                    b.Property<int>("MatchupId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<float>("AwayScore")
-                        .HasColumnType("REAL");
-
-                    b.Property<int>("AwayTeamTeamId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<float>("HomeScore")
-                        .HasColumnType("REAL");
-
-                    b.Property<int>("HomeTeamTeamId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("LeagueId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Week")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("MatchupId");
-
-                    b.HasIndex("AwayTeamTeamId");
-
-                    b.HasIndex("HomeTeamTeamId");
-
-                    b.ToTable("Matchups");
-                });
-
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.Rule", b =>
                 {
                     b.Property<long>("RuleId")
@@ -233,12 +197,6 @@ namespace FootballGm.Api.Migrations
                     b.PrimitiveCollection<string>("EligiblePositions")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsFixed")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("LeagueId")
                         .HasColumnType("INTEGER");
@@ -698,25 +656,6 @@ namespace FootballGm.Api.Migrations
                     b.Navigation("League");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.Matchup", b =>
-                {
-                    b.HasOne("FootballGm.Api.Data.Entity.Contrived.Team", "AwayTeam")
-                        .WithMany()
-                        .HasForeignKey("AwayTeamTeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FootballGm.Api.Data.Entity.Contrived.Team", "HomeTeam")
-                        .WithMany()
-                        .HasForeignKey("HomeTeamTeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AwayTeam");
-
-                    b.Navigation("HomeTeam");
                 });
 
             modelBuilder.Entity("FootballGm.Api.Data.Entity.Contrived.Rule", b =>

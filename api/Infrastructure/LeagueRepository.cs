@@ -104,12 +104,17 @@ public class LeagueRepository(AppDbContext context) : ILeagueRepository
         int leagueId,
         CancellationToken cancellationToken = default)
     {
-        return await context.LeagueMembers
+        // SQLite cannot ORDER BY DateTimeOffset. Join time is applied after the rows load.
+        var members = await context.LeagueMembers
             .AsNoTracking()
             .Include(member => member.User)
             .Where(member => member.LeagueId == leagueId)
-            .OrderBy(member => member.JoinedAtUtc)
             .ToListAsync(cancellationToken);
+
+        return members
+            .OrderBy(member => member.JoinedAtUtc)
+            .ThenBy(member => member.UserId)
+            .ToList();
     }
 }
 

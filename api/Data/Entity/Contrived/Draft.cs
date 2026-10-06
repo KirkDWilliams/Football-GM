@@ -11,4 +11,9 @@ public class Draft
     public int LeagueId { get; set; }
 
     public DraftStatus Status { get; set; }
+
+    [MaxLength(32)]
+    public string? CurrentNominatorUserId { get; set; }
+
+    public List<string> NominationOrder { get; set; } = [];
 }

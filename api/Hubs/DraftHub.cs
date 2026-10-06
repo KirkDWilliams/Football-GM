@@ -1,4 +1,3 @@
-using System.Dynamic;
 using System.Security.Claims;
 using FootballGm.Api.Domain;
 using Microsoft.AspNetCore.Authorization;
@@ -31,6 +30,17 @@ public class DraftHub(IDraftService service, ILeagueSetupService setupService) :
 
         if (result.Snapshot is not null)
             await Clients.Caller.SendAsync("DraftUpdated", result.Snapshot);
+    }
+
+    public async Task Start(int leagueId)
+    {
+        var result = await service.Start(leagueId, RequireUserId());
+        if (result.Snapshot is null || result.Status != StartDraftStatus.Success)
+            throw new HubException(result.Status.ToString());
+
+        await Clients
+            .Group($"draft-{leagueId}")
+            .SendAsync("DraftUpdated", result.Snapshot);
     }
 
     public async Task Close(int leagueId)

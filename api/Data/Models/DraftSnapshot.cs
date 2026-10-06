@@ -13,6 +13,10 @@ public sealed class DraftSnapshot
     [JsonConverter(typeof(CamelCaseEnumConverter<DraftStatus>))]
     public required DraftStatus Status { get; init; }
 
+    public string? CurrentNominatorUserId { get; init; }
+
+    public required List<string> NominationOrder { get; init; }
+
     public required List<DraftMemberSnapshot> Members { get; init; }
 
     public static DraftSnapshot From(
@@ -22,17 +26,24 @@ public sealed class DraftSnapshot
         DraftId = draft.Id,
         LeagueId = draft.LeagueId,
         Status = draft.Status,
+        CurrentNominatorUserId = draft.CurrentNominatorUserId,
+        NominationOrder = [.. draft.NominationOrder],
         Members =
         [
-            .. members
-                .OrderBy(member => member.JoinedAtUtc)
-                .Select(member => new DraftMemberSnapshot
-                {
-                    UserId = member.UserId,
-                    DisplayName = member.User.DisplayName
-                })
+            .. OrderedByJoin(members).Select(member => new DraftMemberSnapshot
+            {
+                UserId = member.UserId,
+                DisplayName = member.User.DisplayName
+            })
         ]
     };
+
+    /// <summary>
+    /// Earliest join first. User id breaks ties. Start freezes this order.
+    /// </summary>
+    public static IEnumerable<Entities.LeagueMember> OrderedByJoin(
+        IEnumerable<Entities.LeagueMember> members) =>
+        members.OrderBy(member => member.JoinedAtUtc).ThenBy(member => member.UserId);
 }
 
 public sealed class DraftMemberSnapshot

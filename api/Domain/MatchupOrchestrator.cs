@@ -23,7 +23,7 @@ namespace FootballGm.Api.Domain
 
             foreach (var team in league.Teams)
             {
-                var teamScore = teamOrchestrator.CalculateTeamScore(week, team.TeamPlayers);
+                var teamScore = await teamOrchestrator.CalculateTeamScore(week, team.TeamPlayers);
 
                 // gather players
                 // funnel them through rule-point matrix
@@ -35,10 +35,10 @@ namespace FootballGm.Api.Domain
                 ArgumentException.ThrowIfNullOrEmpty(matchupForTeam?.ToString(), nameof(matchupForTeam));
 
                 if (matchupForTeam.AwayTeam.TeamId == team.TeamId)
-                    matchupForTeam.AwayScore = teamScore.Result;
+                    matchupForTeam.AwayScore = teamScore;
 
                 if (matchupForTeam.HomeTeam.TeamId == team.TeamId)
-                    matchupForTeam.HomeScore = teamScore.Result;
+                    matchupForTeam.HomeScore = teamScore;
             }
 
             return Matchup.FromEntities(matchups);
